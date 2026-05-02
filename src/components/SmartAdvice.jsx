@@ -16,13 +16,21 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
             </svg>
             <h3>Smart Advice</h3>
           </div>
-          <button className="advice-close" onClick={onClose} id="advice-close">✕</button>
+          <button className="advice-close" onClick={onClose} id="advice-close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         <div className="advice-list">
           {(alerts || []).filter(a => a.type !== 'info').length === 0 && (
             <div className="advice-empty">
-              <div className="advice-empty-icon">✓</div>
+              <div className="advice-empty-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
               <p>All systems operating within parameters. No action required.</p>
             </div>
           )}

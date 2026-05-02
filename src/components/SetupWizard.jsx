@@ -5,6 +5,7 @@ import { useState } from 'react';
  * Step 1: Name 5 sensors
  * Step 2: ZESA token data (kWh, Amount, Date)
  * Step 3: Duration Goal
+ * Strictly professional — no emojis.
  */
 const DEFAULT_NAMES = ['Fridge', 'Geyser', 'Borehole', 'Entertainment', 'Lighting'];
 
@@ -16,9 +17,9 @@ export default function SetupWizard({ onComplete }) {
   const [error, setError] = useState('');
 
   const steps = [
-    { label: 'Sensors', icon: '📡' },
-    { label: 'Token', icon: '⚡' },
-    { label: 'Goal', icon: '🎯' },
+    { label: 'Sensors', num: '01' },
+    { label: 'Token', num: '02' },
+    { label: 'Goal', num: '03' },
   ];
 
   const handleNext = () => {
@@ -42,7 +43,6 @@ export default function SetupWizard({ onComplete }) {
         setError('Please enter a valid duration (days).');
         return;
       }
-      // Complete setup
       const setupData = {
         sensorNames,
         tokenData: {
@@ -77,7 +77,13 @@ export default function SetupWizard({ onComplete }) {
         <div className="setup-steps">
           {steps.map((s, i) => (
             <div key={i} className={`setup-step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
-              <div className="setup-step-dot">{i < step ? '✓' : s.icon}</div>
+              <div className="setup-step-dot">
+                {i < step ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : s.num}
+              </div>
               <span>{s.label}</span>
             </div>
           ))}
@@ -88,8 +94,8 @@ export default function SetupWizard({ onComplete }) {
         {/* Step 1: Name Sensors */}
         {step === 0 && (
           <div className="setup-body">
-            <h3 className="setup-heading">Name Your Sensors</h3>
-            <p className="setup-desc">Assign appliance names to each of the 5 current sensor channels.</p>
+            <h3 className="setup-heading">Sensor Mapping</h3>
+            <p className="setup-desc">Assign appliance names to each of the 5 current sensor inputs.</p>
             {sensorNames.map((name, i) => (
               <div key={i} className="setup-sensor-row">
                 <div className="setup-sensor-badge">S{i + 1}</div>
@@ -113,7 +119,7 @@ export default function SetupWizard({ onComplete }) {
         {/* Step 2: ZESA Token Data */}
         {step === 1 && (
           <div className="setup-body">
-            <h3 className="setup-heading">ZESA Token Data</h3>
+            <h3 className="setup-heading">ZESA Token Entry</h3>
             <p className="setup-desc">Enter your most recent electricity token purchase for depletion tracking.</p>
             <label className="login-label">Energy Purchased (kWh)</label>
             <div className="login-input-wrap">
@@ -155,8 +161,8 @@ export default function SetupWizard({ onComplete }) {
         {/* Step 3: Duration Goal */}
         {step === 2 && (
           <div className="setup-body">
-            <h3 className="setup-heading">Set Duration Goal</h3>
-            <p className="setup-desc">How many days should this token last? ZEC-5 will optimize usage to meet this target.</p>
+            <h3 className="setup-heading">Duration Goal</h3>
+            <p className="setup-desc">How many days should this token last? ZEC-5 will optimize consumption to meet this target.</p>
             <div className="setup-goal-display">
               <div className="setup-goal-value">
                 <input
@@ -170,7 +176,7 @@ export default function SetupWizard({ onComplete }) {
                 <span className="setup-goal-unit">DAYS</span>
               </div>
               <p className="setup-goal-hint">
-                Average household: 21–30 days per token
+                Average household: 21-30 days per token
               </p>
             </div>
           </div>
@@ -180,11 +186,11 @@ export default function SetupWizard({ onComplete }) {
         <div className="setup-nav">
           {step > 0 && (
             <button className="btn-secondary" onClick={() => { setStep(s => s - 1); setError(''); }}>
-              ← Back
+              Back
             </button>
           )}
           <button className="btn-primary" onClick={handleNext} style={{ marginLeft: 'auto' }} id="setup-next">
-            {step === 2 ? 'Complete Setup' : 'Continue →'}
+            {step === 2 ? 'Complete Setup' : 'Continue'}
           </button>
         </div>
       </div>
