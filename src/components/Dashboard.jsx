@@ -188,7 +188,7 @@ export default function Dashboard({
           <div className="calibration-section">
             <div className="calibration-header">
               <span className="calibration-label">
-                {calibration.complete ? 'Learning Complete' : `Behavioral Learning Phase \u2014 Day ${calibration.day}/7`}
+                {calibration.complete ? 'Learning Complete' : `Behavioral Learning Phase | Day ${calibration.day}/7`}
               </span>
               <span className="calibration-pct">{Math.round(calibration.pct)}%</span>
             </div>

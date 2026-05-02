@@ -16,7 +16,7 @@ export default function HardwareModal({ sensorName, sensorIndex, onClose }) {
         </div>
         <h3 className="hw-modal-title">Hardware Fault Detected</h3>
         <div className="hw-modal-alert-bar">
-          Sensor <span>S{sensorIndex + 1}</span> — {sensorName || `Channel ${sensorIndex + 1}`}
+          Sensor <span>S{sensorIndex + 1}</span> | {sensorName || `Channel ${sensorIndex + 1}`}
         </div>
         <p className="hw-modal-desc">
           Data ping returned Null while system is armed. This may indicate a wiring fault, 
