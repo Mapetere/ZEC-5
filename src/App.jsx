@@ -4,28 +4,29 @@ import SetupWizard from './components/SetupWizard.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Header from './components/Header.jsx';
 import Dashboard from './components/Dashboard.jsx';
-import RelayControl from './components/RelayControl.jsx';
 import Management from './components/Management.jsx';
 import SmartAdvice from './components/SmartAdvice.jsx';
 import HardwareModal from './components/HardwareModal.jsx';
+import EmergencyMode from './components/EmergencyMode.jsx';
 import { startMockStream, generateAlerts } from './services/mockData.js';
 
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
-  relays: 'Relay Control Grid',
   management: 'Appliance Management',
 };
 
 const DEFAULT_PROFILES = [
-  { name: 'Fridge', base: 1.2, variance: 0.3, type: 'Continuous', maxLoad: '1.8', spikeProbability: 0.02, spikeMultiplier: 3 },
-  { name: 'Geyser', base: 3.8, variance: 0.8, type: 'Cyclic', maxLoad: '9.0', spikeProbability: 0.05, spikeMultiplier: 2 },
-  { name: 'Borehole', base: 2.1, variance: 0.5, type: 'Scheduled', maxLoad: '5.0', spikeProbability: 0.03, spikeMultiplier: 2.5 },
-  { name: 'Entertainment', base: 0.6, variance: 0.2, type: 'Variable', maxLoad: '2.0', spikeProbability: 0.01, spikeMultiplier: 4 },
-  { name: 'Lighting', base: 0.4, variance: 0.15, type: 'Variable', maxLoad: '1.2', spikeProbability: 0.01, spikeMultiplier: 2 },
+  { name: 'Fridge', base: 1.2, variance: 0.08, type: 'Continuous', maxLoad: '1.8' },
+  { name: 'Geyser', base: 3.8, variance: 0.15, type: 'Cyclic', maxLoad: '9.0' },
+  { name: 'Borehole', base: 2.1, variance: 0.10, type: 'Scheduled', maxLoad: '5.0' },
+  { name: 'Entertainment', base: 0.6, variance: 0.05, type: 'Variable', maxLoad: '2.0' },
+  { name: 'Lighting', base: 0.4, variance: 0.03, type: 'Variable', maxLoad: '1.2' },
 ];
 
+const MAINS_VOLTAGE = 230;
+
 export default function App() {
-  // Auth state
+  // Auth
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('zec5_auth');
@@ -33,15 +34,10 @@ export default function App() {
     } catch { return null; }
   });
 
-  // Setup wizard state
-  const [setupComplete, setSetupComplete] = useState(() => {
-    return !!localStorage.getItem('zec5_setup');
-  });
+  // Setup
+  const [setupComplete, setSetupComplete] = useState(() => !!localStorage.getItem('zec5_setup'));
   const [setupData, setSetupData] = useState(() => {
-    try {
-      const stored = localStorage.getItem('zec5_setup');
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
+    try { return JSON.parse(localStorage.getItem('zec5_setup')); } catch { return null; }
   });
 
   // App state
@@ -52,20 +48,19 @@ export default function App() {
   const [alerts, setAlerts] = useState([]);
   const [connected, setConnected] = useState(false);
   const [showAdvice, setShowAdvice] = useState(false);
-  const [hwFault, setHwFault] = useState(null); // { index, name }
+  const [showEmergency, setShowEmergency] = useState(false);
+  const [hwFault, setHwFault] = useState(null);
+  const [tickCount, setTickCount] = useState(0);
+  const [dataStartTime] = useState(() => Date.now());
 
   const [profiles, setProfiles] = useState(() => {
     try {
       const stored = localStorage.getItem('zec5_profiles');
       if (stored) return JSON.parse(stored);
-      // Merge from setup data if available
       const setup = localStorage.getItem('zec5_setup');
       if (setup) {
         const sd = JSON.parse(setup);
-        return DEFAULT_PROFILES.map((p, i) => ({
-          ...p,
-          name: sd.sensorNames?.[i] || p.name,
-        }));
+        return DEFAULT_PROFILES.map((p, i) => ({ ...p, name: sd.sensorNames?.[i] || p.name }));
       }
       return DEFAULT_PROFILES;
     } catch { return DEFAULT_PROFILES; }
@@ -73,63 +68,88 @@ export default function App() {
 
   const mockRef = useRef(null);
 
-  // Handle setup completion
+  // Data collection minutes (for 0-Day fix)
+  const dataCollectionMinutes = Math.floor((Date.now() - dataStartTime) / (1000 * 60));
+
+  // Compute token state for Phase 2 logic
+  const tokenState = (() => {
+    if (!setupData?.tokenData?.kwh) return null;
+    const td = setupData.tokenData;
+    const goal = setupData.durationGoal || 21;
+    const purchaseDate = new Date(td.date);
+    const now = new Date();
+    const daysSincePurchase = Math.max(1, (now - purchaseDate) / (1000 * 60 * 60 * 24));
+    const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
+    const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
+    const dailyUsageKwh = avgPowerKw * 8;
+    const kwhRemaining = Math.max(0, td.kwh - (dailyUsageKwh * daysSincePurchase));
+    const daysRemaining = dailyUsageKwh > 0 ? kwhRemaining / dailyUsageKwh : goal;
+
+    // Phase check
+    const calStart = setupData.calibrationStart ? new Date(setupData.calibrationStart) : now;
+    const calDays = (now - calStart) / (1000 * 60 * 60 * 24);
+    const isPhase2 = calDays >= 7;
+
+    // Condition A: below 50% of original tokens
+    const belowThreshold = kwhRemaining < (td.kwh * 0.5);
+
+    // Condition B: projected depletion before target date
+    const targetEndDate = new Date(purchaseDate.getTime() + goal * 24 * 60 * 60 * 1000);
+    const projectedEndDate = dailyUsageKwh > 0
+      ? new Date(now.getTime() + daysRemaining * 24 * 60 * 60 * 1000)
+      : new Date(now.getTime() + goal * 24 * 60 * 60 * 1000);
+    const atRisk = projectedEndDate < targetEndDate;
+
+    const isEmergency = kwhRemaining <= 5;
+
+    return {
+      isPhase2,
+      belowThreshold,
+      atRisk,
+      isEmergency,
+      kwhRemaining: kwhRemaining.toFixed(1),
+      daysRemaining: Math.round(daysRemaining),
+      dailyUsage: dailyUsageKwh,
+    };
+  })();
+
   const handleSetupComplete = useCallback((data) => {
     setSetupData(data);
     setSetupComplete(true);
-    // Update profiles with sensor names from setup
-    const updated = DEFAULT_PROFILES.map((p, i) => ({
-      ...p,
-      name: data.sensorNames?.[i] || p.name,
-    }));
+    const updated = DEFAULT_PROFILES.map((p, i) => ({ ...p, name: data.sensorNames?.[i] || p.name }));
     setProfiles(updated);
     localStorage.setItem('zec5_profiles', JSON.stringify(updated));
   }, []);
 
-  // Start mock data stream
+  // Mock data stream
   useEffect(() => {
     if (!user || !setupComplete) return;
-
     const mock = startMockStream((data) => {
       setSensors(data.sensors);
       setHistory(data.history);
-      setRelays(prev => {
-        if (prev.some(v => v)) return prev;
-        return data.relays;
-      });
-      setAlerts(generateAlerts(data.sensors, profiles));
+      setTickCount(data.tickCount);
+      setAlerts(generateAlerts(data.sensors, profiles, tokenState));
     }, 1500);
-
     mockRef.current = mock;
     setConnected(true);
-
-    return () => {
-      mock.stop();
-      setConnected(false);
-    };
+    return () => { mock.stop(); setConnected(false); };
   }, [user, setupComplete]);
 
-  const handleRelayToggle = useCallback((index, state) => {
-    setRelays(prev => {
-      const next = [...prev];
-      next[index] = state;
-      return next;
-    });
-    if (mockRef.current) {
-      mockRef.current.toggleRelay(index, state);
+  // Update alerts when tokenState changes
+  useEffect(() => {
+    if (sensors.some(v => v > 0)) {
+      setAlerts(generateAlerts(sensors, profiles, tokenState));
     }
+  }, [tokenState?.isPhase2, tokenState?.belowThreshold, tokenState?.atRisk]);
+
+  const handleRelayToggle = useCallback((index, state) => {
+    setRelays(prev => { const n = [...prev]; n[index] = state; return n; });
+    if (mockRef.current) mockRef.current.toggleRelay(index, state);
   }, []);
 
-  const handleShedLoad = useCallback((relayIndex) => {
-    if (relayIndex != null && relayIndex < 8) {
-      handleRelayToggle(relayIndex, false);
-    }
-  }, [handleRelayToggle]);
-
   const handleAcceptAdvice = useCallback((relayIndex) => {
-    handleShedLoad(relayIndex);
-    // Could close advice panel after action
-  }, [handleShedLoad]);
+    if (relayIndex != null && relayIndex < 8) handleRelayToggle(relayIndex, false);
+  }, [handleRelayToggle]);
 
   const handleProfileSave = useCallback((newProfiles) => {
     setProfiles(newProfiles);
@@ -137,9 +157,7 @@ export default function App() {
   }, []);
 
   const handleHardwareFault = useCallback((index, name) => {
-    if (!hwFault) {
-      setHwFault({ index, name });
-    }
+    if (!hwFault) setHwFault({ index, name });
   }, [hwFault]);
 
   const handleLogout = useCallback(() => {
@@ -154,25 +172,14 @@ export default function App() {
     setSetupData(null);
   }, []);
 
-  // Not authenticated
-  if (!user) {
-    return <LoginPage onLogin={setUser} />;
-  }
-
-  // First-run setup
-  if (!setupComplete) {
-    return <SetupWizard onComplete={handleSetupComplete} />;
-  }
+  if (!user) return <LoginPage onLogin={setUser} />;
+  if (!setupComplete) return <SetupWizard onComplete={handleSetupComplete} />;
 
   return (
     <div className="app-layout">
-      <Sidebar
-        activePage={page}
-        onNavigate={setPage}
-        onLogout={handleLogout}
-      />
+      <Sidebar activePage={page} onNavigate={setPage} onLogout={handleLogout} />
       <div className="main-content">
-        <Header title={PAGE_TITLES[page]} connected={connected} />
+        <Header title={PAGE_TITLES[page] || 'Dashboard'} connected={connected} />
         <div className="page-container">
           {page === 'dashboard' && (
             <Dashboard
@@ -180,28 +187,22 @@ export default function App() {
               history={history}
               alerts={alerts}
               profiles={profiles}
-              onShedLoad={handleShedLoad}
               tokenData={setupData?.tokenData}
               durationGoal={setupData?.durationGoal}
               calibrationStart={setupData?.calibrationStart}
               onOpenAdvice={() => setShowAdvice(true)}
+              onOpenEmergency={() => setShowEmergency(true)}
               onHardwareFault={handleHardwareFault}
+              tickCount={tickCount}
+              dataCollectionMinutes={dataCollectionMinutes}
             />
-          )}
-          {page === 'relays' && (
-            <RelayControl relays={relays} onToggle={handleRelayToggle} />
           )}
           {page === 'management' && (
-            <Management
-              profiles={profiles}
-              onSave={handleProfileSave}
-              onResetSetup={handleResetSetup}
-            />
+            <Management profiles={profiles} onSave={handleProfileSave} onResetSetup={handleResetSetup} />
           )}
         </div>
       </div>
 
-      {/* Smart Advice Sidebar */}
       <SmartAdvice
         alerts={alerts}
         relays={relays}
@@ -210,7 +211,17 @@ export default function App() {
         onClose={() => setShowAdvice(false)}
       />
 
-      {/* Hardware Fault Modal */}
+      {showEmergency && (
+        <EmergencyMode
+          kwhRemaining={tokenState?.kwhRemaining || '0'}
+          sensors={sensors}
+          profiles={profiles}
+          relays={relays}
+          onToggleRelay={handleRelayToggle}
+          onClose={() => setShowEmergency(false)}
+        />
+      )}
+
       {hwFault && (
         <HardwareModal
           sensorName={hwFault.name}

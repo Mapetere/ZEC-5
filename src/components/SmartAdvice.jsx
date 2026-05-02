@@ -1,9 +1,12 @@
 /**
- * SmartAdvice — Sidebar panel with actionable recommendations integrated with relay control.
- * "Accept Advice" triggers a relay cut in one click.
+ * SmartAdvice — Phase 2 only (post Day 7).
+ * Recommendations include embedded relay controls.
+ * "Accept Advice" triggers a relay cut — the ONLY place relays are exposed.
  */
 export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, onClose }) {
   if (!visible) return null;
+
+  const actionableAlerts = (alerts || []).filter(a => a.type !== 'info');
 
   return (
     <div className="advice-overlay" onClick={onClose}>
@@ -11,8 +14,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
         <div className="advice-header">
           <div className="advice-title-row">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
             </svg>
             <h3>Smart Advice</h3>
           </div>
@@ -24,22 +26,22 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
         </div>
 
         <div className="advice-list">
-          {(alerts || []).filter(a => a.type !== 'info').length === 0 && (
+          {actionableAlerts.length === 0 && (
             <div className="advice-empty">
               <div className="advice-empty-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <p>All systems operating within parameters. No action required.</p>
+              <p>All systems operating within target parameters. No intervention required.</p>
             </div>
           )}
 
-          {(alerts || []).filter(a => a.type !== 'info').map((alert) => (
+          {actionableAlerts.map((alert) => (
             <div key={alert.id} className={`advice-card ${alert.type}`}>
               <div className="advice-card-header">
                 <span className={`advice-severity ${alert.type}`}>
-                  {alert.type === 'danger' ? 'CRITICAL' : 'WARNING'}
+                  {alert.type === 'danger' ? 'CRITICAL' : 'ADVISORY'}
                 </span>
               </div>
               <h4 className="advice-card-title">{alert.title}</h4>
@@ -48,7 +50,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
               {alert.actionable && alert.relayIndex != null && (
                 <div className="advice-card-action">
                   <div className="advice-relay-status">
-                    <span className="advice-relay-label">Relay {alert.relayIndex + 1}</span>
+                    <span className="advice-relay-label">Relay {alert.relayIndex + 1} | {alert.sensorName || 'Channel'}</span>
                     <span className={`advice-relay-state ${relays?.[alert.relayIndex] ? 'on' : 'off'}`}>
                       {relays?.[alert.relayIndex] ? 'ACTIVE' : 'IDLE'}
                     </span>
@@ -61,7 +63,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                     </svg>
-                    Accept &amp; Shed Load
+                    Accept Advice | Shed Load
                   </button>
                 </div>
               )}

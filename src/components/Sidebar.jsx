@@ -20,16 +20,6 @@ export default function Sidebar({ activePage, onNavigate, onLogout }) {
           </svg>
         </button>
         <button
-          className={`sidebar-btn ${activePage === 'relays' ? 'active' : ''}`}
-          onClick={() => onNavigate('relays')}
-          title="Relay Control"
-          id="nav-relays"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-        </button>
-        <button
           className={`sidebar-btn ${activePage === 'management' ? 'active' : ''}`}
           onClick={() => onNavigate('management')}
           title="Management"

@@ -22,10 +22,10 @@
   --alert-red-dim: rgba(255,61,0,0.12);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Inter', system-ui, sans-serif;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
   --shadow-glow: 0 0 20px rgba(37,211,102,0.12);
   --shadow-card: 0 4px 24px rgba(0,0,0,0.5);
   --sidebar-width: 72px;
@@ -1385,4 +1385,253 @@ body {
 .hw-modal-alert-bar span {
   font-family: var(--font-mono);
   font-weight: 400;
+}
+
+/* ===== ADVICE LOCKED (Phase 1) ===== */
+.advice-locked {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+/* ===== EMERGENCY TRIGGER ===== */
+.emergency-trigger-btn {
+  width: 100%;
+  padding: 10px 16px;
+  margin-top: 12px;
+  background: var(--alert-red-dim);
+  border: 1px solid rgba(255,61,0,0.3);
+  border-radius: 0;
+  color: var(--alert-red);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+.emergency-trigger-btn:hover {
+  background: rgba(255,61,0,0.2);
+  border-color: var(--alert-red);
+}
+
+/* ===== EMERGENCY MODE PANEL ===== */
+.emergency-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 32px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+}
+.emergency-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.emergency-title {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--alert-red);
+  letter-spacing: 0.5px;
+}
+.emergency-alert-bar {
+  padding: 10px 16px;
+  background: var(--alert-red-dim);
+  border: 1px solid rgba(255,61,0,0.3);
+  border-radius: 0;
+  font-size: 13px;
+  color: var(--alert-red);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.emergency-request { margin-bottom: 8px; }
+.emergency-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.emergency-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.emergency-input-pre,
+.emergency-input-post {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.emergency-hours-input {
+  width: 70px;
+  padding: 10px 12px;
+  text-align: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  outline: none;
+}
+.emergency-hours-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-dim);
+}
+.emergency-results { }
+.emergency-budget-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.emergency-budget-item {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  text-align: center;
+}
+.emergency-budget-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+.emergency-budget-val {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+.emergency-strategy {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.emergency-strategy-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.emergency-strategy-label {
+  font-size: 10px;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  background: var(--accent-blue-dim);
+  border-radius: 0;
+}
+.emergency-strategy-name {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.emergency-strategy-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.emergency-relay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.emergency-relay-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+}
+.emergency-relay-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.emergency-relay-name {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.emergency-relay-draw {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.emergency-cut-btn {
+  padding: 6px 14px;
+  background: var(--alert-red-dim);
+  border: 1px solid rgba(255,61,0,0.3);
+  border-radius: 0;
+  color: var(--alert-red);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.emergency-cut-btn:hover {
+  background: var(--alert-red);
+  color: var(--bg-primary);
+}
+.emergency-after {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.emergency-group {
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  margin-bottom: 6px;
+}
+.emergency-group-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.emergency-group-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.emergency-group-tag {
+  padding: 3px 10px;
+  background: var(--accent-blue-dim);
+  border: 1px solid rgba(37,211,102,0.2);
+  border-radius: 0;
+  font-size: 11px;
+  color: var(--accent-blue);
+}
+.emergency-ok {
+  padding: 16px;
+  background: var(--accent-green-dim);
+  border: 1px solid rgba(37,211,102,0.2);
+  border-radius: 0;
+  font-size: 13px;
+  color: var(--accent-green);
+  line-height: 1.5;
 }
