@@ -21,7 +21,7 @@
   --alert-red: #FF3D00;
   --alert-red-dim: rgba(255,61,0,0.12);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Orbitron', monospace;
+  --font-mono: 'Inter', system-ui, sans-serif;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -53,7 +53,7 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 0; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ===== LOGIN PAGE ===== */
@@ -86,7 +86,7 @@ body {
   z-index: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  border-radius: 0;
   padding: 48px 40px;
   width: 100%;
   max-width: 420px;
@@ -101,13 +101,13 @@ body {
 .login-logo-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   background: linear-gradient(135deg, var(--accent-blue), #128C7E);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 400;
   font-size: 14px;
   color: var(--bg-primary);
   letter-spacing: 1px;
@@ -115,7 +115,7 @@ body {
 .login-logo h1 {
   font-family: var(--font-mono);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-primary);
   letter-spacing: 2px;
 }
@@ -129,7 +129,7 @@ body {
 .login-label {
   display: block;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -144,7 +144,7 @@ body {
   padding: 14px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 15px;
@@ -169,10 +169,10 @@ body {
   text-align: center;
   font-family: var(--font-mono);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 400;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   color: var(--accent-blue);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -187,11 +187,11 @@ body {
   padding: 14px;
   background: linear-gradient(135deg, var(--accent-blue), #1FA855);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   color: var(--bg-primary);
   font-family: var(--font-sans);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: opacity var(--transition-fast), transform var(--transition-fast);
   letter-spacing: 0.5px;
@@ -205,7 +205,7 @@ body {
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   padding: 10px 16px;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   font-family: var(--font-sans);
   font-size: 13px;
   cursor: pointer;
@@ -216,7 +216,7 @@ body {
 .login-error {
   background: var(--alert-red-dim);
   border: 1px solid rgba(255,61,0,0.3);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   padding: 10px 14px;
   margin-bottom: 16px;
   font-size: 13px;
@@ -260,13 +260,13 @@ body {
 .sidebar-logo {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: linear-gradient(135deg, var(--accent-blue), #128C7E);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-weight: 800;
+  font-weight: 400;
   font-size: 11px;
   color: var(--bg-primary);
   margin-bottom: 32px;
@@ -283,7 +283,7 @@ body {
   height: 44px;
   border: none;
   background: transparent;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -306,7 +306,7 @@ body {
   width: 3px;
   height: 24px;
   background: var(--accent-blue);
-  border-radius: 0 2px 2px 0;
+  border-radius: 0;
 }
 .sidebar-btn svg { width: 22px; height: 22px; }
 .sidebar-bottom {
@@ -338,7 +338,7 @@ body {
 .header-title {
   font-family: var(--font-mono);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 1.5px;
   color: var(--text-primary);
 }
@@ -352,7 +352,7 @@ body {
 .status-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--alert-red);
 }
 .status-dot.connected {
@@ -386,7 +386,7 @@ body {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   padding: 20px;
   transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
 }
@@ -402,23 +402,23 @@ body {
 }
 .card-title {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 .card-badge {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   padding: 3px 8px;
-  border-radius: 20px;
+  border-radius: 0;
   background: var(--accent-blue-dim);
   color: var(--accent-blue);
 }
 .card-value {
   font-family: var(--font-mono);
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
@@ -455,7 +455,7 @@ body {
 .gauge-value {
   font-family: var(--font-mono);
   font-size: 36px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-blue);
   line-height: 1;
 }
@@ -468,13 +468,13 @@ body {
 .gauge-bar-track {
   height: 4px;
   background: var(--bg-input);
-  border-radius: 2px;
+  border-radius: 0;
   margin-top: 12px;
   overflow: hidden;
 }
 .gauge-bar-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 0;
   background: linear-gradient(90deg, var(--accent-blue), #128C7E);
   transition: width var(--transition-smooth);
 }
@@ -486,7 +486,7 @@ body {
 .section-title {
   font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -498,7 +498,7 @@ body {
 .section-title .dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--accent-blue);
 }
 
@@ -509,7 +509,7 @@ body {
   padding: 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   margin-bottom: 10px;
   transition: border-color var(--transition-fast);
 }
@@ -521,7 +521,7 @@ body {
   width: 36px;
   height: 36px;
   min-width: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -533,7 +533,7 @@ body {
 .alert-text { flex: 1; }
 .alert-text h4 {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
@@ -549,9 +549,9 @@ body {
 }
 .alert-action {
   padding: 6px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   border: 1px solid var(--warning-amber);
   background: var(--warning-amber-dim);
@@ -570,7 +570,7 @@ body {
 .relay-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   padding: 24px 20px;
   text-align: center;
   transition: all var(--transition-smooth);
@@ -589,7 +589,7 @@ body {
 }
 .relay-name {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 8px;
   min-height: 20px;
@@ -597,7 +597,7 @@ body {
 .relay-status {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   margin-bottom: 20px;
   letter-spacing: 1px;
 }
@@ -612,7 +612,7 @@ body {
 .toggle {
   width: 52px;
   height: 28px;
-  border-radius: 14px;
+  border-radius: 0;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   cursor: pointer;
@@ -626,7 +626,7 @@ body {
 .toggle-knob {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--text-muted);
   position: absolute;
   top: 2px;
@@ -648,7 +648,7 @@ body {
 .mgmt-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   padding: 24px;
 }
 .mgmt-card-header {
@@ -660,19 +660,19 @@ body {
 .mgmt-channel-badge {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: var(--accent-blue-dim);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-blue);
 }
 .mgmt-card-title {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 .mgmt-input-group {
@@ -681,7 +681,7 @@ body {
 .mgmt-input-group label {
   display: block;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -692,7 +692,7 @@ body {
   padding: 10px 14px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -707,9 +707,9 @@ body {
   padding: 10px 20px;
   background: linear-gradient(135deg, var(--accent-blue), #1FA855);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   color: var(--bg-primary);
-  font-weight: 600;
+  font-weight: 400;
   font-size: 13px;
   cursor: pointer;
   transition: opacity var(--transition-fast);
@@ -731,7 +731,7 @@ body {
 .apexcharts-tooltip {
   background: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: var(--radius-sm) !important;
+  border-radius: 0;
   color: var(--text-primary) !important;
 }
 .apexcharts-tooltip-title {
@@ -772,7 +772,7 @@ body {
   z-index: 1;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  border-radius: 0;
   padding: 40px 36px;
   width: 100%;
   max-width: 520px;
@@ -802,7 +802,7 @@ body {
 .setup-step-dot {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--bg-input);
   border: 2px solid var(--border-color);
   display: flex;
@@ -824,7 +824,7 @@ body {
 .setup-heading {
   font-family: var(--font-mono);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 6px;
   letter-spacing: 1px;
@@ -845,12 +845,12 @@ body {
   width: 36px;
   height: 36px;
   min-width: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: var(--accent-blue-dim);
   color: var(--accent-blue);
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -876,7 +876,7 @@ body {
   text-align: center;
   font-family: var(--font-mono);
   font-size: 48px;
-  font-weight: 700;
+  font-weight: 400;
   background: transparent;
   border: none;
   border-bottom: 2px solid var(--accent-blue);
@@ -913,7 +913,7 @@ body {
 .runway-number {
   font-family: var(--font-mono);
   font-size: 48px;
-  font-weight: 800;
+  font-weight: 400;
   line-height: 1;
   color: var(--accent-blue);
   display: block;
@@ -945,7 +945,7 @@ body {
 .runway-stat-val {
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
 }
 .runway-stat-label {
@@ -955,12 +955,12 @@ body {
 .runway-bar-track {
   height: 6px;
   background: var(--bg-input);
-  border-radius: 3px;
+  border-radius: 0;
   overflow: hidden;
 }
 .runway-bar-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 0;
   background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
   transition: width var(--transition-smooth);
 }
@@ -985,25 +985,25 @@ body {
 }
 .calibration-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 .calibration-pct {
   font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--accent-blue);
 }
 .calibration-bar-track {
   height: 5px;
   background: var(--bg-input);
-  border-radius: 3px;
+  border-radius: 0;
   overflow: hidden;
   margin-bottom: 8px;
 }
 .calibration-bar-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 0;
   background: linear-gradient(90deg, var(--accent-blue), #128C7E);
   transition: width var(--transition-smooth);
 }
@@ -1020,7 +1020,7 @@ body {
 .hw-health { margin-bottom: 16px; }
 .hw-health-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
@@ -1031,10 +1031,10 @@ body {
 .hw-dot {
   width: 36px;
   height: 28px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1066,11 +1066,11 @@ body {
   padding: 10px 16px;
   background: var(--accent-blue-dim);
   border: 1px solid rgba(37,211,102,0.2);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   color: var(--accent-blue);
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1086,10 +1086,10 @@ body {
   background: var(--alert-red);
   color: #fff;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 400;
   min-width: 18px;
   height: 18px;
-  border-radius: 9px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1130,7 +1130,7 @@ body {
 .advice-title-row h3 {
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 1px;
   color: var(--text-primary);
 }
@@ -1138,7 +1138,7 @@ body {
   width: 32px;
   height: 32px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   background: transparent;
   color: var(--text-muted);
   font-size: 14px;
@@ -1162,7 +1162,7 @@ body {
 .advice-empty-icon {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--accent-green-dim);
   color: var(--accent-green);
   font-size: 24px;
@@ -1180,7 +1180,7 @@ body {
 .advice-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   padding: 18px;
   margin-bottom: 14px;
   transition: border-color var(--transition-fast);
@@ -1193,10 +1193,10 @@ body {
 .advice-severity {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 1.5px;
   padding: 3px 8px;
-  border-radius: 3px;
+  border-radius: 0;
 }
 .advice-severity.warning {
   background: var(--warning-amber-dim);
@@ -1208,7 +1208,7 @@ body {
 }
 .advice-card-title {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -1237,7 +1237,7 @@ body {
 .advice-relay-state {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 1px;
 }
 .advice-relay-state.on { color: var(--accent-green); }
@@ -1247,11 +1247,11 @@ body {
   padding: 10px;
   background: linear-gradient(135deg, var(--warning-amber), #FF8F00);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   color: var(--bg-primary);
   font-family: var(--font-sans);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1274,7 +1274,7 @@ body {
 .hw-modal {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  border-radius: 0;
   padding: 40px 36px;
   width: 100%;
   max-width: 440px;
@@ -1285,7 +1285,7 @@ body {
 .hw-modal-title {
   font-family: var(--font-mono);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--warning-amber);
   margin-bottom: 8px;
   letter-spacing: 1px;
@@ -1297,7 +1297,7 @@ body {
 }
 .hw-modal-sensor span {
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-blue);
 }
 .hw-modal-desc {
@@ -1309,13 +1309,13 @@ body {
 .hw-modal-contact {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
   padding: 16px;
   margin-bottom: 4px;
 }
 .hw-modal-contact-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -1327,7 +1327,7 @@ body {
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--accent-blue);
   text-decoration: none;
   transition: opacity var(--transition-fast);
@@ -1342,7 +1342,7 @@ body {
   padding: 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 0;
 }
 .runway-idle-icon {
   color: var(--text-muted);
@@ -1356,7 +1356,7 @@ body {
 }
 .runway-idle-text strong {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text-secondary);
 }
 .runway-idle-text span {
@@ -1376,13 +1376,13 @@ body {
   padding: 8px 16px;
   background: var(--alert-red-dim);
   border: 1px solid rgba(255,61,0,0.3);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--alert-red);
   margin-bottom: 16px;
 }
 .hw-modal-alert-bar span {
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 400;
 }
