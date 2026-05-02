@@ -83,7 +83,7 @@ export default function Management({ profiles, onSave, onResetSetup }) {
                 Save Profile
               </button>
               <span className={`mgmt-saved ${savedIndex === i ? 'visible' : ''}`}>
-                ✓ Saved
+                Saved
               </span>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function Management({ profiles, onSave, onResetSetup }) {
             Re-run the first-time setup to update ZESA token data, duration goals, or sensor names.
           </p>
           <button className="btn-secondary" onClick={onResetSetup} id="mgmt-reset-setup">
-            ↻ Re-run Setup Wizard
+            Re-run Setup Wizard
           </button>
         </div>
       )}

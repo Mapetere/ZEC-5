@@ -113,7 +113,7 @@ export default function LoginPage({ onLogin }) {
               />
             </div>
             <button className="btn-primary" type="submit" disabled={loading} id="btn-send-otp">
-              {loading ? 'Sending Code…' : 'Send Verification Code'}
+              {loading ? 'Sending Code...' : 'Send Verification Code'}
             </button>
           </form>
         ) : (
@@ -143,14 +143,14 @@ export default function LoginPage({ onLogin }) {
               ))}
             </div>
             <button className="btn-primary" type="submit" disabled={loading} id="btn-verify-otp">
-              {loading ? 'Verifying…' : 'Verify & Access'}
+              {loading ? 'Verifying...' : 'Verify & Access'}
             </button>
             <button
               type="button"
               className="login-back"
               onClick={() => { setStep('email'); setOtp(['', '', '', '', '', '']); setError(''); }}
             >
-              ← Back to email
+              Back to email
             </button>
             <p style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'var(--text-muted)' }}>
               Check browser console for demo OTP

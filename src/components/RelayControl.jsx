@@ -19,7 +19,7 @@ export default function RelayControl({ relays, onToggle }) {
             <div className="relay-number">Relay {String(i + 1).padStart(2, '0')}</div>
             <div className="relay-name">{relayNames[i]}</div>
             <div className={`relay-status ${state ? 'on' : 'off'}`}>
-              {state ? '● ACTIVE' : '○ IDLE'}
+              {state ? 'ACTIVE' : 'IDLE'}
             </div>
             <div className="toggle-wrap">
               <button
