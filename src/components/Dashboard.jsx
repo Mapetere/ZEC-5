@@ -4,16 +4,17 @@ import Chart from 'react-apexcharts';
 /**
  * Dashboard — Final Build
  * - 0-Day fix: defaults to Day Goal until 1 hour of data
- * - Data smoothing via moving average (handled in mockData)
+ * - Fast-forward button to inject 7-day history
+ * - Daily averages display
+ * - Vacancy detection (near-zero = "Achievable")
  * - 2-Phase recommendation logic
- * - Relay stealth: no manual toggles on dashboard
- * - Hardware integrity with 24h zero detection
+ * - Relay stealth
  */
 export default function Dashboard({
-  sensors, history, alerts, profiles, onShedLoad,
+  sensors, history, alerts, profiles,
   tokenData, durationGoal, calibrationStart,
-  onOpenAdvice, onHardwareFault, onOpenEmergency,
-  tickCount, dataCollectionMinutes
+  onOpenAdvice, onHardwareFault, onOpenEmergency, onFastForward,
+  tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -32,8 +33,6 @@ export default function Dashboard({
   const runway = useMemo(() => {
     if (!tokenData || !tokenData.kwh) return null;
     const goal = durationGoal || 21;
-
-    // 0-Day Fix: until 1 hour of data, default to goal
     const hasStableData = (dataCollectionMinutes || 0) >= 60;
 
     if (!hasStableData) {
@@ -52,7 +51,6 @@ export default function Dashboard({
     const purchaseDate = new Date(tokenData.date);
     const now = new Date();
     const daysSincePurchase = Math.max(1, (now - purchaseDate) / (1000 * 60 * 60 * 24));
-
     const totalAmps = (sensors || []).reduce((s, v) => s + (v || 0), 0);
     const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
     const dailyUsageKwh = avgPowerKw * 8;
@@ -66,12 +64,12 @@ export default function Dashboard({
       kwhRemaining: kwhRemaining.toFixed(1),
       dailyUsage: dailyUsageKwh.toFixed(1),
       goal,
-      onTrack,
+      onTrack: vacant ? true : onTrack,
       isCalibrating: false,
       pct: Math.min(100, (daysRemaining / goal) * 100),
-      isEmergency,
+      isEmergency: vacant ? false : isEmergency,
     };
-  }, [tokenData, sensors, durationGoal, dataCollectionMinutes]);
+  }, [tokenData, sensors, durationGoal, dataCollectionMinutes, vacant]);
 
   // --- Sensor Cards ---
   const sensorCards = useMemo(() => {
@@ -85,7 +83,7 @@ export default function Dashboard({
     });
   }, [sensors, profiles]);
 
-  // --- Hardware Fault Detection (null sensors) ---
+  // --- Hardware Fault Detection ---
   const faultSensors = sensorCards.filter(s => s.isNull);
   if (faultSensors.length > 0 && onHardwareFault) {
     const first = faultSensors[0];
@@ -94,35 +92,18 @@ export default function Dashboard({
 
   // --- Chart Config ---
   const chartOptions = useMemo(() => ({
-    chart: {
-      type: 'area',
-      toolbar: { show: false },
-      background: 'transparent',
-      animations: { enabled: true, easing: 'easeinout', speed: 600 },
-    },
-    grid: {
-      borderColor: '#233138',
-      strokeDashArray: 4,
-      padding: { top: 0, right: 4, bottom: 0, left: 4 },
-    },
+    chart: { type: 'area', toolbar: { show: false }, background: 'transparent', animations: { enabled: true, easing: 'easeinout', speed: 600 } },
+    grid: { borderColor: '#233138', strokeDashArray: 4, padding: { top: 0, right: 4, bottom: 0, left: 4 } },
     xaxis: { labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false } },
-    yaxis: {
-      labels: {
-        style: { colors: '#5B6F78', fontSize: '11px', fontFamily: 'Inter' },
-        formatter: (v) => v.toFixed(1),
-      },
-      min: 0,
-    },
+    yaxis: { labels: { style: { colors: '#5B6F78', fontSize: '11px', fontFamily: 'Inter' }, formatter: (v) => v.toFixed(1) }, min: 0 },
     stroke: { curve: 'smooth', width: 2 },
-    fill: {
-      type: 'gradient',
-      gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0.02, stops: [0, 100] },
-    },
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0.02, stops: [0, 100] } },
     tooltip: { theme: 'dark', y: { formatter: (v) => `${v.toFixed(2)} A` } },
-    colors: ['#25D366'],
-    dataLabels: { enabled: false },
-    legend: { show: false },
+    colors: ['#25D366'], dataLabels: { enabled: false }, legend: { show: false },
   }), []);
+
+  // --- Recent daily averages for display ---
+  const recentDays = (dailyAverages || []).slice(-7);
 
   return (
     <div className="fade-in">
@@ -133,8 +114,8 @@ export default function Dashboard({
           <div className="card-header">
             <span className="card-title">Energy Runway</span>
             {runway && (
-              <span className={`card-badge ${runway.isCalibrating ? 'badge-calibrating' : runway.onTrack ? '' : 'badge-warning'}`}>
-                {runway.isCalibrating ? 'Calibrating' : runway.onTrack ? 'On Track' : 'Off Track'}
+              <span className={`card-badge ${vacant ? 'badge-vacant' : runway.isCalibrating ? 'badge-calibrating' : runway.onTrack ? '' : 'badge-warning'}`}>
+                {vacant ? 'Vacant | Achievable' : runway.isCalibrating ? 'Calibrating' : runway.onTrack ? 'On Track' : 'Off Track'}
               </span>
             )}
           </div>
@@ -167,17 +148,12 @@ export default function Dashboard({
                 </p>
               )}
               <div className="runway-bar-track">
-                <div
-                  className={`runway-bar-fill ${runway.pct < 30 ? 'danger' : runway.pct < 60 ? 'warning' : ''}`}
-                  style={{ width: `${runway.pct}%` }}
-                />
+                <div className={`runway-bar-fill ${runway.pct < 30 ? 'danger' : runway.pct < 60 ? 'warning' : ''}`} style={{ width: `${runway.pct}%` }} />
               </div>
-              {/* Emergency Mode trigger */}
               {runway.isEmergency && (
                 <button className="emergency-trigger-btn" onClick={onOpenEmergency} id="open-emergency">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                    <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                   Enter Emergency Mode
                 </button>
@@ -202,16 +178,27 @@ export default function Dashboard({
               <span className="calibration-pct">{Math.round(calibration.pct)}%</span>
             </div>
             <div className="calibration-bar-track">
-              <div
-                className={`calibration-bar-fill ${calibration.complete ? 'complete' : ''}`}
-                style={{ width: `${calibration.pct}%` }}
-              />
+              <div className={`calibration-bar-fill ${calibration.complete ? 'complete' : ''}`} style={{ width: `${calibration.pct}%` }} />
             </div>
-            <p className="calibration-hint">
-              {calibration.complete
-                ? 'Behavioral baselines established. Intelligent monitoring active.'
-                : 'Collecting household signatures. Recommendations unlock after Day 7.'}
-            </p>
+            {!calibration.complete && (
+              <div className="calibration-actions">
+                <p className="calibration-hint">Collecting signatures. Recommendations unlock after Day 7.</p>
+                <button className="fast-forward-btn" onClick={onFastForward} id="fast-forward">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" y1="5" x2="19" y2="19" />
+                  </svg>
+                  Inject 7-Day History
+                </button>
+              </div>
+            )}
+            {calibration.complete && (
+              <p className="calibration-hint">Behavioral baselines established. Intelligent monitoring active.</p>
+            )}
+          </div>
+          {/* Notification Threshold */}
+          <div className="threshold-display">
+            <span className="threshold-label">Notification Trigger</span>
+            <span className="threshold-value">{notifyThreshold} kWh</span>
           </div>
           {/* Hardware Integrity */}
           <div className="hw-health">
@@ -224,7 +211,7 @@ export default function Dashboard({
               ))}
             </div>
           </div>
-          {/* Smart Advice — locked during Phase 1 */}
+          {/* Smart Advice */}
           {calibration.complete ? (
             <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -246,6 +233,38 @@ export default function Dashboard({
         </div>
       </div>
 
+      {/* -- Daily Averages (if history exists) -- */}
+      {recentDays.length > 0 && (
+        <>
+          <div className="section-title"><span className="dot" /> Daily Averages Database</div>
+          <div className="card full-width daily-avg-table" style={{ marginBottom: 28 }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  {(profiles || []).slice(0, 5).map((p, i) => <th key={i}>{p.name}</th>)}
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentDays.map(day => (
+                  <tr key={day.date}>
+                    <td>{day.date}</td>
+                    {day.sensors.map((v, i) => <td key={i}>{v.toFixed(2)}A</td>)}
+                    <td>{day.sensors.reduce((a, b) => a + b, 0).toFixed(2)}A</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {vacant && (
+              <div className="vacant-notice">
+                Near-zero current detected. Household appears vacant. Duration goal validated as Achievable.
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {/* -- Sensor Feeds -- */}
       <div className="section-title"><span className="dot" /> Live Sensor Feeds</div>
       <div className="dashboard-grid three-col" style={{ marginBottom: 28 }}>
@@ -253,9 +272,7 @@ export default function Dashboard({
           <div key={s.index} className={`card gauge-card ${s.isNull ? 'fault-card' : ''}`}>
             <div className="card-header">
               <span className="card-title">{s.name}</span>
-              <span className={`card-badge ${s.isNull ? 'badge-fault' : ''}`}>
-                {s.isNull ? 'FAULT' : `CH ${s.index + 1}`}
-              </span>
+              <span className={`card-badge ${s.isNull ? 'badge-fault' : ''}`}>{s.isNull ? 'FAULT' : `CH ${s.index + 1}`}</span>
             </div>
             <div className="gauge-value">
               {s.isNull ? '--' : s.val.toFixed(2)}
@@ -277,19 +294,13 @@ export default function Dashboard({
           options={{
             ...chartOptions,
             colors: ['#25D366', '#128C7E', '#FFB300', '#FF6B6B', '#8696A0'],
-            legend: {
-              show: true, position: 'top', horizontalAlign: 'right',
-              labels: { colors: '#8696A0' }, fontFamily: 'Inter', fontSize: '11px',
-            },
+            legend: { show: true, position: 'top', horizontalAlign: 'right', labels: { colors: '#8696A0' }, fontFamily: 'Inter', fontSize: '11px' },
           }}
-          series={(profiles || []).slice(0, 5).map((p, i) => ({
-            name: p.name,
-            data: history?.[i] || [],
-          }))}
+          series={(profiles || []).slice(0, 5).map((p, i) => ({ name: p.name, data: history?.[i] || [] }))}
         />
       </div>
 
-      {/* -- Inference Notifications -- */}
+      {/* -- Inference -- */}
       <div className="section-title"><span className="dot" /> Inference Engine</div>
       <div className="alerts-section">
         {(alerts || []).map((a) => (
