@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import LoginPage from './components/LoginPage.jsx';
+import SetupWizard from './components/SetupWizard.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Header from './components/Header.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import RelayControl from './components/RelayControl.jsx';
 import Management from './components/Management.jsx';
+import SmartAdvice from './components/SmartAdvice.jsx';
+import HardwareModal from './components/HardwareModal.jsx';
 import { startMockStream, generateAlerts } from './services/mockData.js';
 
 const PAGE_TITLES = {
@@ -30,6 +33,17 @@ export default function App() {
     } catch { return null; }
   });
 
+  // Setup wizard state
+  const [setupComplete, setSetupComplete] = useState(() => {
+    return !!localStorage.getItem('zec5_setup');
+  });
+  const [setupData, setSetupData] = useState(() => {
+    try {
+      const stored = localStorage.getItem('zec5_setup');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+
   // App state
   const [page, setPage] = useState('dashboard');
   const [sensors, setSensors] = useState([0, 0, 0, 0, 0]);
@@ -37,24 +51,49 @@ export default function App() {
   const [relays, setRelays] = useState(Array(8).fill(false));
   const [alerts, setAlerts] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [showAdvice, setShowAdvice] = useState(false);
+  const [hwFault, setHwFault] = useState(null); // { index, name }
+
   const [profiles, setProfiles] = useState(() => {
     try {
       const stored = localStorage.getItem('zec5_profiles');
-      return stored ? JSON.parse(stored) : DEFAULT_PROFILES;
+      if (stored) return JSON.parse(stored);
+      // Merge from setup data if available
+      const setup = localStorage.getItem('zec5_setup');
+      if (setup) {
+        const sd = JSON.parse(setup);
+        return DEFAULT_PROFILES.map((p, i) => ({
+          ...p,
+          name: sd.sensorNames?.[i] || p.name,
+        }));
+      }
+      return DEFAULT_PROFILES;
     } catch { return DEFAULT_PROFILES; }
   });
 
   const mockRef = useRef(null);
 
+  // Handle setup completion
+  const handleSetupComplete = useCallback((data) => {
+    setSetupData(data);
+    setSetupComplete(true);
+    // Update profiles with sensor names from setup
+    const updated = DEFAULT_PROFILES.map((p, i) => ({
+      ...p,
+      name: data.sensorNames?.[i] || p.name,
+    }));
+    setProfiles(updated);
+    localStorage.setItem('zec5_profiles', JSON.stringify(updated));
+  }, []);
+
   // Start mock data stream
   useEffect(() => {
-    if (!user) return;
+    if (!user || !setupComplete) return;
 
     const mock = startMockStream((data) => {
       setSensors(data.sensors);
       setHistory(data.history);
       setRelays(prev => {
-        // Keep user toggles, only init from mock on first load
         if (prev.some(v => v)) return prev;
         return data.relays;
       });
@@ -68,7 +107,7 @@ export default function App() {
       mock.stop();
       setConnected(false);
     };
-  }, [user]);
+  }, [user, setupComplete]);
 
   const handleRelayToggle = useCallback((index, state) => {
     setRelays(prev => {
@@ -79,7 +118,6 @@ export default function App() {
     if (mockRef.current) {
       mockRef.current.toggleRelay(index, state);
     }
-    // In production: wsService.toggleRelay(index, state);
   }, []);
 
   const handleShedLoad = useCallback((relayIndex) => {
@@ -88,10 +126,21 @@ export default function App() {
     }
   }, [handleRelayToggle]);
 
+  const handleAcceptAdvice = useCallback((relayIndex) => {
+    handleShedLoad(relayIndex);
+    // Could close advice panel after action
+  }, [handleShedLoad]);
+
   const handleProfileSave = useCallback((newProfiles) => {
     setProfiles(newProfiles);
     localStorage.setItem('zec5_profiles', JSON.stringify(newProfiles));
   }, []);
+
+  const handleHardwareFault = useCallback((index, name) => {
+    if (!hwFault) {
+      setHwFault({ index, name });
+    }
+  }, [hwFault]);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('zec5_auth');
@@ -99,14 +148,29 @@ export default function App() {
     if (mockRef.current) mockRef.current.stop();
   }, []);
 
+  const handleResetSetup = useCallback(() => {
+    localStorage.removeItem('zec5_setup');
+    setSetupComplete(false);
+    setSetupData(null);
+  }, []);
+
   // Not authenticated
   if (!user) {
     return <LoginPage onLogin={setUser} />;
   }
 
+  // First-run setup
+  if (!setupComplete) {
+    return <SetupWizard onComplete={handleSetupComplete} />;
+  }
+
   return (
     <div className="app-layout">
-      <Sidebar activePage={page} onNavigate={setPage} onLogout={handleLogout} />
+      <Sidebar
+        activePage={page}
+        onNavigate={setPage}
+        onLogout={handleLogout}
+      />
       <div className="main-content">
         <Header title={PAGE_TITLES[page]} connected={connected} />
         <div className="page-container">
@@ -117,22 +181,43 @@ export default function App() {
               alerts={alerts}
               profiles={profiles}
               onShedLoad={handleShedLoad}
+              tokenData={setupData?.tokenData}
+              durationGoal={setupData?.durationGoal}
+              calibrationStart={setupData?.calibrationStart}
+              onOpenAdvice={() => setShowAdvice(true)}
+              onHardwareFault={handleHardwareFault}
             />
           )}
           {page === 'relays' && (
-            <RelayControl
-              relays={relays}
-              onToggle={handleRelayToggle}
-            />
+            <RelayControl relays={relays} onToggle={handleRelayToggle} />
           )}
           {page === 'management' && (
             <Management
               profiles={profiles}
               onSave={handleProfileSave}
+              onResetSetup={handleResetSetup}
             />
           )}
         </div>
       </div>
+
+      {/* Smart Advice Sidebar */}
+      <SmartAdvice
+        alerts={alerts}
+        relays={relays}
+        onAcceptAdvice={handleAcceptAdvice}
+        visible={showAdvice}
+        onClose={() => setShowAdvice(false)}
+      />
+
+      {/* Hardware Fault Modal */}
+      {hwFault && (
+        <HardwareModal
+          sensorName={hwFault.name}
+          sensorIndex={hwFault.index}
+          onClose={() => setHwFault(null)}
+        />
+      )}
     </div>
   );
 }

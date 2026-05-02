@@ -12,7 +12,7 @@ const DEFAULTS = [
   { name: 'Lighting', type: 'Variable', maxLoad: '1.2' },
 ];
 
-export default function Management({ profiles, onSave }) {
+export default function Management({ profiles, onSave, onResetSetup }) {
   const [formData, setFormData] = useState(profiles || DEFAULTS);
   const [savedIndex, setSavedIndex] = useState(-1);
 
@@ -89,6 +89,19 @@ export default function Management({ profiles, onSave }) {
           </div>
         ))}
       </div>
+
+      {/* Reset Setup */}
+      {onResetSetup && (
+        <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border-color)' }}>
+          <div className="section-title"><span className="dot" /> System Configuration</div>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            Re-run the first-time setup to update ZESA token data, duration goals, or sensor names.
+          </p>
+          <button className="btn-secondary" onClick={onResetSetup} id="mgmt-reset-setup">
+            ↻ Re-run Setup Wizard
+          </button>
+        </div>
+      )}
     </div>
   );
 }
