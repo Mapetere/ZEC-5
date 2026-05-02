@@ -1,0 +1,66 @@
+/**
+ * SmartAdvice — Sidebar panel with actionable recommendations integrated with relay control.
+ * "Accept Advice" triggers a relay cut in one click.
+ */
+export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, onClose }) {
+  if (!visible) return null;
+
+  return (
+    <div className="advice-overlay" onClick={onClose}>
+      <aside className="advice-panel slide-in" onClick={e => e.stopPropagation()}>
+        <div className="advice-header">
+          <div className="advice-title-row">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <h3>Smart Advice</h3>
+          </div>
+          <button className="advice-close" onClick={onClose} id="advice-close">✕</button>
+        </div>
+
+        <div className="advice-list">
+          {(alerts || []).filter(a => a.type !== 'info').length === 0 && (
+            <div className="advice-empty">
+              <div className="advice-empty-icon">✓</div>
+              <p>All systems operating within parameters. No action required.</p>
+            </div>
+          )}
+
+          {(alerts || []).filter(a => a.type !== 'info').map((alert) => (
+            <div key={alert.id} className={`advice-card ${alert.type}`}>
+              <div className="advice-card-header">
+                <span className={`advice-severity ${alert.type}`}>
+                  {alert.type === 'danger' ? 'CRITICAL' : 'WARNING'}
+                </span>
+              </div>
+              <h4 className="advice-card-title">{alert.title}</h4>
+              <p className="advice-card-msg">{alert.message}</p>
+
+              {alert.actionable && alert.relayIndex != null && (
+                <div className="advice-card-action">
+                  <div className="advice-relay-status">
+                    <span className="advice-relay-label">Relay {alert.relayIndex + 1}</span>
+                    <span className={`advice-relay-state ${relays?.[alert.relayIndex] ? 'on' : 'off'}`}>
+                      {relays?.[alert.relayIndex] ? 'ACTIVE' : 'IDLE'}
+                    </span>
+                  </div>
+                  <button
+                    className="advice-accept-btn"
+                    onClick={() => onAcceptAdvice(alert.relayIndex)}
+                    id={`advice-accept-${alert.relayIndex}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    Accept &amp; Shed Load
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </aside>
+    </div>
+  );
+}
