@@ -8,7 +8,10 @@ import Management from './components/Management.jsx';
 import SmartAdvice from './components/SmartAdvice.jsx';
 import HardwareModal from './components/HardwareModal.jsx';
 import EmergencyMode from './components/EmergencyMode.jsx';
-import { startMockStream, generateAlerts } from './services/mockData.js';
+import {
+  startMockStream, generateAlerts,
+  storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
+} from './services/mockData.js';
 
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
@@ -26,21 +29,15 @@ const DEFAULT_PROFILES = [
 const MAINS_VOLTAGE = 230;
 
 export default function App() {
-  // Auth
   const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('zec5_auth');
-      return stored ? JSON.parse(stored).email : null;
-    } catch { return null; }
+    try { return JSON.parse(localStorage.getItem('zec5_auth'))?.email || null; } catch { return null; }
   });
 
-  // Setup
   const [setupComplete, setSetupComplete] = useState(() => !!localStorage.getItem('zec5_setup'));
   const [setupData, setSetupData] = useState(() => {
     try { return JSON.parse(localStorage.getItem('zec5_setup')); } catch { return null; }
   });
 
-  // App state
   const [page, setPage] = useState('dashboard');
   const [sensors, setSensors] = useState([0, 0, 0, 0, 0]);
   const [history, setHistory] = useState([[], [], [], [], []]);
@@ -52,6 +49,8 @@ export default function App() {
   const [hwFault, setHwFault] = useState(null);
   const [tickCount, setTickCount] = useState(0);
   const [dataStartTime] = useState(() => Date.now());
+  const [dailyAverages, setDailyAverages] = useState(() => getDailyAverages());
+  const [vacant, setVacant] = useState(false);
 
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -67,9 +66,12 @@ export default function App() {
   });
 
   const mockRef = useRef(null);
+  const dailyStoreCounter = useRef(0);
 
-  // Data collection minutes (for 0-Day fix)
   const dataCollectionMinutes = Math.floor((Date.now() - dataStartTime) / (1000 * 60));
+
+  // User-configurable notification threshold (kWh)
+  const notifyThreshold = setupData?.notifyThreshold || 50;
 
   // Compute token state for Phase 2 logic
   const tokenState = (() => {
@@ -85,13 +87,12 @@ export default function App() {
     const kwhRemaining = Math.max(0, td.kwh - (dailyUsageKwh * daysSincePurchase));
     const daysRemaining = dailyUsageKwh > 0 ? kwhRemaining / dailyUsageKwh : goal;
 
-    // Phase check
     const calStart = setupData.calibrationStart ? new Date(setupData.calibrationStart) : now;
     const calDays = (now - calStart) / (1000 * 60 * 60 * 24);
     const isPhase2 = calDays >= 7;
 
-    // Condition A: below 50% of original tokens
-    const belowThreshold = kwhRemaining < (td.kwh * 0.5);
+    // Condition A: below user-configured threshold (kWh)
+    const belowThreshold = kwhRemaining < notifyThreshold;
 
     // Condition B: projected depletion before target date
     const targetEndDate = new Date(purchaseDate.getTime() + goal * 24 * 60 * 60 * 1000);
@@ -100,13 +101,16 @@ export default function App() {
       : new Date(now.getTime() + goal * 24 * 60 * 60 * 1000);
     const atRisk = projectedEndDate < targetEndDate;
 
+    // Vacancy override: if house is vacant, goal is always achievable
+    const isVacant = vacant;
     const isEmergency = kwhRemaining <= 5;
 
     return {
       isPhase2,
-      belowThreshold,
-      atRisk,
-      isEmergency,
+      belowThreshold: isVacant ? false : belowThreshold,
+      atRisk: isVacant ? false : atRisk,
+      isEmergency: isVacant ? false : isEmergency,
+      isVacant,
       kwhRemaining: kwhRemaining.toFixed(1),
       daysRemaining: Math.round(daysRemaining),
       dailyUsage: dailyUsageKwh,
@@ -121,13 +125,22 @@ export default function App() {
     localStorage.setItem('zec5_profiles', JSON.stringify(updated));
   }, []);
 
-  // Mock data stream
+  // Mock data stream + daily average storage
   useEffect(() => {
     if (!user || !setupComplete) return;
     const mock = startMockStream((data) => {
       setSensors(data.sensors);
       setHistory(data.history);
       setTickCount(data.tickCount);
+
+      // Store daily average every ~40 ticks (~1 min at 1.5s interval)
+      dailyStoreCounter.current++;
+      if (dailyStoreCounter.current % 40 === 0) {
+        const updated = storeDailyAverage(data.sensors);
+        setDailyAverages(updated);
+        setVacant(isHouseVacant());
+      }
+
       setAlerts(generateAlerts(data.sensors, profiles, tokenState));
     }, 1500);
     mockRef.current = mock;
@@ -135,12 +148,31 @@ export default function App() {
     return () => { mock.stop(); setConnected(false); };
   }, [user, setupComplete]);
 
-  // Update alerts when tokenState changes
   useEffect(() => {
     if (sensors.some(v => v > 0)) {
       setAlerts(generateAlerts(sensors, profiles, tokenState));
     }
   }, [tokenState?.isPhase2, tokenState?.belowThreshold, tokenState?.atRisk]);
+
+  // Fast-forward: inject 7-day history
+  const handleFastForward = useCallback(() => {
+    const days = inject7DayHistory();
+    setDailyAverages(days);
+    // Reload setup data from localStorage (calibrationStart was updated)
+    try {
+      const refreshed = JSON.parse(localStorage.getItem('zec5_setup'));
+      setSetupData(refreshed);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Update notification threshold
+  const handleThresholdUpdate = useCallback((newThreshold) => {
+    if (setupData) {
+      const updated = { ...setupData, notifyThreshold: newThreshold };
+      setSetupData(updated);
+      localStorage.setItem('zec5_setup', JSON.stringify(updated));
+    }
+  }, [setupData]);
 
   const handleRelayToggle = useCallback((index, state) => {
     setRelays(prev => { const n = [...prev]; n[index] = state; return n; });
@@ -168,8 +200,10 @@ export default function App() {
 
   const handleResetSetup = useCallback(() => {
     localStorage.removeItem('zec5_setup');
+    localStorage.removeItem('zec5_daily_averages');
     setSetupComplete(false);
     setSetupData(null);
+    setDailyAverages([]);
   }, []);
 
   if (!user) return <LoginPage onLogin={setUser} />;
@@ -193,12 +227,22 @@ export default function App() {
               onOpenAdvice={() => setShowAdvice(true)}
               onOpenEmergency={() => setShowEmergency(true)}
               onHardwareFault={handleHardwareFault}
+              onFastForward={handleFastForward}
               tickCount={tickCount}
               dataCollectionMinutes={dataCollectionMinutes}
+              dailyAverages={dailyAverages}
+              vacant={vacant}
+              notifyThreshold={notifyThreshold}
             />
           )}
           {page === 'management' && (
-            <Management profiles={profiles} onSave={handleProfileSave} onResetSetup={handleResetSetup} />
+            <Management
+              profiles={profiles}
+              onSave={handleProfileSave}
+              onResetSetup={handleResetSetup}
+              notifyThreshold={notifyThreshold}
+              onThresholdUpdate={handleThresholdUpdate}
+            />
           )}
         </div>
       </div>
