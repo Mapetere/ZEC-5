@@ -1,0 +1,42 @@
+//This project is a written as a school research project
+//The code is liable to refactoring and further development
+//author : Engineer Nyasha Praise Mapetere
+//Date : 05 May 2026
+
+#include "EmonLib.h"                   // Include EmonLib library
+
+EnergyMonitor emon1;                   // Create an instance for Sensor 1
+
+// Define the ADC Pin connected to Tip (Pin 2) of the audio jack
+const int sensorPin1 = 34;             // Example: GPIO 34
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Configure the ESP32 ADC resolution (12-bit = 0 to 4095)
+  analogReadResolution(12);
+
+  // Initialize EmonLib:
+  // emon1.current(Pin, Calibration);
+  // Calibration value adjusts the math so the output matches your 30A/1V sensor
+  emon1.current(sensorPin1, 30.0);      
+}
+
+void loop() {
+  // Calculate Irms (Root Mean Square Current)
+  // 1480 is the number of samples taken per reading to capture the full 50Hz AC wave
+  double Irms = emon1.calcIrms(1480);  
+
+  // Optional: Filter out tiny noise when the lamp is off
+  if (Irms < 0.1) {
+    Irms = 0.0;
+  }
+
+  // Print the calculated current to the Serial Monitor
+  Serial.print("Current reading: ");
+  Serial.print(Irms);
+  Serial.println(" Amps");
+
+  // Add a small delay before the next reading
+  delay(1000);
+}
