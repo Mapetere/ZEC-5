@@ -130,11 +130,11 @@ export function processTick(sensors, profiles) {
   // Starts at 100% after sync, reaches 50% after ~2 days
   if (state.lastSyncDate) {
     const hoursSinceSync = (now - new Date(state.lastSyncDate).getTime()) / (1000 * 60 * 60);
-    state.confidencePct = Math.max(30, Math.round(100 - hoursSinceSync * 1.5));
+    state.confidencePct = Math.min(100, Math.max(30, Math.round(100 - hoursSinceSync * 1.5)));
   } else {
     // No sync ever — confidence based on time since purchase
     const hoursSincePurchase = (now - new Date(state.purchaseDate).getTime()) / (1000 * 60 * 60);
-    state.confidencePct = Math.max(30, Math.round(100 - hoursSincePurchase * 0.5));
+    state.confidencePct = Math.min(100, Math.max(30, Math.round(100 - hoursSincePurchase * 0.5)));
   }
 
   saveEngineState(state);

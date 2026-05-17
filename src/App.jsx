@@ -17,6 +17,7 @@ import {
   initEngine, processTick, getUnitsRemaining,
   syncWithMeter, resetEngine, getEngineState
 } from './services/energyEngine.js';
+import wsService from './services/websocket.js';
 
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
@@ -152,7 +153,7 @@ export default function App() {
     }
   }, []);
 
-  // Mock data stream + daily average storage + energy engine tick
+  // Mock data stream + daily average storage + energy engine tick + WebSocket integration
   useEffect(() => {
     if (!user || !setupComplete) return;
 
@@ -161,28 +162,96 @@ export default function App() {
       initEngine(setupData.tokenData.kwh, setupData.tokenData.date);
     }
 
-    const mock = startMockStream((data) => {
-      setSensors(data.sensors);
-      setHistory(data.history);
-      setTickCount(data.tickCount);
+    let mockStream = null;
+    let localTickCount = 0;
 
-      // Process energy engine tick — accumulate real-time consumption
-      const es = processTick(data.sensors, profiles);
+    // Subscribe to live ESP32 status updates
+    const unsubscribeStatus = wsService.onStatus((isConnected) => {
+      setConnected(isConnected);
+      if (isConnected) {
+        // Hardware connected! Stop local client simulation to prevent duplicate ticks
+        if (mockStream) {
+          mockStream.stop();
+          mockStream = null;
+        }
+        console.log('[ZEC-5] Active ESP32 connection established. Streaming live telemetry.');
+      } else if (!mockStream) {
+        // Hardware offline. Start client-side simulation failover
+        console.log('[ZEC-5] ESP32 disconnected. Initiating client-side simulation failover.');
+        startLocalSimulation();
+      }
+    });
+
+    // Subscribe to live sensor telemetry from the ESP32
+    const unsubscribeData = wsService.onData((data) => {
+      // Parse sensors: ESP32 sends raw floats, clamp index 0 to 4
+      const liveSensors = (data.sensors || [0, 0, 0, 0, 0]).map(v => parseFloat(v) || 0);
+      setSensors(liveSensors);
+      
+      // Update history arrays
+      setHistory(prev => {
+        return prev.map((arr, i) => {
+          const next = [...arr, liveSensors[i] || 0];
+          if (next.length > 50) next.shift();
+          return next;
+        });
+      });
+
+      localTickCount++;
+      setTickCount(localTickCount);
+
+      // Process live tick in the self-correcting calibration engine
+      const es = processTick(liveSensors, profiles);
       if (es) setEngineState(es);
 
-      // Store daily average every ~40 ticks (~1 min at 1.5s interval)
+      // Process daily averages
       dailyStoreCounter.current++;
       if (dailyStoreCounter.current % 40 === 0) {
-        const updated = storeDailyAverage(data.sensors);
+        const updated = storeDailyAverage(liveSensors);
         setDailyAverages(updated);
         setVacant(isHouseVacant());
       }
+    });
 
-      setAlerts(generateAlerts(data.sensors, profiles, tokenState));
-    }, 1500);
-    mockRef.current = mock;
-    setConnected(true);
-    return () => { mock.stop(); setConnected(false); };
+    // Subscribe to relay updates from the ESP32
+    const unsubscribeRelays = wsService.onRelayUpdate((liveRelays) => {
+      if (liveRelays) {
+        setRelays(liveRelays);
+      }
+    });
+
+    // Start client-side simulation failover
+    function startLocalSimulation() {
+      mockStream = startMockStream((data) => {
+        setSensors(data.sensors);
+        setHistory(data.history);
+        setTickCount(data.tickCount);
+
+        const es = processTick(data.sensors, profiles);
+        if (es) setEngineState(es);
+
+        dailyStoreCounter.current++;
+        if (dailyStoreCounter.current % 40 === 0) {
+          const updated = storeDailyAverage(data.sensors);
+          setDailyAverages(updated);
+          setVacant(isHouseVacant());
+        }
+
+        setAlerts(generateAlerts(data.sensors, profiles, tokenState));
+      }, 1500);
+      mockRef.current = mockStream;
+    }
+
+    // Connect to the ESP32 access point IP
+    wsService.connect();
+
+    return () => {
+      unsubscribeStatus();
+      unsubscribeData();
+      unsubscribeRelays();
+      wsService.disconnect();
+      if (mockStream) mockStream.stop();
+    };
   }, [user, setupComplete]);
 
   useEffect(() => {
@@ -213,6 +282,9 @@ export default function App() {
 
   const handleRelayToggle = useCallback((index, state) => {
     setRelays(prev => { const n = [...prev]; n[index] = state; return n; });
+    // Propagate over-the-air to the physical ESP32 via WebSocket
+    wsService.toggleRelay(index, state);
+    // Fallback sync in simulation mode
     if (mockRef.current) mockRef.current.toggleRelay(index, state);
   }, []);
 
