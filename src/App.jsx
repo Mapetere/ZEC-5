@@ -8,10 +8,15 @@ import Management from './components/Management.jsx';
 import SmartAdvice from './components/SmartAdvice.jsx';
 import HardwareModal from './components/HardwareModal.jsx';
 import EmergencyMode from './components/EmergencyMode.jsx';
+import MeterSync from './components/MeterSync.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
 } from './services/mockData.js';
+import {
+  initEngine, processTick, getUnitsRemaining,
+  syncWithMeter, resetEngine, getEngineState
+} from './services/energyEngine.js';
 
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
@@ -46,11 +51,13 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [showAdvice, setShowAdvice] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showMeterSync, setShowMeterSync] = useState(false);
   const [hwFault, setHwFault] = useState(null);
   const [tickCount, setTickCount] = useState(0);
   const [dataStartTime] = useState(() => Date.now());
   const [dailyAverages, setDailyAverages] = useState(() => getDailyAverages());
   const [vacant, setVacant] = useState(false);
+  const [engineState, setEngineState] = useState(() => getEngineState());
 
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -73,7 +80,7 @@ export default function App() {
   // User-configurable notification threshold (kWh)
   const notifyThreshold = setupData?.notifyThreshold || 50;
 
-  // Compute token state for Phase 2 logic
+  // Compute token state for Phase 2 logic (uses engine state when available)
   const tokenState = (() => {
     if (!setupData?.tokenData?.kwh) return null;
     const td = setupData.tokenData;
@@ -81,10 +88,23 @@ export default function App() {
     const purchaseDate = new Date(td.date);
     const now = new Date();
     const daysSincePurchase = Math.max(1, (now - purchaseDate) / (1000 * 60 * 60 * 24));
-    const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
-    const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
-    const dailyUsageKwh = avgPowerKw * 8;
-    const kwhRemaining = Math.max(0, td.kwh - (dailyUsageKwh * daysSincePurchase));
+
+    // Use engine's corrected remaining if available, otherwise fallback
+    let kwhRemaining;
+    let dailyUsageKwh;
+    if (engineState) {
+      kwhRemaining = Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh);
+      // Estimate daily from current real power draw
+      const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
+      const avgRealPowerKw = (totalAmps * MAINS_VOLTAGE * 0.80) / 1000; // 0.80 avg PF
+      dailyUsageKwh = avgRealPowerKw * 24 * 0.45;
+    } else {
+      const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
+      const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
+      dailyUsageKwh = avgPowerKw * 8;
+      kwhRemaining = Math.max(0, td.kwh - (dailyUsageKwh * daysSincePurchase));
+    }
+
     const daysRemaining = dailyUsageKwh > 0 ? kwhRemaining / dailyUsageKwh : goal;
 
     const calStart = setupData.calibrationStart ? new Date(setupData.calibrationStart) : now;
@@ -117,21 +137,38 @@ export default function App() {
     };
   })();
 
+  // Initialize energy engine when setup completes
   const handleSetupComplete = useCallback((data) => {
     setSetupData(data);
     setSetupComplete(true);
     const updated = DEFAULT_PROFILES.map((p, i) => ({ ...p, name: data.sensorNames?.[i] || p.name }));
     setProfiles(updated);
     localStorage.setItem('zec5_profiles', JSON.stringify(updated));
+
+    // Initialize the energy engine with token data
+    if (data.tokenData?.kwh && data.tokenData?.date) {
+      const es = initEngine(data.tokenData.kwh, data.tokenData.date);
+      setEngineState(es);
+    }
   }, []);
 
-  // Mock data stream + daily average storage
+  // Mock data stream + daily average storage + energy engine tick
   useEffect(() => {
     if (!user || !setupComplete) return;
+
+    // Ensure engine is initialized (in case of page refresh)
+    if (!getEngineState() && setupData?.tokenData?.kwh) {
+      initEngine(setupData.tokenData.kwh, setupData.tokenData.date);
+    }
+
     const mock = startMockStream((data) => {
       setSensors(data.sensors);
       setHistory(data.history);
       setTickCount(data.tickCount);
+
+      // Process energy engine tick — accumulate real-time consumption
+      const es = processTick(data.sensors, profiles);
+      if (es) setEngineState(es);
 
       // Store daily average every ~40 ticks (~1 min at 1.5s interval)
       dailyStoreCounter.current++;
@@ -192,6 +229,13 @@ export default function App() {
     if (!hwFault) setHwFault({ index, name });
   }, [hwFault]);
 
+  // Meter sync handler
+  const handleMeterSync = useCallback((meterReading) => {
+    const result = syncWithMeter(meterReading);
+    if (result) setEngineState(result);
+    return result;
+  }, []);
+
   const handleLogout = useCallback(() => {
     localStorage.removeItem('zec5_auth');
     setUser(null);
@@ -201,9 +245,11 @@ export default function App() {
   const handleResetSetup = useCallback(() => {
     localStorage.removeItem('zec5_setup');
     localStorage.removeItem('zec5_daily_averages');
+    resetEngine();
     setSetupComplete(false);
     setSetupData(null);
     setDailyAverages([]);
+    setEngineState(null);
   }, []);
 
   if (!user) return <LoginPage onLogin={setUser} />;
@@ -226,6 +272,7 @@ export default function App() {
               calibrationStart={setupData?.calibrationStart}
               onOpenAdvice={() => setShowAdvice(true)}
               onOpenEmergency={() => setShowEmergency(true)}
+              onOpenMeterSync={() => setShowMeterSync(true)}
               onHardwareFault={handleHardwareFault}
               onFastForward={handleFastForward}
               tickCount={tickCount}
@@ -233,6 +280,7 @@ export default function App() {
               dailyAverages={dailyAverages}
               vacant={vacant}
               notifyThreshold={notifyThreshold}
+              engineState={engineState}
             />
           )}
           {page === 'management' && (
@@ -253,6 +301,13 @@ export default function App() {
         onAcceptAdvice={handleAcceptAdvice}
         visible={showAdvice}
         onClose={() => setShowAdvice(false)}
+      />
+
+      <MeterSync
+        visible={showMeterSync}
+        onClose={() => setShowMeterSync(false)}
+        onSync={handleMeterSync}
+        engineState={engineState}
       />
 
       {showEmergency && (

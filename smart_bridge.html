@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Bridge | High-Signal IoT Dashboard</title>
+  <!-- Google Fonts: Outfit for sharp geometric numbers, Inter for crisp UI text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@200;300;400;600&display=swap" rel="stylesheet">
+  <!-- Chart.js for silky smooth real-time visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0A0A0C;
+      --bg-surface: #121216;
+      --border-color: #1F1F26;
+      --text-primary: #F4F4F6;
+      --text-secondary: #8E8E9F;
+      --accent-color: #00FF87; /* High-signal neon green */
+      --accent-color-dim: rgba(0, 255, 135, 0.15);
+      --danger-color: #FF3B30;
+      --danger-color-dim: rgba(255, 59, 48, 0.15);
+      --font-sans: 'Inter', sans-serif;
+      --font-display: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Minimal Grid Layout with plenty of negative space */
+    .dashboard-container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      flex: 1;
+    }
+
+    /* Minimalist Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 24px;
+    }
+
+    .brand-section h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .brand-section p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Live connection control block */
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 10px 20px;
+      border-radius: 0;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-color);
+      box-shadow: 0 0 12px var(--accent-color);
+      transition: all 0.3s ease;
+    }
+
+    .status-indicator.disconnected {
+      background-color: var(--text-secondary);
+      box-shadow: none;
+    }
+
+    .status-indicator.heavy-load {
+      background-color: var(--danger-color);
+      box-shadow: 0 0 12px var(--danger-color);
+    }
+
+    .status-label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    .btn-toggle {
+      background: transparent;
+      border: 1px solid var(--text-secondary);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-toggle:hover {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    /* Core Layout: Left widgets / Right chart */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* Widgets panel */
+    .widgets-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .card-label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Primary Metric display */
+    .primary-metric-val {
+      font-family: var(--font-display);
+      font-size: 72px;
+      font-weight: 200;
+      line-height: 1;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .primary-metric-val span.unit {
+      font-size: 24px;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    .metric-subtext {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .badge {
+      font-family: var(--font-display);
+      font-size: 10px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    .badge-normal {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      background: var(--accent-color-dim);
+    }
+
+    .badge-heavy {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+      background: var(--danger-color-dim);
+    }
+
+    /* Secondary status card */
+    .status-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .small-metric {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+    }
+
+    .small-metric-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .small-metric-val {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+
+    /* Chart Card */
+    .chart-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 40px;
+      height: 460px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Silent Activity/State Change Feed */
+    .log-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .log-header {
+      font-family: var(--font-display);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .log-item-details {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .log-timestamp {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .log-state-tag {
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border: 1px solid;
+    }
+
+    .log-state-tag.heavy {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+
+    .log-state-tag.normal {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .log-message {
+      color: var(--text-primary);
+    }
+
+    .log-amps {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Live IP input modal/dropdown for custom ESP32 address configuration */
+    .config-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      z-index: 10;
+      margin-top: 8px;
+      width: 280px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .config-dropdown.active {
+      display: block;
+    }
+
+    .config-input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .config-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .btn-apply {
+      width: 100%;
+      background: var(--accent-color);
+      border: none;
+      color: var(--bg-primary);
+      font-weight: 600;
+      padding: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* Custom Scrollbar for list */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .dashboard-container {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="brand-section">
+        <h1>Smart Bridge</h1>
+        <p>Ac Current Behavior Monitor — IoT Presentation Instrument</p>
+      </div>
+      <div style="position: relative;">
+        <div class="connection-status">
+          <div class="status-indicator" id="status-indicator"></div>
+          <span class="status-label" id="status-label">Simulating Stream</span>
+          <button class="btn-toggle" id="btn-config">Config</button>
+          <button class="btn-toggle" id="btn-mode">Go Live</button>
+        </div>
+        <div class="config-dropdown" id="config-dropdown">
+          <label class="login-label" style="font-size: 10px; text-transform: uppercase; color: var(--text-secondary); display: block; margin-bottom: 8px;">ESP32 Stream Address</label>
+          <input type="text" class="config-input" id="config-url" value="ws://192.168.4.1/ws" placeholder="ws://192.168.4.1/ws" />
+          <button class="btn-apply" id="btn-apply-config">Apply Configuration</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <div class="dashboard-grid">
+      
+      <!-- LEFT PANEL -->
+      <div class="widgets-panel">
+        
+        <!-- Live Amps Display -->
+        <div class="card">
+          <span class="card-label">Live Load Intensity</span>
+          <div class="primary-metric-val" id="live-amps">
+            0.00 <span class="unit">A</span>
+          </div>
+          <div class="metric-subtext">
+            <span id="load-state-label">Connecting</span>
+            <span class="badge badge-normal" id="load-state-badge">IDLE</span>
+          </div>
+        </div>
+
+        <!-- Telemetry Summary -->
+        <div class="card" style="padding: 24px;">
+          <span class="card-label" style="margin-bottom: 12px;">Diagnostics</span>
+          <div class="status-summary-grid">
+            <div class="small-metric">
+              <div class="small-metric-title">Peak Load</div>
+              <div class="small-metric-val" id="peak-load">0.00 A</div>
+            </div>
+            <div class="small-metric">
+              <div class="small-metric-title">Samples Received</div>
+              <div class="small-metric-val" id="samples-count">0</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT PANEL (Smooth Live Line Chart) -->
+      <div class="chart-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <span class="card-label" style="margin: 0;">AC Waveform RMS History</span>
+          <span style="font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);" id="live-hz">60s rolling chart</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="liveChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SILENT HISTORY LOG -->
+    <div class="log-section">
+      <div class="log-header">
+        <span>State Shift Log</span>
+        <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">Silent behavioral audit feed</span>
+      </div>
+      <div class="log-list" id="log-list">
+        <!-- Log items dynamically injected here -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- STYLISH MINIMALIST THEME SETTINGS ---
+    const chartCtx = document.getElementById('liveChart').getContext('2d');
+    const MAX_CHART_POINTS = 60; // 60 seconds rolling average
+    const dataLabels = Array.from({length: MAX_CHART_POINTS}, (_, i) => '');
+    const initialData = Array(MAX_CHART_POINTS).fill(0);
+
+    // Initializing ChartJS with clean neon lines and negative space design
+    const liveChart = new Chart(chartCtx, {
+      type: 'line',
+      data: {
+        labels: dataLabels,
+        datasets: [{
+          label: 'Current (Amps)',
+          data: initialData,
+          borderColor: '#00FF87',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointBackgroundColor: '#00FF87',
+          fill: true,
+          backgroundColor: function(context) {
+            const chart = context.chart;
+            const {ctx, chartArea} = chart;
+            if (!chartArea) return null;
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, 'rgba(0, 255, 135, 0.15)');
+            gradient.addColorStop(1, 'rgba(0, 255, 135, 0.0)');
+            return gradient;
+          },
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: '#121216',
+            titleColor: '#F4F4F6',
+            bodyColor: '#F4F4F6',
+            borderColor: '#1F1F26',
+            borderWidth: 1,
+            cornerRadius: 0
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { display: false }
+          },
+          y: {
+            min: 0,
+            max: 15,
+            grid: {
+              color: '#1F1F26',
+              drawTicks: false
+            },
+            ticks: {
+              color: '#8E8E9F',
+              font: { family: 'Inter', size: 10 },
+              padding: 10
+            }
+          }
+        }
+      }
+    });
+
+    // --- APPLICATION VARIABLES ---
+    let isLiveMode = false;
+    let wsConnection = null;
+    let mockIntervalId = null;
+    let currentIP = "ws://192.168.4.1/ws";
+    
+    // Diagnostic trackers
+    let peakAmps = 0;
+    let totalSamples = 0;
+    let lastKnownState = null;
+
+    // DOM Elements
+    const liveAmpsEl = document.getElementById('live-amps');
+    const loadStateLabelEl = document.getElementById('load-state-label');
+    const loadStateBadgeEl = document.getElementById('load-state-badge');
+    const peakLoadEl = document.getElementById('peak-load');
+    const samplesCountEl = document.getElementById('samples-count');
+    const statusIndicatorEl = document.getElementById('status-indicator');
+    const statusLabelEl = document.getElementById('status-label');
+    const logListEl = document.getElementById('log-list');
+    const btnModeEl = document.getElementById('btn-mode');
+    const btnConfigEl = document.getElementById('btn-config');
+    const configDropdownEl = document.getElementById('config-dropdown');
+    const configUrlEl = document.getElementById('config-url');
+    const btnApplyConfigEl = document.getElementById('btn-apply-config');
+
+    // Toggle Config Dropdown
+    btnConfigEl.addEventListener('click', () => {
+      configDropdownEl.classList.toggle('active');
+    });
+
+    // Apply New Stream URL Config
+    btnApplyConfigEl.addEventListener('click', () => {
+      currentIP = configUrlEl.value.trim();
+      configDropdownEl.classList.remove('active');
+      if (isLiveMode) {
+        // Restart connection to new target IP
+        startLiveStream();
+      }
+    });
+
+    // Toggle Mode (Simulation vs Live ESP32 connection)
+    btnModeEl.addEventListener('click', () => {
+      isLiveMode = !isLiveMode;
+      if (isLiveMode) {
+        btnModeEl.textContent = "Simulate";
+        statusLabelEl.textContent = "Connecting Live...";
+        startLiveStream();
+      } else {
+        btnModeEl.textContent = "Go Live";
+        statusLabelEl.textContent = "Simulating Stream";
+        startSimulation();
+      }
+    });
+
+    // Update Dashboard Data values
+    function updateTelemetry(payload) {
+      const amps = parseFloat(payload.current_amps);
+      const state = payload.state || "IDLE";
+      const device = payload.device || "Unknown";
+      
+      // Update primary large current metrics
+      liveAmpsEl.innerHTML = `${amps.toFixed(2)} <span class="unit">A</span>`;
+      
+      // Update state label & badge classes based on state changes
+      loadStateLabelEl.textContent = `${device} active`;
+      loadStateBadgeEl.textContent = state.replace('_', ' ');
+
+      if (state === "HEAVY_LOAD") {
+        loadStateBadgeEl.className = "badge badge-heavy";
+        statusIndicatorEl.className = "status-indicator heavy-load";
+      } else {
+        loadStateBadgeEl.className = "badge badge-normal";
+        statusIndicatorEl.className = "status-indicator";
+      }
+
+      // Update Peak diagnostics
+      if (amps > peakAmps) {
+        peakAmps = amps;
+        peakLoadEl.textContent = `${peakAmps.toFixed(2)} A`;
+      }
+
+      totalSamples++;
+      samplesCountEl.textContent = totalSamples;
+
+      // Silently log and audit state changes in bottom feed
+      if (state !== lastKnownState) {
+        logStateChange(state, amps);
+        lastKnownState = state;
+      }
+
+      // Smooth chart update
+      updateChart(amps);
+    }
+
+    // Chart live data shifting
+    function updateChart(val) {
+      const dataset = liveChart.data.datasets[0].data;
+      dataset.push(val);
+      if (dataset.length > MAX_CHART_POINTS) {
+        dataset.shift();
+      }
+      liveChart.update('none'); // Update smoothly without refreshing full options layout
+    }
+
+    // Silent state change logger
+    function logStateChange(state, amps) {
+      const timeStr = new Date().toLocaleTimeString();
+      const isHeavy = state === "HEAVY_LOAD";
+      
+      const logItem = document.createElement('div');
+      logItem.className = 'log-item';
+      
+      logItem.innerHTML = `
+        <div class="log-item-details">
+          <span class="log-timestamp">${timeStr}</span>
+          <span class="log-state-tag ${isHeavy ? 'heavy' : 'normal'}">${state.replace('_', ' ')}</span>
+          <span class="log-message">Load threshold shift detected</span>
+        </div>
+        <span class="log-amps">${amps.toFixed(2)} A</span>
+      `;
+      
+      logListEl.prepend(logItem);
+
+      // Maintain sensible history length (max 30 logs)
+      while (logListEl.children.length > 30) {
+        logListEl.removeChild(logListEl.lastChild);
+      }
+    }
+
+    // --- STREAM CONTROLS ---
+
+    // 1. WebSocket Live Mode
+    function startLiveStream() {
+      // Clear simulation loop
+      if (mockIntervalId) clearInterval(mockIntervalId);
+      
+      if (wsConnection) {
+        wsConnection.close();
+      }
+
+      try {
+        wsConnection = new WebSocket(currentIP);
+        
+        wsConnection.onopen = () => {
+          statusLabelEl.textContent = "Live Stream Connected";
+          statusIndicatorEl.className = "status-indicator";
+        };
+
+        wsConnection.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            // Translate ESP32 custom data formats if needed, or update straight
+            updateTelemetry(data);
+          } catch(e) {
+            console.error("Data parse error: ", e);
+          }
+        };
+
+        wsConnection.onclose = () => {
+          if (isLiveMode) {
+            statusLabelEl.textContent = "Reconnecting...";
+            statusIndicatorEl.className = "status-indicator disconnected";
+            setTimeout(startLiveStream, 3000); // Attempt auto recovery reconnect
+          }
+        };
+
+        wsConnection.onerror = () => {
+          statusIndicatorEl.className = "status-indicator disconnected";
+        };
+      } catch(e) {
+        console.error("WS error: ", e);
+      }
+    }
+
+    // 2. High-Fidelity Mock Generator Mode
+    function startSimulation() {
+      if (wsConnection) {
+        wsConnection.close();
+      }
+      
+      if (mockIntervalId) clearInterval(mockIntervalId);
+
+      let step = 0;
+
+      mockIntervalId = setInterval(() => {
+        step++;
+        let amps = 0;
+        let state = "IDLE";
+
+        // Create a realistic cyclic industrial power lifecycle behavior profile:
+        // Idle (0-10s) -> Startup spike (10-15s) -> Heavy operational draw (15-40s) -> Return to normal/Idle
+        const cycle = step % 60;
+
+        if (cycle < 10) {
+          // System idling: low background noise
+          amps = 0.4 + (Math.random() * 0.15);
+          state = "IDLE";
+        } else if (cycle >= 10 && cycle < 13) {
+          // Massive transient startup peak
+          amps = 11.2 + (Math.random() * 1.5);
+          state = "HEAVY_LOAD";
+        } else if (cycle >= 13 && cycle < 40) {
+          // Sustained highly active operating process load
+          amps = 8.1 + (Math.random() * 0.9);
+          state = "HEAVY_LOAD";
+        } else if (cycle >= 40 && cycle < 50) {
+          // Nominal operational load
+          amps = 3.2 + (Math.random() * 0.4);
+          state = "NORMAL";
+        } else {
+          // Transitioning back down to low idle draw
+          amps = 1.1 + (Math.random() * 0.2);
+          state = "IDLE";
+        }
+
+        const payload = {
+          device: "SmartBridge_01",
+          current_amps: parseFloat(amps.toFixed(2)),
+          state: state,
+          timestamp: Math.floor(Date.now() / 1000).toString()
+        };
+
+        updateTelemetry(payload);
+      }, 1000);
+    }
+
+    // Kickstart in high fidelity simulation stream out of the box
+    startSimulation();
+  </script>
+</body>
+</html>

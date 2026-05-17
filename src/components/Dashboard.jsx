@@ -1,20 +1,33 @@
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
+import { calculateRealPower, calculateRunway } from '../services/energyEngine.js';
 
 /**
- * Dashboard — Final Build
- * - 0-Day fix: defaults to Day Goal until 1 hour of data
- * - Fast-forward button to inject 7-day history
- * - Daily averages display
- * - Vacancy detection (near-zero = "Achievable")
- * - 2-Phase recommendation logic
- * - Relay stealth
+ * Dashboard — Rewired from scratch for clarity.
+ * 
+ * LAYOUT (top → bottom):
+ * ┌──────────────────────┬──────────────────────┐
+ * │  UNITS REMAINING     │  SYSTEM STATUS       │
+ * │  (primary metric)    │  (learning + health)  │
+ * ├──────────────────────┴──────────────────────┤
+ * │  POWER BREAKDOWN (per-appliance real power)  │
+ * ├──────────────────────────────────────────────┤
+ * │  DAILY AVERAGES TABLE                        │
+ * ├──────────────────────────────────────────────┤
+ * │  LIVE SENSOR FEEDS (5 gauge cards)           │
+ * ├──────────────────────────────────────────────┤
+ * │  ENERGY FINGERPRINTS (time-series chart)     │
+ * ├──────────────────────────────────────────────┤
+ * │  INFERENCE ENGINE (alerts)                   │
+ * └──────────────────────────────────────────────┘
  */
 export default function Dashboard({
   sensors, history, alerts, profiles,
   tokenData, durationGoal, calibrationStart,
   onOpenAdvice, onHardwareFault, onOpenEmergency, onFastForward,
-  tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold
+  onOpenMeterSync,
+  tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold,
+  engineState
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -29,7 +42,32 @@ export default function Dashboard({
     return { day, pct: Math.min(100, (elapsed / 7) * 100), complete: elapsed >= 7, daysLeft };
   }, [calibrationStart]);
 
-  // --- Energy Runway with 0-Day Fix ---
+  // --- Per-Appliance Power Breakdown (corrected for power factor) ---
+  const powerBreakdown = useMemo(() => {
+    if (!sensors || !profiles) return [];
+    return profiles.slice(0, 5).map((p, i) => {
+      const amps = sensors[i] || 0;
+      const { apparentW, realW, powerFactor } = calculateRealPower(amps, p.type);
+      return {
+        name: p.name,
+        type: p.type,
+        amps,
+        apparentW,
+        realW,
+        powerFactor,
+        index: i,
+      };
+    });
+  }, [sensors, profiles]);
+
+  const totalRealW = powerBreakdown.reduce((s, p) => s + p.realW, 0);
+  const totalApparentW = powerBreakdown.reduce((s, p) => s + p.apparentW, 0);
+
+  // --- Units Remaining + Runway (from engine state or fallback) ---
+  const unitsRemaining = engineState
+    ? Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh)
+    : tokenData?.kwh || 0;
+
   const runway = useMemo(() => {
     if (!tokenData || !tokenData.kwh) return null;
     const goal = durationGoal || 21;
@@ -38,7 +76,7 @@ export default function Dashboard({
     if (!hasStableData) {
       return {
         daysRemaining: goal,
-        kwhRemaining: tokenData.kwh.toFixed(1),
+        kwhRemaining: unitsRemaining.toFixed(1),
         dailyUsage: '--',
         goal,
         onTrack: true,
@@ -48,28 +86,18 @@ export default function Dashboard({
       };
     }
 
-    const purchaseDate = new Date(tokenData.date);
-    const now = new Date();
-    const daysSincePurchase = Math.max(1, (now - purchaseDate) / (1000 * 60 * 60 * 24));
-    const totalAmps = (sensors || []).reduce((s, v) => s + (v || 0), 0);
-    const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
-    const dailyUsageKwh = avgPowerKw * 8;
-    const kwhRemaining = Math.max(0, tokenData.kwh - (dailyUsageKwh * daysSincePurchase));
-    const daysRemaining = dailyUsageKwh > 0 ? Math.max(0, kwhRemaining / dailyUsageKwh) : goal;
-    const onTrack = daysRemaining >= (goal - daysSincePurchase);
-    const isEmergency = kwhRemaining <= 5;
-
+    const proj = calculateRunway(totalRealW, unitsRemaining, goal);
     return {
-      daysRemaining: Math.round(daysRemaining),
-      kwhRemaining: kwhRemaining.toFixed(1),
-      dailyUsage: dailyUsageKwh.toFixed(1),
+      daysRemaining: proj.daysRemaining,
+      kwhRemaining: unitsRemaining.toFixed(1),
+      dailyUsage: proj.dailyUsageKwh,
       goal,
-      onTrack: vacant ? true : onTrack,
+      onTrack: vacant ? true : proj.onTrack,
       isCalibrating: false,
-      pct: Math.min(100, (daysRemaining / goal) * 100),
-      isEmergency: vacant ? false : isEmergency,
+      pct: proj.pct,
+      isEmergency: vacant ? false : proj.isEmergency,
     };
-  }, [tokenData, sensors, durationGoal, dataCollectionMinutes, vacant]);
+  }, [tokenData, totalRealW, unitsRemaining, durationGoal, dataCollectionMinutes, vacant]);
 
   // --- Sensor Cards ---
   const sensorCards = useMemo(() => {
@@ -105,58 +133,101 @@ export default function Dashboard({
   // --- Recent daily averages for display ---
   const recentDays = (dailyAverages || []).slice(-7);
 
+  // --- Confidence indicator ---
+  const confidence = engineState?.confidencePct || 100;
+  const confidenceLabel = confidence >= 80 ? 'High' : confidence >= 50 ? 'Moderate' : 'Low';
+  const confidenceColor = confidence >= 80 ? 'var(--accent-green)' : confidence >= 50 ? 'var(--warning-amber)' : 'var(--alert-red)';
+
   return (
     <div className="fade-in">
-      {/* -- Top Row: Runway + System Status -- */}
+      {/* ============================================================
+          ROW 1: UNITS REMAINING + SYSTEM STATUS
+          ============================================================ */}
       <div className="dashboard-grid" style={{ marginBottom: 24 }}>
-        {/* Energy Runway */}
-        <div className="card runway-card">
+
+        {/* --- UNITS REMAINING (Primary Metric) --- */}
+        <div className="card units-card">
           <div className="card-header">
-            <span className="card-title">Energy Runway</span>
+            <span className="card-title">Meter Units Remaining</span>
             {runway && (
               <span className={`card-badge ${vacant ? 'badge-vacant' : runway.isCalibrating ? 'badge-calibrating' : runway.onTrack ? '' : 'badge-warning'}`}>
                 {vacant ? 'Vacant | Achievable' : runway.isCalibrating ? 'Calibrating' : runway.onTrack ? 'On Track' : 'Off Track'}
               </span>
             )}
           </div>
+
           {runway ? (
             <>
-              <div className="runway-countdown">
-                <div className="runway-days">
-                  <span className="runway-number">{runway.daysRemaining}</span>
-                  <span className="runway-label">Days Left</span>
+              {/* Big kWh Display */}
+              <div className="units-hero">
+                <div className="units-kwh">
+                  <span className="units-number">{runway.kwhRemaining}</span>
+                  <span className="units-label">kWh</span>
                 </div>
-                <div className="runway-divider" />
+                <div className="units-confidence" style={{ borderColor: confidenceColor }}>
+                  <span className="units-conf-pct" style={{ color: confidenceColor }}>{confidence}%</span>
+                  <span className="units-conf-label">Confidence</span>
+                </div>
+              </div>
+
+              {/* Stats Row */}
+              <div className="runway-countdown">
                 <div className="runway-stats">
                   <div className="runway-stat">
-                    <span className="runway-stat-val">{runway.kwhRemaining}</span>
-                    <span className="runway-stat-label">kWh Remaining</span>
+                    <span className="runway-stat-val">{runway.daysRemaining}</span>
+                    <span className="runway-stat-label">Days Left</span>
                   </div>
                   <div className="runway-stat">
                     <span className="runway-stat-val">{runway.dailyUsage}</span>
-                    <span className="runway-stat-label">kWh/Day Avg</span>
+                    <span className="runway-stat-label">kWh/Day</span>
                   </div>
                   <div className="runway-stat">
                     <span className="runway-stat-val">{runway.goal}</span>
                     <span className="runway-stat-label">Day Goal</span>
                   </div>
+                  <div className="runway-stat">
+                    <span className="runway-stat-val">{Math.round(totalRealW)}</span>
+                    <span className="runway-stat-label">Watts Now</span>
+                  </div>
                 </div>
               </div>
+
               {runway.isCalibrating && (
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
                   Defaulting to goal. Stable average requires 1 hour of data collection.
                 </p>
               )}
+
+              {/* Progress Bar */}
               <div className="runway-bar-track">
                 <div className={`runway-bar-fill ${runway.pct < 30 ? 'danger' : runway.pct < 60 ? 'warning' : ''}`} style={{ width: `${runway.pct}%` }} />
               </div>
-              {runway.isEmergency && (
-                <button className="emergency-trigger-btn" onClick={onOpenEmergency} id="open-emergency">
+
+              {/* Action Buttons */}
+              <div className="units-actions">
+                <button className="meter-sync-btn" onClick={onOpenMeterSync} id="open-meter-sync">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                    <path d="M12 6v6l4 2" />
                   </svg>
-                  Enter Emergency Mode
+                  Sync Meter
                 </button>
+                {runway.isEmergency && (
+                  <button className="emergency-trigger-btn" onClick={onOpenEmergency} id="open-emergency">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    Emergency Mode
+                  </button>
+                )}
+              </div>
+
+              {/* Last Sync Info */}
+              {engineState?.lastSyncDate && (
+                <p className="units-last-sync">
+                  Last meter sync: {new Date(engineState.lastSyncDate).toLocaleDateString()} — 
+                  Correction: ×{engineState.correctionFactor.toFixed(3)}
+                </p>
               )}
             </>
           ) : (
@@ -164,7 +235,7 @@ export default function Dashboard({
           )}
         </div>
 
-        {/* System Status */}
+        {/* --- SYSTEM STATUS --- */}
         <div className="card">
           <div className="card-header">
             <span className="card-title">System Status</span>
@@ -233,7 +304,56 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* -- Daily Averages (if history exists) -- */}
+      {/* ============================================================
+          ROW 2: POWER BREAKDOWN (per-appliance real vs apparent power)
+          ============================================================ */}
+      <div className="section-title"><span className="dot" /> Real-Time Power Breakdown</div>
+      <div className="card full-width power-breakdown-card" style={{ marginBottom: 28 }}>
+        <div className="power-breakdown-header">
+          <div className="power-breakdown-total">
+            <span className="power-total-val">{Math.round(totalRealW)}</span>
+            <span className="power-total-unit">W</span>
+            <span className="power-total-label">Real Power</span>
+          </div>
+          <div className="power-breakdown-total apparent">
+            <span className="power-total-val">{Math.round(totalApparentW)}</span>
+            <span className="power-total-unit">W</span>
+            <span className="power-total-label">Apparent Power</span>
+          </div>
+          <div className="power-breakdown-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <span>Real Power = V × I × cos(φ). ZESA meters bill real power, not apparent.</span>
+          </div>
+        </div>
+        <div className="power-breakdown-bars">
+          {powerBreakdown.map(p => {
+            const pctOfTotal = totalRealW > 0 ? (p.realW / totalRealW * 100) : 0;
+            return (
+              <div key={p.index} className="power-bar-row">
+                <div className="power-bar-label">
+                  <span className="power-bar-name">{p.name}</span>
+                  <span className="power-bar-detail">
+                    {Math.round(p.realW)}W · PF {p.powerFactor.toFixed(2)} · {p.amps.toFixed(2)}A
+                  </span>
+                </div>
+                <div className="power-bar-track">
+                  <div
+                    className="power-bar-fill"
+                    style={{ width: `${pctOfTotal}%` }}
+                  />
+                </div>
+                <span className="power-bar-pct">{pctOfTotal.toFixed(0)}%</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ============================================================
+          ROW 3: DAILY AVERAGES
+          ============================================================ */}
       {recentDays.length > 0 && (
         <>
           <div className="section-title"><span className="dot" /> Daily Averages Database</div>
@@ -265,7 +385,9 @@ export default function Dashboard({
         </>
       )}
 
-      {/* -- Sensor Feeds -- */}
+      {/* ============================================================
+          ROW 4: LIVE SENSOR FEEDS
+          ============================================================ */}
       <div className="section-title"><span className="dot" /> Live Sensor Feeds</div>
       <div className="dashboard-grid three-col" style={{ marginBottom: 28 }}>
         {sensorCards.map((s) => (
@@ -285,7 +407,9 @@ export default function Dashboard({
         ))}
       </div>
 
-      {/* -- Energy Fingerprints -- */}
+      {/* ============================================================
+          ROW 5: ENERGY FINGERPRINTS (Chart)
+          ============================================================ */}
       <div className="section-title"><span className="dot" /> Energy Fingerprints</div>
       <div className="card full-width" style={{ marginBottom: 28 }}>
         <Chart
@@ -300,7 +424,9 @@ export default function Dashboard({
         />
       </div>
 
-      {/* -- Inference -- */}
+      {/* ============================================================
+          ROW 6: INFERENCE ENGINE (Alerts)
+          ============================================================ */}
       <div className="section-title"><span className="dot" /> Inference Engine</div>
       <div className="alerts-section">
         {(alerts || []).map((a) => (
