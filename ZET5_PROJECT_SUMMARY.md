@@ -1,22 +1,22 @@
-# ZEC-5 — Zimbabwean Energy Controller (5-Channel)
+# ZET-5 — Zimbabwean Energy Tracker (5-Channel)
 
 ## Project Summary for AI Handoff
 
 > **Author:** Engineer Nyasha Praise Mapetere
 > **Project Type:** School research project — IoT smart energy management system
 > **Status:** Functional prototype with mock data; hardware integration pending
-> **Location:** `c:\Development\ZEC-5`
+> **Location:** `c:\Development\ZET-5`
 
 ---
 
 ## What This Project Is
 
-ZEC-5 is a **smart home energy management system** built for the **Zimbabwean electricity context** (ZESA prepaid tokens). It combines:
+ZET-5 is a **smart home energy management system** built for the **Zimbabwean electricity context** (ZESA prepaid tokens). It combines:
 
 1. **Hardware layer:** An ESP32 microcontroller reading 5 current sensors (CT clamps via audio jacks) that measure amperage on 5 household circuits (e.g., Fridge, Geyser, Borehole, Entertainment, Lighting).
 2. **Software layer:** A React web dashboard that visualizes real-time energy consumption, tracks prepaid electricity token depletion, and provides intelligent load-shedding recommendations to help users make their purchased kWh last a target number of days.
 
-The core problem it solves: **Zimbabwean households buy prepaid electricity (ZESA tokens) in kWh units and have no visibility into how fast they're consuming them.** ZEC-5 monitors per-appliance current draw in real time, projects when the tokens will run out, and recommends which appliances to shed to meet a user-defined duration goal.
+The core problem it solves: **Zimbabwean households buy prepaid electricity (ZESA tokens) in kWh units and have no visibility into how fast they're consuming them.** ZET-5 monitors per-appliance current draw in real time, projects when the tokens will run out, and recommends which appliances to shed to meet a user-defined duration goal.
 
 ---
 
@@ -39,7 +39,7 @@ The core problem it solves: **Zimbabwean households buy prepaid electricity (ZES
 ## File Structure
 
 ```
-ZEC-5/
+ZET-5/
 ├── ESP32_code                    # Arduino firmware (EmonLib, 30A/1V CT clamp on GPIO 34)
 ├── index.html                    # Vite entry point
 ├── package.json                  # "zec-5" v1.0.0
@@ -70,7 +70,7 @@ ZEC-5/
 
 ### 1. Authentication (`LoginPage.jsx`)
 - Email → simulated OTP (6-digit code printed to console)
-- Auth stored in `localStorage` as `zec5_auth`
+- Auth stored in `localStorage` as `zet5_auth`
 - No real backend; purely client-side simulation
 
 ### 2. First-Run Setup (`SetupWizard.jsx`)
@@ -83,7 +83,7 @@ A 4-step wizard that configures the system:
 | **3. Goal** | Duration goal — either X days or a specific target date. Default: 21 days |
 | **4. Alerts** | Notification threshold — kWh level below which recommendations activate. Default: 50 kWh |
 
-Setup data persisted to `localStorage` as `zec5_setup`. Includes `calibrationStart` timestamp.
+Setup data persisted to `localStorage` as `zet5_setup`. Includes `calibrationStart` timestamp.
 
 ### 3. Main Dashboard (`Dashboard.jsx`)
 Two pages accessible via sidebar:
@@ -217,10 +217,10 @@ All state lives in `App.jsx` and is passed down via props. Key state variables:
 
 | Key | Content |
 |---|---|
-| `zec5_auth` | `{ email, ts }` |
-| `zec5_setup` | Setup wizard output (tokenData, durationGoal, sensorNames, calibrationStart, notifyThreshold) |
-| `zec5_profiles` | Array of 5 appliance profiles |
-| `zec5_daily_averages` | Array of `{ date, sensors[5], count }` entries (last 90 days) |
+| `zet5_auth` | `{ email, ts }` |
+| `zet5_setup` | Setup wizard output (tokenData, durationGoal, sensorNames, calibrationStart, notifyThreshold) |
+| `zet5_profiles` | Array of 5 appliance profiles |
+| `zet5_daily_averages` | Array of `{ date, sensors[5], count }` entries (last 90 days) |
 
 ---
 

@@ -46,12 +46,14 @@ function processPath(targetPath) {
   else if (newBasename.includes('ZEC-5')) newBasename = newBasename.replace(/ZEC-5/g, 'ZET-5');
   
   if (newBasename !== basename) {
+    const newPath = path.join(path.dirname(targetPath), newBasename);
     try {
       fs.renameSync(targetPath, newPath);
       console.log(`Renamed: ${targetPath} -> ${newPath}`);
     } catch (e) {
       console.error(`Failed to rename ${targetPath}: ${e.message}`);
     }
+  }
 }
 
 for (const dir of dirsToScan) {
