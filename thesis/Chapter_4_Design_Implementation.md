@@ -1,14 +1,14 @@
 # CHAPTER 4: DESIGN AND IMPLEMENTATION
 
 ## 4.0 Introduction
-This chapter presents the full software design and modular implementation of the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Built entirely as a self-contained, offline software prototype, the ZEC-5 architecture translates raw metrology data into actionable, self-learning consumption models served through an interactive, premium glassmorphic dashboard. 
+This chapter presents the full software design and modular implementation of the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Built entirely as a self-contained, offline software prototype, the ZET-5 architecture translates raw metrology data into actionable, self-learning consumption models served through an interactive, premium glassmorphic dashboard. 
 
 The software utilizes a modular C++/JavaScript design that isolates simulated sensing inputs from the core algorithmic layers, making the codebase highly extensible and ready for direct transition to physical edge microcontroller hardware.
 
 ---
 
 ## 4.1 System Architectural Design: The Modular SIL Model
-The ZEC-5 software is designed around a **four-layer decoupled architecture** where processing flows sequentially from simulated circuit loops up to the presentation dashboard. This structure prevents coupling between metrology calculations and decision-making logic, ensuring independent testability and high computational performance.
+The ZET-5 software is designed around a **four-layer decoupled architecture** where processing flows sequentially from simulated circuit loops up to the presentation dashboard. This structure prevents coupling between metrology calculations and decision-making logic, ensuring independent testability and high computational performance.
 
 ```
 +-------------------------------------------------------------+
@@ -56,7 +56,7 @@ This module handles all time virtualization, machine learning, and numerical for
 
 *   **`getVirtualTime()`:** Rather than calling standard system time (`Date.now()`), the system overlays a persistent offset:
     $$\text{Virtual Time} = \text{Date.now()} + \text{timeOffsetMs}$$
-    This offset is saved in `localStorage` under `zec5_virtual_time_offset`. This guarantees that if the user refreshes their browser, the simulated system clock remains in its advanced time phase.
+    This offset is saved in `localStorage` under `zet5_virtual_time_offset`. This guarantees that if the user refreshes their browser, the simulated system clock remains in its advanced time phase.
 *   **`advanceVirtualTime(hours)`:** Manually increments `timeOffsetMs` by a specified number of hours. This shifts the virtual clock, triggering immediate updates across the metrology engines.
 *   **`simulateIntervalProgress(hours, averagePowerW)`:** Simulates a long-term time jump step-by-step. It advances the clock hour-by-hour. For each simulated hour ($h$), it blends the active loop wattage ($C_{\text{obs}}$) into the corresponding 24-bin RHS signature array ($S$) using our Exponential Moving Average (EMA) algorithm:
     $$S_t(h) = (1 - \alpha) \cdot S_{t-1}(h) + \alpha \cdot C_{\text{obs}}(h)$$
@@ -106,6 +106,6 @@ This module governs real-power calculations, power factor scaling, token depleti
 ---
 
 ## 4.4 Chapter Summary
-This chapter detailed the software architecture and modular implementation files of the ZEC-5 prototype. We explained how the decoupled four-layer architecture separates simulated metrology inputs from the core algorithmic layers. The APIs of `predictionEngine.js` (time machine virtualization, online learning EMA) and `energyEngine.js` (power factor scaling, closed-loop drift calibration) were detailed. 
+This chapter detailed the software architecture and modular implementation files of the ZET-5 prototype. We explained how the decoupled four-layer architecture separates simulated metrology inputs from the core algorithmic layers. The APIs of `predictionEngine.js` (time machine virtualization, online learning EMA) and `energyEngine.js` (power factor scaling, closed-loop drift calibration) were detailed. 
 
-Finally, we presented the glassmorphic presentation dashboard and onboarding wizard, highlighting the **Predictive Clock Simulator** and the **Tier 1 Safety Lock**. The next chapter presents the experimental testing, evaluation results, and analysis of the ZEC-5 system.
+Finally, we presented the glassmorphic presentation dashboard and onboarding wizard, highlighting the **Predictive Clock Simulator** and the **Tier 1 Safety Lock**. The next chapter presents the experimental testing, evaluation results, and analysis of the ZET-5 system.

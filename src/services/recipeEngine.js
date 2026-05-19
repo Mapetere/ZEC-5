@@ -1,5 +1,5 @@
 /**
- * ZEC-5 Intelligent Energy Recipe & Thermodynamic Solver
+ * ZET-5 Intelligent Energy Recipe & Thermodynamic Solver
  * 
  * This engine performs real-time linear knapsack optimizations and thermodynamic heating calculations
  * to provide mathematically validated, highly specific daily "energy recipes" that users can 

@@ -4,7 +4,7 @@
 export default function Sidebar({ activePage, onNavigate, onLogout }) {
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">ZEC</div>
+      <div className="sidebar-logo">ZET</div>
       <nav className="sidebar-nav">
         <button
           className={`sidebar-btn ${activePage === 'dashboard' ? 'active' : ''}`}

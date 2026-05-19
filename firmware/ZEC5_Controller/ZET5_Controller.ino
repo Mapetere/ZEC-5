@@ -1,5 +1,5 @@
 // ============================================================================
-//  ZEC-5 | Zimbabwean Energy Controller — 5 Channel
+//  ZET-5 | Zimbabwean Energy Tracker — 5 Channel
 //  ESP32 Firmware — Full Build
 //
 //  Author  : Engineer Nyasha Praise Mapetere
@@ -12,7 +12,7 @@
 //    - 8x Relay module (active LOW)
 //
 //  Communication:
-//    - WiFi Access Point mode (SSID: ZEC-5, Password: zec5admin)
+//    - WiFi Access Point mode (SSID: ZET-5, Password: zet5admin)
 //    - WebSocket server on ws://<IP>/ws
 //    - Broadcasts: { "sensors": [s1..s5], "relays": [r1..r8] }  every 1.5s
 //    - Receives:   { "relay": <0-7>, "state": <true/false> }
@@ -33,8 +33,8 @@
 // ========================== CONFIGURATION ====================================
 
 // WiFi Access Point credentials
-const char* AP_SSID     = "ZEC-5";
-const char* AP_PASSWORD = "zec5admin";
+const char* AP_SSID     = "ZET-5";
+const char* AP_PASSWORD = "zet5admin";
 
 // --- CT Clamp Sensor Pins (ADC1 only — ADC2 conflicts with WiFi) ---
 // All on ADC1: GPIO 32, 33, 34, 35, 36, 39
@@ -131,7 +131,7 @@ void setup() {
 
   Serial.println();
   Serial.println("================================================");
-  Serial.println("  ZEC-5 | Zimbabwean Energy Controller");
+  Serial.println("  ZET-5 | Zimbabwean Energy Tracker");
   Serial.println("  5-Channel Current Monitor + 8-Channel Relay");
   Serial.println("  [HARDWARE-IN-THE-LOOP SIMULATION RUNNING]");
   Serial.println("================================================");
@@ -157,7 +157,7 @@ void setup() {
   setupWebSocket();
 
   Serial.println();
-  Serial.println("[ZEC-5] System ready. Waiting for connections...");
+  Serial.println("[ZET-5] System ready. Waiting for connections...");
   Serial.println();
 }
 
@@ -276,8 +276,8 @@ void setupWebSocket() {
 
   // Serve a minimal status page at root (optional)
   server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-    String html = "<!DOCTYPE html><html><head><title>ZEC-5</title></head><body>";
-    html += "<h1>ZEC-5 Controller</h1>";
+    String html = "<!DOCTYPE html><html><head><title>ZET-5</title></head><body>";
+    html += "<h1>ZET-5 Controller</h1>";
     html += "<p>WebSocket endpoint: <code>ws://" + WiFi.softAPIP().toString() + "/ws</code></p>";
     html += "<p>Status: Online</p>";
     html += "</body></html>";
@@ -521,7 +521,7 @@ void broadcastData() {
 // ========================== SERIAL DEBUG =====================================
 
 void printStatus() {
-  Serial.print("[ZEC-5] Sensors: ");
+  Serial.print("[ZET-5] Sensors: ");
   for (int i = 0; i < 5; i++) {
     Serial.print("S");
     Serial.print(i + 1);

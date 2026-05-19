@@ -1,12 +1,12 @@
 /**
- * ZEC-5 WebSocket Service
+ * ZET-5 WebSocket Service
  * Handles communication with the ESP32 controller.
  * Receives JSON sensor data and sends relay toggle commands.
  */
 
 const WS_URL = 'ws://192.168.4.1/ws'; // Default ESP32 AP address
 
-class ZEC5WebSocket {
+class ZET5WebSocket {
   constructor() {
     this.ws = null;
     this.listeners = new Set();
@@ -37,7 +37,7 @@ class ZEC5WebSocket {
             this.relayListeners.forEach(cb => cb(data.relays));
           }
         } catch (err) {
-          console.warn('[ZEC-5 WS] Parse error:', err);
+          console.warn('[ZET-5 WS] Parse error:', err);
         }
       };
 
@@ -52,7 +52,7 @@ class ZEC5WebSocket {
         this._notifyStatus();
       };
     } catch (err) {
-      console.error('[ZEC-5 WS] Connection failed:', err);
+      console.error('[ZET-5 WS] Connection failed:', err);
       this._scheduleReconnect(url);
     }
   }
@@ -101,5 +101,5 @@ class ZEC5WebSocket {
   }
 }
 
-export const wsService = new ZEC5WebSocket();
+export const wsService = new ZET5WebSocket();
 export default wsService;

@@ -1,5 +1,5 @@
 /**
- * ZEC-5 Energy Engine — Corrected Power Estimation
+ * ZET-5 Energy Engine — Corrected Power Estimation
  * 
  * WHY THIS EXISTS:
  * CT clamps measure CURRENT (Amps), but ZESA meters bill REAL POWER (kWh).
@@ -17,7 +17,7 @@
  */
 
 const MAINS_VOLTAGE = 230;
-const STORAGE_KEY = 'zec5_energy_engine';
+const STORAGE_KEY = 'zet5_energy_engine';
 
 // Default power factors by load type
 // These are conservative estimates for typical Zimbabwean household appliances

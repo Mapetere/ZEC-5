@@ -1,16 +1,16 @@
 # CHAPTER 3: RESEARCH METHODOLOGY
 
 ## 3.0 Introduction
-This chapter details the research methodology, operational frameworks, and mathematical models used to develop and validate the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. To address the complex multi-disciplinary nature of this project—spanning electrical engineering, embedded software development, and online machine learning—we adopt a structured **Design Science Research (DSR)** framework. 
+This chapter details the research methodology, operational frameworks, and mathematical models used to develop and validate the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. To address the complex multi-disciplinary nature of this project—spanning electrical engineering, embedded software development, and online machine learning—we adopt a structured **Design Science Research (DSR)** framework. 
 
-This chapter is organized as follows: Section 3.1 details the DSR framework. Section 3.2 justifies the Software-in-the-Loop (SIL) research design. Section 3.3 presents the complete mathematical modeling of the ZEC-5 metrology, calibration, learning, and forecasting modules. Section 3.4 details the data generation and collection methods. Section 3.5 outlines the development tools, and Section 3.6 presents the validation and testing methodology.
+This chapter is organized as follows: Section 3.1 details the DSR framework. Section 3.2 justifies the Software-in-the-Loop (SIL) research design. Section 3.3 presents the complete mathematical modeling of the ZET-5 metrology, calibration, learning, and forecasting modules. Section 3.4 details the data generation and collection methods. Section 3.5 outlines the development tools, and Section 3.6 presents the validation and testing methodology.
 
 ---
 
 ## 3.1 Design Science Research (DSR) Framework
 Design Science Research (DSR) is an established socio-technical methodology for computer science and engineering disciplines. Unlike traditional empirical science which aims to *explain* or *describe* natural phenomena, DSR focus on *constructing* and *validating* novel technological artifacts to solve identified, practical problems (Hevner et al., 2004). 
 
-The development of the ZEC-5 prototype follows Hevner's six-stage DSR lifecycle:
+The development of the ZET-5 prototype follows Hevner's six-stage DSR lifecycle:
 
 ```
 +--------------------------------------------------------------------------+
@@ -97,7 +97,7 @@ This SIL framework provides three major scientific advantages:
 ## 3.3 System Mathematical Modeling
 
 ### 3.3.1 The Metrology and Power Factor Correction Engine
-To reflect true utility billing, ZEC-5 calculates the **Real Power ($P$)** of each of the five monitored circuits. For any given circuit loop ($c$), the instantaneous real power ($P_c$) is derived from the simulated current ($I_c$), a nominal supply voltage ($V = 230\text{V}$), and the loop's specific Power Factor ($PF_c$):
+To reflect true utility billing, ZET-5 calculates the **Real Power ($P$)** of each of the five monitored circuits. For any given circuit loop ($c$), the instantaneous real power ($P_c$) is derived from the simulated current ($I_c$), a nominal supply voltage ($V = 230\text{V}$), and the loop's specific Power Factor ($PF_c$):
 $$P_c(t) = V(t) \cdot I_c(t) \cdot PF_c \quad \text{[Watts]}$$
 
 The appliance-specific Power Factors are defined as:
@@ -113,7 +113,7 @@ $$P_{\text{total}}(t) = \sum_{c=1}^{5} P_c(t)$$
 ---
 
 ### 3.3.2 The Closed-Loop Meter Sync Calibration Engine
-Discrete numerical integration of simulated power values inevitably drifts from utility meters due to sags and sines. To resolve this, ZEC-5 implements a **Meter Sync Calibration Engine**. 
+Discrete numerical integration of simulated power values inevitably drifts from utility meters due to sags and sines. To resolve this, ZET-5 implements a **Meter Sync Calibration Engine**. 
 
 When a user reads their physical meter and enters the exact remaining kWh token balance ($E_{\text{physical}}$), the system calculates the **metrology drift correction factor ($\kappa$)**. 
 
@@ -132,7 +132,7 @@ $$P_{\text{calibrated}}(t) = \kappa \cdot P_{\text{total}}(t)$$
 ---
 
 ### 3.3.3 The Rolling Hourly Signature (RHS) Online Learning Algorithm
-Rather than storing days of raw metrology data in a memory-intensive database, ZEC-5 utilizes a **Rolling Hourly Signature (RHS)**. The signature is structured as a $24$-bin array ($S$), where each bin represents a specific hour of the day ($h \in [0, 23]$):
+Rather than storing days of raw metrology data in a memory-intensive database, ZET-5 utilizes a **Rolling Hourly Signature (RHS)**. The signature is structured as a $24$-bin array ($S$), where each bin represents a specific hour of the day ($h \in [0, 23]$):
 $$S = [S(0), S(1), S(2), \dots, S(23)]$$
 
 Every simulated hour, the metrology engine calculates the average power consumed during that hour ($C_{\text{observed}}$). The signature bin for that specific hour is then incrementally updated using an Exponential Moving Average (EMA):
@@ -146,7 +146,7 @@ This $\alpha$ weight represents a mathematical trade-off: a higher $\alpha$ allo
 ### 3.3.4 The Iterative Numerical Integration Forecasting Model
 Standard meters project token runway using linear division:
 $$\text{Runway (Days)} = \frac{E_{\text{remaining}}}{P_{\text{average}} \cdot 24}$$
-This linear model assumes consumption is constant. ZEC-5 replaces this with **Iterative Numerical Integration**. 
+This linear model assumes consumption is constant. ZET-5 replaces this with **Iterative Numerical Integration**. 
 
 To compute the exact depletion timestamp, the engine steps forward hour-by-hour into the future. Let $t_{\text{virt}}$ be the current virtual time and $h = \text{Hour}(t_{\text{virt}})$. The forecasting processor executes a simulation loop:
 
@@ -176,7 +176,7 @@ By accounting for the cyclic load fingerprint ($S$), this iterative forecasting 
 ---
 
 ### 3.3.5 The Thermodynamic Geyser and Knapsack Scheduling Solvers
-To transition from passive threshold recommendations to actionable real-life daily schedule "recipes," ZEC-5 integrates a **Thermodynamic Model** and a **Linear Knapsack Budget Allocator**.
+To transition from passive threshold recommendations to actionable real-life daily schedule "recipes," ZET-5 integrates a **Thermodynamic Model** and a **Linear Knapsack Budget Allocator**.
 
 #### 1. Thermodynamic Geyser Modeling
 A standard electric geyser cannot be operated in short, arbitrary intervals (e.g. 5 or 10 minutes) because a heating element requires a minimum continuous duration to heat cold water to a usable temperature. Operating below this minimum operational threshold wastes electricity through incomplete heating cycles.
@@ -210,7 +210,7 @@ If the budget is feasible, the surplus energy ($E_{\text{surplus}} = E_{\text{re
 ### 3.3.6 Grid-State Aware Filtering and Load-Shedding Forecasting
 Domestic installations in sub-Saharan African markets are routinely subjected to severe, multi-hour utility power cuts (load-shedding). If a residential energy controller is passive, a prolonged grid blackout results in a continuous $0\text{ Watt}$ draw across all monitored loops. Without active protection, the online Exponential Moving Average (EMA) signature engine would interpret this as a drop in household activity, incrementally writing zero averages into the Rolling Hourly Signature (RHS) matrix and corrupting the learned habit baseline within 48 to 72 hours.
 
-To protect the integrity of the behavioral model and adapt its forecasting to active load-shedding regimes, ZEC-5 implements a **Grid-State Aware Metrology Filter** and a **Probability-Adjusted Forecast runway**.
+To protect the integrity of the behavioral model and adapt its forecasting to active load-shedding regimes, ZET-5 implements a **Grid-State Aware Metrology Filter** and a **Probability-Adjusted Forecast runway**.
 
 #### 1. Grid-State Aware Signature Filtering
 The system continuously monitors the active utility grid state ($G_{\text{state}} \in \{0, 1\}$). A blackout condition ($G_{\text{state}} = 0$) is declared when raw simulated mains voltage drops to zero or when *all* disaggregated channels simultaneously drop to $0.0\text{A}$ while the backup battery/solar supply keeps the edge controller alive. 
@@ -224,7 +224,7 @@ where $\alpha = 0.20$ is the signature learning rate.
 #### 2. Probability-Adjusted Forecast runway Integration
 Standard HEMS calculators project remaining token runway assuming continuous, 24-hour grid availability. Under severe load-shedding sags, this assumption overestimates utility billing sags, as no prepaid energy is consumed during blackouts.
 
-To resolve this, ZEC-5 models an **Hourly Grid Probability Matrix ($\gamma$)**, consisting of 24 bins representing the likelihood of grid power being active during each specific hour ($h \in [0, 23]$):
+To resolve this, ZET-5 models an **Hourly Grid Probability Matrix ($\gamma$)**, consisting of 24 bins representing the likelihood of grid power being active during each specific hour ($h \in [0, 23]$):
 $$\gamma = [\gamma_0, \gamma_1, \gamma_2, \dots, \gamma_{23}]$$
 
 These probability weights ($\gamma_h \in [0, 1]$) are updated dynamically using real-time observations of grid status or pre-loaded with local ZETDC schedule patterns. When the iterative forecasting engine steps forward hour-by-hour into the future, it incorporates these blackout sags, multiplying the predicted hourly wattage signature by the grid probability factor:
@@ -256,7 +256,7 @@ As a Software-in-the-Loop prototype, data collection focuses on two environments
 ---
 
 ## 3.6 System Validation and Testing Methodology
-The validation framework evaluates the ZEC-5 prototype against four experimental test scenarios:
+The validation framework evaluates the ZET-5 prototype against four experimental test scenarios:
 
 1. **Drift Engine Verification:** Introduce a simulated $5\%$ metrology scaling drift. Execute manual synchronization updates and track the correction factor ($\kappa$) stability to validate $H_1$.
 2. **Online learning Calibration Test:** Run the Virtual Time Machine Sandbox for 7 simulated days (fast-forwarding 24 hours at a time). Monitor the **Behavioral Calibration Index** to validate $H_2$.
@@ -266,6 +266,6 @@ The validation framework evaluates the ZEC-5 prototype against four experimental
 ---
 
 ## 3.7 Chapter Summary
-This chapter detailed the research methodology of the ZEC-5 prototype. We justified the choice of Design Science Research (DSR) and the Software-in-the-Loop (SIL) validation architecture. We presented the core mathematical models governing power factor correction, the closed-loop meter synchronization loop, the Rolling Hourly Signature (RHS) online learning algorithm, and the iterative numerical forecasting model. 
+This chapter detailed the research methodology of the ZET-5 prototype. We justified the choice of Design Science Research (DSR) and the Software-in-the-Loop (SIL) validation architecture. We presented the core mathematical models governing power factor correction, the closed-loop meter synchronization loop, the Rolling Hourly Signature (RHS) online learning algorithm, and the iterative numerical forecasting model. 
 
-Finally, we established a systematic validation framework consisting of four quantitative test scenarios designed to validate our core hypotheses. The next chapter details the software implementation and architectural components of the ZEC-5 prototype.
+Finally, we established a systematic validation framework consisting of four quantitative test scenarios designed to validate our core hypotheses. The next chapter details the software implementation and architectural components of the ZET-5 prototype.

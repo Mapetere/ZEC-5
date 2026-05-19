@@ -1,4 +1,4 @@
-# ZEC-5 Firmware — Setup Guide
+# ZET-5 Firmware — Setup Guide
 
 ## Required Hardware
 
@@ -114,7 +114,7 @@ Install these via **Arduino IDE → Sketch → Include Library → Manage Librar
 
 4. **Connect ESP32 via USB and select the correct COM port**
 
-5. **Upload** the `ZEC5_Controller.ino` sketch
+5. **Upload** the `ZET5_Controller.ino` sketch
 
 ---
 
@@ -125,7 +125,7 @@ Install these via **Arduino IDE → Sketch → Include Library → Manage Librar
 2. You should see:
    ```
    ================================================
-     ZEC-5 | Zimbabwean Energy Controller
+     ZET-5 | Zimbabwean Energy Tracker
      5-Channel Current Monitor + 8-Channel Relay
    ================================================
 
@@ -136,16 +136,16 @@ Install these via **Arduino IDE → Sketch → Include Library → Manage Librar
    [WiFi] AP IP Address: 192.168.4.1
    [WiFi] WebSocket URL: ws://192.168.4.1/ws
    [WebSocket] Server started.
-   [ZEC-5] System ready. Waiting for connections...
+   [ZET-5] System ready. Waiting for connections...
    ```
 3. Every 1.5 seconds you'll see sensor readings like:
    ```
-   [ZEC-5] Sensors: S1=1.23A | S2=3.81A | S3=0.00A | S4=0.62A | S5=0.41A  Relays: 00000000  Clients: 0
+   [ZET-5] Sensors: S1=1.23A | S2=3.81A | S3=0.00A | S4=0.62A | S5=0.41A  Relays: 00000000  Clients: 0
    ```
 
 ### Connect the Dashboard
-1. On your phone/laptop, connect to WiFi network **`ZEC-5`** (password: `zec5admin`)
-2. Open the ZEC-5 React dashboard
+1. On your phone/laptop, connect to WiFi network **`ZET-5`** (password: `zet5admin`)
+2. Open the ZET-5 React dashboard
 3. The dashboard's `websocket.js` will auto-connect to `ws://192.168.4.1/ws`
 4. Real sensor data will replace the mock data stream
 
@@ -168,14 +168,14 @@ The CT clamp calibration value (`30.0`) assumes a **30A/1V** sensor ratio. If yo
 ## WiFi Configuration
 
 By default, the ESP32 creates its own WiFi network:
-- **SSID:** `ZEC-5`
-- **Password:** `zec5admin`
+- **SSID:** `ZET-5`
+- **Password:** `zet5admin`
 - **IP Address:** `192.168.4.1`
 
-To change these, edit the top of `ZEC5_Controller.ino`:
+To change these, edit the top of `ZET5_Controller.ino`:
 ```cpp
-const char* AP_SSID     = "ZEC-5";
-const char* AP_PASSWORD = "zec5admin";
+const char* AP_SSID     = "ZET-5";
+const char* AP_PASSWORD = "zet5admin";
 ```
 
 ---
@@ -187,6 +187,6 @@ const char* AP_PASSWORD = "zec5admin";
 | All sensors read 0.00A | CT clamps not clamped on wire, or wrong GPIO | Check wiring, ensure clamp is around a SINGLE conductor |
 | Readings are noisy/jumping | No load, or clamp around both live+neutral | Clamp around the LIVE wire only, not both |
 | WiFi network doesn't appear | Power issue or code not uploaded | Check Serial Monitor for boot errors |
-| Dashboard doesn't connect | Wrong WiFi network, or firewall | Connect phone/laptop to `ZEC-5` WiFi first |
+| Dashboard doesn't connect | Wrong WiFi network, or firewall | Connect phone/laptop to `ZET-5` WiFi first |
 | Relays don't toggle | Wrong GPIO, or 3.3V not triggering 5V relay | Add level shifter, or use relay module with 3.3V logic support |
 | `ADC2` error or erratic ADC | Using ADC2 pins with WiFi | Only use GPIO 32-39 (ADC1) for sensors |

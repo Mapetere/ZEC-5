@@ -81,7 +81,7 @@ export default function EmergencyMode({ kwhRemaining, sensors, profiles, relays,
         {!submitted ? (
           <div className="emergency-request">
             <p className="emergency-desc">
-              Enter your survival target. ZEC-5 will calculate a power budget and offer
+              Enter your survival target. ZET-5 will calculate a power budget and offer
               load shedding strategies to meet your goal.
             </p>
             <label className="login-label">Personal Request</label>

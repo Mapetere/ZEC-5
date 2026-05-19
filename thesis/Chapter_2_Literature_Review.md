@@ -1,7 +1,7 @@
 # CHAPTER 2: LITERATURE REVIEW AND RELATED WORK
 
 ## 2.0 Introduction
-Intelligent residential energy management represents a critical intersection of power systems engineering, embedded computing, and machine learning. This chapter reviews the theoretical background, historical developments, and emerging technological trends that define this domain. The review is structured to analyze existing methodologies, evaluate their practical limitations within developing economies, and establish the theoretical foundation for the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. 
+Intelligent residential energy management represents a critical intersection of power systems engineering, embedded computing, and machine learning. This chapter reviews the theoretical background, historical developments, and emerging technological trends that define this domain. The review is structured to analyze existing methodologies, evaluate their practical limitations within developing economies, and establish the theoretical foundation for the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. 
 
 ---
 
@@ -15,7 +15,7 @@ Residential energy management requires disaggregated load data—knowing which s
 
 Modern research has heavily favored NILM due to its single-sensor installation profile. However, NILM presents significant computational hurdles. Deep learning models—such as Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs), and Long Short-Term Memory (LSTM) networks—are widely used to classify complex load overlaps (Mwale and Chipofya, 2023). These networks are computationally heavy, require large, highly labeled historical datasets (e.g., REDD, UK-DALE), and exhibit significant accuracy degradation when running on low-power edge processors. 
 
-Furthermore, these datasets do not reflect the appliance profiles of Zimbabwean households, where brands, wattage ratings, and mains supply voltage profiles differ significantly. For a robust, low-cost edge controller, ZEC-5 rejects heavy single-sensor NILM neural network processing in favor of a **pragmatic multi-channel circuit loop design**. By monitoring up to five dedicated domestic circuits (e.g., Geyser ring, Fridge socket radial) directly at the distribution board, the system achieves **100% deterministic disaggregation accuracy** without any machine learning overhead or cloud-connected training.
+Furthermore, these datasets do not reflect the appliance profiles of Zimbabwean households, where brands, wattage ratings, and mains supply voltage profiles differ significantly. For a robust, low-cost edge controller, ZET-5 rejects heavy single-sensor NILM neural network processing in favor of a **pragmatic multi-channel circuit loop design**. By monitoring up to five dedicated domestic circuits (e.g., Geyser ring, Fridge socket radial) directly at the distribution board, the system achieves **100% deterministic disaggregation accuracy** without any machine learning overhead or cloud-connected training.
 
 ### 2.1.2 Real vs. Apparent Power Metrology: The Power Factor Challenge
 In Alternating Current (AC) electrical systems, power is represented in three distinct mathematical forms:
@@ -33,7 +33,7 @@ $$E_{\text{billed}} = \int P(t) \, dt$$
 
 Low-cost domestic current sensors (such as Split-Core Current Transformers) measure only current ($I$), which yields Apparent Power ($S$) if nominal mains voltage ($230\text{V}$) is assumed. If a domestic energy monitor uses Apparent Power to calculate token depletion, it will introduce massive calculation errors for reactive household appliances. 
 
-For instance, a refrigerator compressor typically exhibits a low Power Factor ($\cos\phi \approx 0.70$) due to its inductive winding cycles. An electric geyser, being purely resistive, exhibits a Power Factor near unity ($\cos\phi \approx 0.98$). Calculating geyser consumption as Apparent Power is highly accurate, but doing so for a refrigerator results in a **30% overestimation** of utility billing. To address this, ZEC-5 integrates appliance-specific **Power Factor Correction factors** directly into its accumulation calculations, ensuring that the software models match the physical utility's billing algorithms.
+For instance, a refrigerator compressor typically exhibits a low Power Factor ($\cos\phi \approx 0.70$) due to its inductive winding cycles. An electric geyser, being purely resistive, exhibits a Power Factor near unity ($\cos\phi \approx 0.98$). Calculating geyser consumption as Apparent Power is highly accurate, but doing so for a refrigerator results in a **30% overestimation** of utility billing. To address this, ZET-5 integrates appliance-specific **Power Factor Correction factors** directly into its accumulation calculations, ensuring that the software models match the physical utility's billing algorithms.
 
 ### 2.1.3 The Numerical Integration Drift Problem
 Calculating total energy consumption ($E$) from real-time power readings requires continuous mathematical integration:
@@ -43,7 +43,7 @@ where $\Delta t$ is the measurement sampling interval. In any digital metrology 
 2. Sensor metrology tolerances and thermal resistance drift.
 3. High-frequency analog-to-digital converter (ADC) quantisation noise and offset errors.
 
-Over days or weeks, these micro-errors accumulate into significant discrepancies. A smart home energy controller that drifts by just 5% will miscalculate a prepaid token's remaining runway by up to 24 hours, leading to premature blackout failures. In order to construct a robust system, the literature suggests closed-loop feedback controllers. ZEC-5 utilizes a **Meter Sync Calibration Engine** to dynamically calculate a correction factor ($\kappa$) based on manual synchronization inputs, ensuring that the integration engine actively recalibrates itself to match the physical meter's state.
+Over days or weeks, these micro-errors accumulate into significant discrepancies. A smart home energy controller that drifts by just 5% will miscalculate a prepaid token's remaining runway by up to 24 hours, leading to premature blackout failures. In order to construct a robust system, the literature suggests closed-loop feedback controllers. ZET-5 utilizes a **Meter Sync Calibration Engine** to dynamically calculate a correction factor ($\kappa$) based on manual synchronization inputs, ensuring that the integration engine actively recalibrates itself to match the physical meter's state.
 
 ### 2.1.4 Edge Computing: Why LSTMs Fail on Microcontrollers
 Deep learning models, specifically Long Short-Term Memory (LSTM) recurrent neural networks, represent the state-of-the-art for time-series forecasting and sequence modeling. LSTMs process sequential data by maintaining a hidden cell state ($c_t$), which selectively retains historical context over multiple time steps. 
@@ -53,7 +53,7 @@ While highly effective for complex, multi-variable offline forecasting, LSTMs pr
 2. **Volatile Memory Footprint:** The weight matrices and intermediate activation variables of a standard LSTM model require several megabytes of RAM. Common low-power edge microcontrollers possess under 512 kilobytes of Static Random Access Memory (SRAM), creating severe memory out-of-bounds crashes during execution.
 3. **Inability to Adapt in Real-Time (Static Training):** LSTMs are trained offline using static datasets. Once compiled and deployed to an edge device, the model's weights are static. If a household changes its physical habits (e.g., changing from night-shift to day-shift work, or buying a new appliance), the LSTM cannot adapt its model in real-time. It requires a complete offline database compile, retraining in Python, and reflashing of the firmware.
 
-To overcome these barriers, ZEC-5 implements a **Rolling Hourly Signature (RHS) online learning model based on double exponential moving averages**. This mathematically elegant algorithm requires a minimal memory footprint (under 2 kilobytes of SRAM), updates its parameters incrementally with every incoming data tick ($O(1)$ complexity), and actively learns and adapts to household behavioral shifts in real-time directly on the edge.
+To overcome these barriers, ZET-5 implements a **Rolling Hourly Signature (RHS) online learning model based on double exponential moving averages**. This mathematically elegant algorithm requires a minimal memory footprint (under 2 kilobytes of SRAM), updates its parameters incrementally with every incoming data tick ($O(1)$ complexity), and actively learns and adapts to household behavioral shifts in real-time directly on the edge.
 
 ---
 
@@ -77,7 +77,7 @@ Osei-Owusu et al. (2024) implemented a single-relay load shedding controller usi
 
 ## 2.3 Comparative Analysis of Existing Systems
 
-Table 2.1 presents a structured comparative analysis of these existing approaches against the design objectives of the ZEC-5 prototype.
+Table 2.1 presents a structured comparative analysis of these existing approaches against the design objectives of the ZET-5 prototype.
 
 ### Table 2.1: Comparison of Existing Residential Energy Management Systems
 | Study / System | Metrology Core | Forecasting Approach | Triage Method | Primary Limitation |
@@ -87,7 +87,7 @@ Table 2.1 presents a structured comparative analysis of these existing approache
 | **Osei-Owusu et al. (2024)** | ESP8266 Current Sensor | None | Single-relay threshold trip | Single-channel only; cannot prioritize loads. |
 | **Mwale & Chipofya (2023)** | Raspberry Pi 4 Neural Net | LSTM | None (Monitoring only) | Requires 4GB RAM; accuracy degrades on edge microcontrollers. |
 | **Makonese et al. (2022)** | Commercial cloud monitor | Cloud Analytics | Manual human action | Cloud dependent; high cost ($120+); fails during internet blackouts. |
-| **ZEC-5 (This Work)** | **SIL Simulated Metrology with PF correction** | **Rolling Hourly Signature (RHS) via EMA** | **Multi-circuit graduated triage (T1-T3)** | **Extrapolated mains voltage (mitigated by calibration loop)** |
+| **ZET-5 (This Work)** | **SIL Simulated Metrology with PF correction** | **Rolling Hourly Signature (RHS) via EMA** | **Multi-circuit graduated triage (T1-T3)** | **Extrapolated mains voltage (mitigated by calibration loop)** |
 
 ---
 
@@ -98,12 +98,12 @@ A critical synthesis of the literature reveals a major research gap: **the lack 
 2. **Absence of Real Power Calibration:** Standard low-cost edge controllers calculate apparent power ($VA$) rather than real power ($W$), ignoring reactive load power factors and accumulating significant metrology drift.
 3. **Absence of a "Time Machine" Validation Tool:** No academic paper or commercial prototype has incorporated a standardized time-virtualization model (Time Machine) to let researchers and panel examiners validate multi-day machine learning adaptations and depletion calculations in real-time.
 
-ZEC-5 addresses this gap directly by implementing a highly optimized C++/JavaScript software-in-the-loop prototype that executes power factor correction, closed-loop drift calibration, online learning EMA modeling, and iterative numerical forecasting on a fully offline edge platform.
+ZET-5 addresses this gap directly by implementing a highly optimized C++/JavaScript software-in-the-loop prototype that executes power factor correction, closed-loop drift calibration, online learning EMA modeling, and iterative numerical forecasting on a fully offline edge platform.
 
 ---
 
-## 2.5 Proposed Conceptual Solution: ZEC-5 Software-in-the-Loop Prototype
-To address this gap, this dissertation details the architecture and validation of the **ZEC-5 Software-in-the-Loop (SIL) Prototype**. The system is conceptualized as a highly optimized, dual-core software system served via a glassmorphic dashboard:
+## 2.5 Proposed Conceptual Solution: ZET-5 Software-in-the-Loop Prototype
+To address this gap, this dissertation details the architecture and validation of the **ZET-5 Software-in-the-Loop (SIL) Prototype**. The system is conceptualized as a highly optimized, dual-core software system served via a glassmorphic dashboard:
 
 ```
 [Simulated Monitored Loops (C1-C5)] 
@@ -127,4 +127,4 @@ The detailed system design, mathematical models, and implementation files are de
 ## 2.6 Chapter Summary
 This chapter reviewed the theoretical and empirical literature surrounding residential energy management. The theoretical analysis contrasted multi-channel loop disaggregation with computationally intensive single-channel NILM neural network processing. We formulated the mathematics of Real Power billing, Power Factor correction, and cumulative integration drift. The chapter detailed the computational and memory limitations of using LSTM neural networks on low-power edge microcontrollers and introduced the Rolling Hourly Signature (RHS) model as a resource-efficient alternative. 
 
-Through a structured comparative analysis, we identified the critical research gap: the absence of an offline, edge-only, self-learning predictive triage controller. The proposed conceptual architecture for the ZEC-5 prototype was presented. The next chapter details the research methodology, design science frameworks, and the mathematical modeling of the ZEC-5 system.
+Through a structured comparative analysis, we identified the critical research gap: the absence of an offline, edge-only, self-learning predictive triage controller. The proposed conceptual architecture for the ZET-5 prototype was presented. The next chapter details the research methodology, design science frameworks, and the mathematical modeling of the ZET-5 system.

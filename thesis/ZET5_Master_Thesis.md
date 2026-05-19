@@ -9,7 +9,7 @@ Prepaid tokens are purchased in kilowatt-hours (kWh) and continuously decline as
 
 Consequently, when a prepaid token balance depletes to zero, the utility meter abruptly disconnects all electrical supply to the residence. This binary, all-or-nothing cutoff treats all household loads equally. The refrigeratorâ€”which houses perishable foodstuffsâ€”loses power at the exact same millisecond as non-essential convenience loads, such as geysers, air conditioners, or entertainment consoles. This systemic inability to prioritize loads based on the remaining energy runway leads to premature food spoilage, accelerated backup battery depletion, and high domestic utility anxiety.
 
-This research addresses this structural gap by designing, implementing, and validating **ZEC-5 (Zimbabwean Energy Controller - 5 Monitored Channels)**. Moving beyond passive protection, ZEC-5 is architected as a **High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Forecasting Prototype**. The system models five disaggregated residential circuit loops (e.g., Geyser, Fridge, Borehole Pump, Entertainment, and Lights) and utilizes **online machine learning** to establish cyclic daily load signatures. By doing so, ZEC-5 runs **iterative numerical integrations** to forecast the exact prepaid depletion date and hour, executing graduated demand-side response actions to stretch the remaining energy runway.
+This research addresses this structural gap by designing, implementing, and validating **ZET-5 (Zimbabwean Energy Tracker - 5 Monitored Channels)**. Moving beyond passive protection, ZET-5 is architected as a **High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Forecasting Prototype**. The system models five disaggregated residential circuit loops (e.g., Geyser, Fridge, Borehole Pump, Entertainment, and Lights) and utilizes **online machine learning** to establish cyclic daily load signatures. By doing so, ZET-5 runs **iterative numerical integrations** to forecast the exact prepaid depletion date and hour, executing graduated demand-side response actions to stretch the remaining energy runway.
 
 ---
 
@@ -27,7 +27,7 @@ There is a clear engineering requirement for a system that can disaggregate hous
 ## 1.3 Research Aim and Objectives
 
 ### 1.3.1 Research Aim
-To design, implement, and validate a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype (ZEC-5) that dynamically profiles residential consumption, mitigates metrology drift, and performs tier-based autonomous load triage to maximize the operational runway of a finite prepaid energy token.
+To design, implement, and validate a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype (ZET-5) that dynamically profiles residential consumption, mitigates metrology drift, and performs tier-based autonomous load triage to maximize the operational runway of a finite prepaid energy token.
 
 ### 1.3.2 Research Objectives
 1. To engineer a high-fidelity disaggregated metrology engine that models five domestic circuit loops, incorporating appliance-specific **Power Factor (PF) correction** to reflect real utility billing.
@@ -44,7 +44,7 @@ This study contributes to the field of edge computing, smart grid technology, an
 
 *   **Academic Contribution:** The existing literature on smart home energy management systems (HEMS) and Non-Intrusive Load Monitoring (NILM) heavily assumes high-performance, cloud-connected hardware (e.g., Raspberry Pi clusters or GPU servers running deep learning networks like LSTMs). This research proves that highly accurate, adaptive residential load profiling and multi-day forecasting can be achieved using resource-constrained edge computing architectures. It establishes the mathematical validity of using **Rolling Hourly Signatures** and **double exponential moving averages** as an efficient, $O(1)$ memory-complexity alternative to heavy deep learning models.
 *   **Methodological Innovation:** By adopting a High-Fidelity Software-in-the-Loop (SIL) simulation framework, this research provides a highly repeatable, deterministic, and safe method for validating complex energy control algorithms. It isolates the algorithmic layer from the physical electrical noise and long validation cycles inherent in hardware-only testing, while providing a clear transition path to physical hardware deployment.
-*   **Socio-Economic Impact:** In the Zimbabwean context, premature energy depletion directly affects household food security (loss of refrigeration) and basic security (loss of lighting and internet access). By extending the prepaid token runway through intelligent, automated triage, ZEC-5 directly enhances household resilience against utility instability, optimizing the value of every dollar spent on prepaid energy.
+*   **Socio-Economic Impact:** In the Zimbabwean context, premature energy depletion directly affects household food security (loss of refrigeration) and basic security (loss of lighting and internet access). By extending the prepaid token runway through intelligent, automated triage, ZET-5 directly enhances household resilience against utility instability, optimizing the value of every dollar spent on prepaid energy.
 
 ---
 
@@ -74,7 +74,7 @@ This study is guided by the following core technical and analytical research que
 ---
 
 ## 1.7 Research Hypotheses
-Based on the system requirements and algorithmic architecture of the ZEC-5 prototype, we formulate the following measurable and falsifiable hypotheses:
+Based on the system requirements and algorithmic architecture of the ZET-5 prototype, we formulate the following measurable and falsifiable hypotheses:
 
 *   **Hypothesis 1 ($H_1$):** The closed-loop Meter Sync Calibration Engine will reduce cumulative metrology integration drift to **under 1.0%** within three manual synchronization cycles.
 *   **Hypothesis 2 ($H_2$):** The Rolling Hourly Signature (RHS) algorithm will achieve a **calibration confidence index exceeding 90%** within 72 simulated hours of active online learning.
@@ -86,7 +86,7 @@ Based on the system requirements and algorithmic architecture of the ZEC-5 proto
 ## 1.8 Project Gantt Chart
 ```mermaid
 gantt
-    title ZEC-5 Research & Implementation Schedule (14 Weeks)
+    title ZET-5 Research & Implementation Schedule (14 Weeks)
     dateFormat  YYYY-MM-DD
     section Research & Design
     Literature Review & Requirement Analysis   :active, des1, 2026-02-01, 3w
@@ -111,7 +111,7 @@ To address this, six objectives, five research questions, and four falsifiable h
 # CHAPTER 2: LITERATURE REVIEW AND RELATED WORK
 
 ## 2.0 Introduction
-Intelligent residential energy management represents a critical intersection of power systems engineering, embedded computing, and machine learning. This chapter reviews the theoretical background, historical developments, and emerging technological trends that define this domain. The review is structured to analyze existing methodologies, evaluate their practical limitations within developing economies, and establish the theoretical foundation for the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. 
+Intelligent residential energy management represents a critical intersection of power systems engineering, embedded computing, and machine learning. This chapter reviews the theoretical background, historical developments, and emerging technological trends that define this domain. The review is structured to analyze existing methodologies, evaluate their practical limitations within developing economies, and establish the theoretical foundation for the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. 
 
 ---
 
@@ -125,7 +125,7 @@ Residential energy management requires disaggregated load dataâ€”knowing wh
 
 Modern research has heavily favored NILM due to its single-sensor installation profile. However, NILM presents significant computational hurdles. Deep learning modelsâ€”such as Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs), and Long Short-Term Memory (LSTM) networksâ€”are widely used to classify complex load overlaps (Mwale and Chipofya, 2023). These networks are computationally heavy, require large, highly labeled historical datasets (e.g., REDD, UK-DALE), and exhibit significant accuracy degradation when running on low-power edge processors. 
 
-Furthermore, these datasets do not reflect the appliance profiles of Zimbabwean households, where brands, wattage ratings, and mains supply voltage profiles differ significantly. For a robust, low-cost edge controller, ZEC-5 rejects heavy single-sensor NILM neural network processing in favor of a **pragmatic multi-channel circuit loop design**. By monitoring up to five dedicated domestic circuits (e.g., Geyser ring, Fridge socket radial) directly at the distribution board, the system achieves **100% deterministic disaggregation accuracy** without any machine learning overhead or cloud-connected training.
+Furthermore, these datasets do not reflect the appliance profiles of Zimbabwean households, where brands, wattage ratings, and mains supply voltage profiles differ significantly. For a robust, low-cost edge controller, ZET-5 rejects heavy single-sensor NILM neural network processing in favor of a **pragmatic multi-channel circuit loop design**. By monitoring up to five dedicated domestic circuits (e.g., Geyser ring, Fridge socket radial) directly at the distribution board, the system achieves **100% deterministic disaggregation accuracy** without any machine learning overhead or cloud-connected training.
 
 ### 2.1.2 Real vs. Apparent Power Metrology: The Power Factor Challenge
 In Alternating Current (AC) electrical systems, power is represented in three distinct mathematical forms:
@@ -143,7 +143,7 @@ $$E_{\text{billed}} = \int P(t) \, dt$$
 
 Low-cost domestic current sensors (such as Split-Core Current Transformers) measure only current ($I$), which yields Apparent Power ($S$) if nominal mains voltage ($230\text{V}$) is assumed. If a domestic energy monitor uses Apparent Power to calculate token depletion, it will introduce massive calculation errors for reactive household appliances. 
 
-For instance, a refrigerator compressor typically exhibits a low Power Factor ($\cos\phi \approx 0.70$) due to its inductive winding cycles. An electric geyser, being purely resistive, exhibits a Power Factor near unity ($\cos\phi \approx 0.98$). Calculating geyser consumption as Apparent Power is highly accurate, but doing so for a refrigerator results in a **30% overestimation** of utility billing. To address this, ZEC-5 integrates appliance-specific **Power Factor Correction factors** directly into its accumulation calculations, ensuring that the software models match the physical utility's billing algorithms.
+For instance, a refrigerator compressor typically exhibits a low Power Factor ($\cos\phi \approx 0.70$) due to its inductive winding cycles. An electric geyser, being purely resistive, exhibits a Power Factor near unity ($\cos\phi \approx 0.98$). Calculating geyser consumption as Apparent Power is highly accurate, but doing so for a refrigerator results in a **30% overestimation** of utility billing. To address this, ZET-5 integrates appliance-specific **Power Factor Correction factors** directly into its accumulation calculations, ensuring that the software models match the physical utility's billing algorithms.
 
 ### 2.1.3 The Numerical Integration Drift Problem
 Calculating total energy consumption ($E$) from real-time power readings requires continuous mathematical integration:
@@ -153,7 +153,7 @@ where $\Delta t$ is the measurement sampling interval. In any digital metrology 
 2. Sensor metrology tolerances and thermal resistance drift.
 3. High-frequency analog-to-digital converter (ADC) quantisation noise and offset errors.
 
-Over days or weeks, these micro-errors accumulate into significant discrepancies. A smart home energy controller that drifts by just 5% will miscalculate a prepaid token's remaining runway by up to 24 hours, leading to premature blackout failures. In order to construct a robust system, the literature suggests closed-loop feedback controllers. ZEC-5 utilizes a **Meter Sync Calibration Engine** to dynamically calculate a correction factor ($\kappa$) based on manual synchronization inputs, ensuring that the integration engine actively recalibrates itself to match the physical meter's state.
+Over days or weeks, these micro-errors accumulate into significant discrepancies. A smart home energy controller that drifts by just 5% will miscalculate a prepaid token's remaining runway by up to 24 hours, leading to premature blackout failures. In order to construct a robust system, the literature suggests closed-loop feedback controllers. ZET-5 utilizes a **Meter Sync Calibration Engine** to dynamically calculate a correction factor ($\kappa$) based on manual synchronization inputs, ensuring that the integration engine actively recalibrates itself to match the physical meter's state.
 
 ### 2.1.4 Edge Computing: Why LSTMs Fail on Microcontrollers
 Deep learning models, specifically Long Short-Term Memory (LSTM) recurrent neural networks, represent the state-of-the-art for time-series forecasting and sequence modeling. LSTMs process sequential data by maintaining a hidden cell state ($c_t$), which selectively retains historical context over multiple time steps. 
@@ -163,7 +163,7 @@ While highly effective for complex, multi-variable offline forecasting, LSTMs pr
 2. **Volatile Memory Footprint:** The weight matrices and intermediate activation variables of a standard LSTM model require several megabytes of RAM. Common low-power edge microcontrollers possess under 512 kilobytes of Static Random Access Memory (SRAM), creating severe memory out-of-bounds crashes during execution.
 3. **Inability to Adapt in Real-Time (Static Training):** LSTMs are trained offline using static datasets. Once compiled and deployed to an edge device, the model's weights are static. If a household changes its physical habits (e.g., changing from night-shift to day-shift work, or buying a new appliance), the LSTM cannot adapt its model in real-time. It requires a complete offline database compile, retraining in Python, and reflashing of the firmware.
 
-To overcome these barriers, ZEC-5 implements a **Rolling Hourly Signature (RHS) online learning model based on double exponential moving averages**. This mathematically elegant algorithm requires a minimal memory footprint (under 2 kilobytes of SRAM), updates its parameters incrementally with every incoming data tick ($O(1)$ complexity), and actively learns and adapts to household behavioral shifts in real-time directly on the edge.
+To overcome these barriers, ZET-5 implements a **Rolling Hourly Signature (RHS) online learning model based on double exponential moving averages**. This mathematically elegant algorithm requires a minimal memory footprint (under 2 kilobytes of SRAM), updates its parameters incrementally with every incoming data tick ($O(1)$ complexity), and actively learns and adapts to household behavioral shifts in real-time directly on the edge.
 
 ---
 
@@ -187,7 +187,7 @@ Osei-Owusu et al. (2024) implemented a single-relay load shedding controller usi
 
 ## 2.3 Comparative Analysis of Existing Systems
 
-Table 2.1 presents a structured comparative analysis of these existing approaches against the design objectives of the ZEC-5 prototype.
+Table 2.1 presents a structured comparative analysis of these existing approaches against the design objectives of the ZET-5 prototype.
 
 ### Table 2.1: Comparison of Existing Residential Energy Management Systems
 | Study / System | Metrology Core | Forecasting Approach | Triage Method | Primary Limitation |
@@ -197,7 +197,7 @@ Table 2.1 presents a structured comparative analysis of these existing approache
 | **Osei-Owusu et al. (2024)** | ESP8266 Current Sensor | None | Single-relay threshold trip | Single-channel only; cannot prioritize loads. |
 | **Mwale & Chipofya (2023)** | Raspberry Pi 4 Neural Net | LSTM | None (Monitoring only) | Requires 4GB RAM; accuracy degrades on edge microcontrollers. |
 | **Makonese et al. (2022)** | Commercial cloud monitor | Cloud Analytics | Manual human action | Cloud dependent; high cost ($120+); fails during internet blackouts. |
-| **ZEC-5 (This Work)** | **SIL Simulated Metrology with PF correction** | **Rolling Hourly Signature (RHS) via EMA** | **Multi-circuit graduated triage (T1-T3)** | **Extrapolated mains voltage (mitigated by calibration loop)** |
+| **ZET-5 (This Work)** | **SIL Simulated Metrology with PF correction** | **Rolling Hourly Signature (RHS) via EMA** | **Multi-circuit graduated triage (T1-T3)** | **Extrapolated mains voltage (mitigated by calibration loop)** |
 
 ---
 
@@ -208,12 +208,12 @@ A critical synthesis of the literature reveals a major research gap: **the lack 
 2. **Absence of Real Power Calibration:** Standard low-cost edge controllers calculate apparent power ($VA$) rather than real power ($W$), ignoring reactive load power factors and accumulating significant metrology drift.
 3. **Absence of a "Time Machine" Validation Tool:** No academic paper or commercial prototype has incorporated a standardized time-virtualization model (Time Machine) to let researchers and panel examiners validate multi-day machine learning adaptations and depletion calculations in real-time.
 
-ZEC-5 addresses this gap directly by implementing a highly optimized C++/JavaScript software-in-the-loop prototype that executes power factor correction, closed-loop drift calibration, online learning EMA modeling, and iterative numerical forecasting on a fully offline edge platform.
+ZET-5 addresses this gap directly by implementing a highly optimized C++/JavaScript software-in-the-loop prototype that executes power factor correction, closed-loop drift calibration, online learning EMA modeling, and iterative numerical forecasting on a fully offline edge platform.
 
 ---
 
-## 2.5 Proposed Conceptual Solution: ZEC-5 Software-in-the-Loop Prototype
-To address this gap, this dissertation details the architecture and validation of the **ZEC-5 Software-in-the-Loop (SIL) Prototype**. The system is conceptualized as a highly optimized, dual-core software system served via a glassmorphic dashboard:
+## 2.5 Proposed Conceptual Solution: ZET-5 Software-in-the-Loop Prototype
+To address this gap, this dissertation details the architecture and validation of the **ZET-5 Software-in-the-Loop (SIL) Prototype**. The system is conceptualized as a highly optimized, dual-core software system served via a glassmorphic dashboard:
 
 ```
 [Simulated Monitored Loops (C1-C5)] 
@@ -237,20 +237,20 @@ The detailed system design, mathematical models, and implementation files are de
 ## 2.6 Chapter Summary
 This chapter reviewed the theoretical and empirical literature surrounding residential energy management. The theoretical analysis contrasted multi-channel loop disaggregation with computationally intensive single-channel NILM neural network processing. We formulated the mathematics of Real Power billing, Power Factor correction, and cumulative integration drift. The chapter detailed the computational and memory limitations of using LSTM neural networks on low-power edge microcontrollers and introduced the Rolling Hourly Signature (RHS) model as a resource-efficient alternative. 
 
-Through a structured comparative analysis, we identified the critical research gap: the absence of an offline, edge-only, self-learning predictive triage controller. The proposed conceptual architecture for the ZEC-5 prototype was presented. The next chapter details the research methodology, design science frameworks, and the mathematical modeling of the ZEC-5 system.
+Through a structured comparative analysis, we identified the critical research gap: the absence of an offline, edge-only, self-learning predictive triage controller. The proposed conceptual architecture for the ZET-5 prototype was presented. The next chapter details the research methodology, design science frameworks, and the mathematical modeling of the ZET-5 system.
 # CHAPTER 3: RESEARCH METHODOLOGY
 
 ## 3.0 Introduction
-This chapter details the research methodology, operational frameworks, and mathematical models used to develop and validate the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. To address the complex multi-disciplinary nature of this projectâ€”spanning electrical engineering, embedded software development, and online machine learningâ€”we adopt a structured **Design Science Research (DSR)** framework. 
+This chapter details the research methodology, operational frameworks, and mathematical models used to develop and validate the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. To address the complex multi-disciplinary nature of this projectâ€”spanning electrical engineering, embedded software development, and online machine learningâ€”we adopt a structured **Design Science Research (DSR)** framework. 
 
-This chapter is organized as follows: Section 3.1 details the DSR framework. Section 3.2 justifies the Software-in-the-Loop (SIL) research design. Section 3.3 presents the complete mathematical modeling of the ZEC-5 metrology, calibration, learning, and forecasting modules. Section 3.4 details the data generation and collection methods. Section 3.5 outlines the development tools, and Section 3.6 presents the validation and testing methodology.
+This chapter is organized as follows: Section 3.1 details the DSR framework. Section 3.2 justifies the Software-in-the-Loop (SIL) research design. Section 3.3 presents the complete mathematical modeling of the ZET-5 metrology, calibration, learning, and forecasting modules. Section 3.4 details the data generation and collection methods. Section 3.5 outlines the development tools, and Section 3.6 presents the validation and testing methodology.
 
 ---
 
 ## 3.1 Design Science Research (DSR) Framework
 Design Science Research (DSR) is an established socio-technical methodology for computer science and engineering disciplines. Unlike traditional empirical science which aims to *explain* or *describe* natural phenomena, DSR focus on *constructing* and *validating* novel technological artifacts to solve identified, practical problems (Hevner et al., 2004). 
 
-The development of the ZEC-5 prototype follows Hevner's six-stage DSR lifecycle:
+The development of the ZET-5 prototype follows Hevner's six-stage DSR lifecycle:
 
 ```
 +--------------------------------------------------------------------------+
@@ -337,7 +337,7 @@ This SIL framework provides three major scientific advantages:
 ## 3.3 System Mathematical Modeling
 
 ### 3.3.1 The Metrology and Power Factor Correction Engine
-To reflect true utility billing, ZEC-5 calculates the **Real Power ($P$)** of each of the five monitored circuits. For any given circuit loop ($c$), the instantaneous real power ($P_c$) is derived from the simulated current ($I_c$), a nominal supply voltage ($V = 230\text{V}$), and the loop's specific Power Factor ($PF_c$):
+To reflect true utility billing, ZET-5 calculates the **Real Power ($P$)** of each of the five monitored circuits. For any given circuit loop ($c$), the instantaneous real power ($P_c$) is derived from the simulated current ($I_c$), a nominal supply voltage ($V = 230\text{V}$), and the loop's specific Power Factor ($PF_c$):
 $$P_c(t) = V(t) \cdot I_c(t) \cdot PF_c \quad \text{[Watts]}$$
 
 The appliance-specific Power Factors are defined as:
@@ -353,7 +353,7 @@ $$P_{\text{total}}(t) = \sum_{c=1}^{5} P_c(t)$$
 ---
 
 ### 3.3.2 The Closed-Loop Meter Sync Calibration Engine
-Discrete numerical integration of simulated power values inevitably drifts from utility meters due to sags and sines. To resolve this, ZEC-5 implements a **Meter Sync Calibration Engine**. 
+Discrete numerical integration of simulated power values inevitably drifts from utility meters due to sags and sines. To resolve this, ZET-5 implements a **Meter Sync Calibration Engine**. 
 
 When a user reads their physical meter and enters the exact remaining kWh token balance ($E_{\text{physical}}$), the system calculates the **metrology drift correction factor ($\kappa$)**. 
 
@@ -372,7 +372,7 @@ $$P_{\text{calibrated}}(t) = \kappa \cdot P_{\text{total}}(t)$$
 ---
 
 ### 3.3.3 The Rolling Hourly Signature (RHS) Online Learning Algorithm
-Rather than storing days of raw metrology data in a memory-intensive database, ZEC-5 utilizes a **Rolling Hourly Signature (RHS)**. The signature is structured as a $24$-bin array ($S$), where each bin represents a specific hour of the day ($h \in [0, 23]$):
+Rather than storing days of raw metrology data in a memory-intensive database, ZET-5 utilizes a **Rolling Hourly Signature (RHS)**. The signature is structured as a $24$-bin array ($S$), where each bin represents a specific hour of the day ($h \in [0, 23]$):
 $$S = [S(0), S(1), S(2), \dots, S(23)]$$
 
 Every simulated hour, the metrology engine calculates the average power consumed during that hour ($C_{\text{observed}}$). The signature bin for that specific hour is then incrementally updated using an Exponential Moving Average (EMA):
@@ -386,7 +386,7 @@ This $\alpha$ weight represents a mathematical trade-off: a higher $\alpha$ allo
 ### 3.3.4 The Iterative Numerical Integration Forecasting Model
 Standard meters project token runway using linear division:
 $$\text{Runway (Days)} = \frac{E_{\text{remaining}}}{P_{\text{average}} \cdot 24}$$
-This linear model assumes consumption is constant. ZEC-5 replaces this with **Iterative Numerical Integration**. 
+This linear model assumes consumption is constant. ZET-5 replaces this with **Iterative Numerical Integration**. 
 
 To compute the exact depletion timestamp, the engine steps forward hour-by-hour into the future. Let $t_{\text{virt}}$ be the current virtual time and $h = \text{Hour}(t_{\text{virt}})$. The forecasting processor executes a simulation loop:
 
@@ -436,7 +436,7 @@ As a Software-in-the-Loop prototype, data collection focuses on two environments
 ---
 
 ## 3.6 System Validation and Testing Methodology
-The validation framework evaluates the ZEC-5 prototype against four experimental test scenarios:
+The validation framework evaluates the ZET-5 prototype against four experimental test scenarios:
 
 1. **Drift Engine Verification:** Introduce a simulated $5\%$ metrology scaling drift. Execute manual synchronization updates and track the correction factor ($\kappa$) stability to validate $H_1$.
 2. **Online learning Calibration Test:** Run the Virtual Time Machine Sandbox for 7 simulated days (fast-forwarding 24 hours at a time). Monitor the **Behavioral Calibration Index** to validate $H_2$.
@@ -446,20 +446,20 @@ The validation framework evaluates the ZEC-5 prototype against four experimental
 ---
 
 ## 3.7 Chapter Summary
-This chapter detailed the research methodology of the ZEC-5 prototype. We justified the choice of Design Science Research (DSR) and the Software-in-the-Loop (SIL) validation architecture. We presented the core mathematical models governing power factor correction, the closed-loop meter synchronization loop, the Rolling Hourly Signature (RHS) online learning algorithm, and the iterative numerical forecasting model. 
+This chapter detailed the research methodology of the ZET-5 prototype. We justified the choice of Design Science Research (DSR) and the Software-in-the-Loop (SIL) validation architecture. We presented the core mathematical models governing power factor correction, the closed-loop meter synchronization loop, the Rolling Hourly Signature (RHS) online learning algorithm, and the iterative numerical forecasting model. 
 
-Finally, we established a systematic validation framework consisting of four quantitative test scenarios designed to validate our core hypotheses. The next chapter details the software implementation and architectural components of the ZEC-5 prototype.
+Finally, we established a systematic validation framework consisting of four quantitative test scenarios designed to validate our core hypotheses. The next chapter details the software implementation and architectural components of the ZET-5 prototype.
 # CHAPTER 4: DESIGN AND IMPLEMENTATION
 
 ## 4.0 Introduction
-This chapter presents the full software design and modular implementation of the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Built entirely as a self-contained, offline software prototype, the ZEC-5 architecture translates raw metrology data into actionable, self-learning consumption models served through an interactive, premium glassmorphic dashboard. 
+This chapter presents the full software design and modular implementation of the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Built entirely as a self-contained, offline software prototype, the ZET-5 architecture translates raw metrology data into actionable, self-learning consumption models served through an interactive, premium glassmorphic dashboard. 
 
 The software utilizes a modular C++/JavaScript design that isolates simulated sensing inputs from the core algorithmic layers, making the codebase highly extensible and ready for direct transition to physical edge microcontroller hardware.
 
 ---
 
 ## 4.1 System Architectural Design: The Modular SIL Model
-The ZEC-5 software is designed around a **four-layer decoupled architecture** where processing flows sequentially from simulated circuit loops up to the presentation dashboard. This structure prevents coupling between metrology calculations and decision-making logic, ensuring independent testability and high computational performance.
+The ZET-5 software is designed around a **four-layer decoupled architecture** where processing flows sequentially from simulated circuit loops up to the presentation dashboard. This structure prevents coupling between metrology calculations and decision-making logic, ensuring independent testability and high computational performance.
 
 ```
 +-------------------------------------------------------------+
@@ -507,7 +507,7 @@ This module handles all time virtualization, machine learning, and numerical for
 
 *   **`getVirtualTime()`:** Rather than calling standard system time (`Date.now()`), the system overlays a persistent offset:
     $$\text{Virtual Time} = \text{Date.now()} + \text{timeOffsetMs}$$
-    This offset is saved in `localStorage` under `zec5_virtual_time_offset`. This guarantees that if the user refreshes their browser, the simulated system clock remains in its advanced time phase.
+    This offset is saved in `localStorage` under `zet5_virtual_time_offset`. This guarantees that if the user refreshes their browser, the simulated system clock remains in its advanced time phase.
 *   **`advanceVirtualTime(hours)`:** Manually increments `timeOffsetMs` by a specified number of hours. This shifts the virtual clock, triggering immediate updates across the metrology engines.
 *   **`simulateIntervalProgress(hours, averagePowerW)`:** Simulates a long-term time jump step-by-step. It advances the clock hour-by-hour. For each simulated hour ($h$), it blends the active loop wattage ($C_{\text{obs}}$) into the corresponding 24-bin RHS signature array ($S$) using our Exponential Moving Average (EMA) algorithm:
     $$S_t(h) = (1 - \alpha) \cdot S_{t-1}(h) + \alpha \cdot C_{\text{obs}}(h)$$
@@ -557,13 +557,13 @@ This module governs real-power calculations, power factor scaling, token depleti
 ---
 
 ## 4.4 Chapter Summary
-This chapter detailed the software architecture and modular implementation files of the ZEC-5 prototype. We explained how the decoupled four-layer architecture separates simulated metrology inputs from the core algorithmic layers. The APIs of `predictionEngine.js` (time machine virtualization, online learning EMA) and `energyEngine.js` (power factor scaling, closed-loop drift calibration) were detailed. 
+This chapter detailed the software architecture and modular implementation files of the ZET-5 prototype. We explained how the decoupled four-layer architecture separates simulated metrology inputs from the core algorithmic layers. The APIs of `predictionEngine.js` (time machine virtualization, online learning EMA) and `energyEngine.js` (power factor scaling, closed-loop drift calibration) were detailed. 
 
-Finally, we presented the glassmorphic presentation dashboard and onboarding wizard, highlighting the **Predictive Clock Simulator** and the **Tier 1 Safety Lock**. The next chapter presents the experimental testing, evaluation results, and analysis of the ZEC-5 system.
+Finally, we presented the glassmorphic presentation dashboard and onboarding wizard, highlighting the **Predictive Clock Simulator** and the **Tier 1 Safety Lock**. The next chapter presents the experimental testing, evaluation results, and analysis of the ZET-5 system.
 # CHAPTER 5: TESTING, RESULTS, AND ANALYSIS
 
 ## 5.0 Introduction
-This chapter presents the empirical testing, experimental results, and analytical evaluation of the **ZEC-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Using our virtualized clock time-machine sandbox, we conduct controlled validation tests to assess system accuracy, self-learning capability, forecasting stability, and triage reliability under realistic Zimbabwean residential load profiles. 
+This chapter presents the empirical testing, experimental results, and analytical evaluation of the **ZET-5 Software-in-the-Loop (SIL) Predictive Energy Controller**. Using our virtualized clock time-machine sandbox, we conduct controlled validation tests to assess system accuracy, self-learning capability, forecasting stability, and triage reliability under realistic Zimbabwean residential load profiles. 
 
 All test cases are mapped directly to the research hypotheses ($H_1$-$H_4$) established in Chapter 1, providing transparent, falsifiable metrics of system performance.
 
@@ -609,7 +609,7 @@ By Cycle 3, the calibration factor stabilized at $0.994$, and the cumulative met
 This test case validates **Hypothesis 2 ($H_2$)**, which states that the Rolling Hourly Signature (RHS) algorithm will achieve a **calibration confidence index exceeding 90%** within 72 simulated hours of active online learning.
 
 ### 5.2.1 Experimental Procedure
-1. The ZEC-5 prototype is initiated with an empty RHS training matrix (all 24 bins set to a baseline default). The initial **Behavioral Calibration Index** displays $0\%$.
+1. The ZET-5 prototype is initiated with an empty RHS training matrix (all 24 bins set to a baseline default). The initial **Behavioral Calibration Index** displays $0\%$.
 2. We run the time-machine simulator, fast-forwarding the virtual system clock 24 hours at a time over 5 simulated days.
 3. The household load profile follows a standard cyclic Zimbabwean baseline: morning geyser peak (05:00-07:00), midday borehole pump draw (12:00-13:00), evening entertainment peak (18:00-22:00), and overnight standby.
 4. We monitor the Behavioral Calibration Index and record the learned wattage signatures of the 24 hourly bins.
@@ -632,7 +632,7 @@ As the virtual hours advanced, the EMA algorithm incrementally updated the signa
 
 Table 5.2 outlines the learned hourly signature profile values in the trained RHS matrix.
 
-### Table 5.2: Trained ZEC-5 Rolling Hourly Signature Bins (Watts)
+### Table 5.2: Trained ZET-5 Rolling Hourly Signature Bins (Watts)
 | Hour Bin (h) | Profile Phase | Monitored Active Circuits | Learned Signature (Watts) |
 | :--- | :--- | :--- | :--- |
 | **00:00 - 04:00** | Night Standby | Fridge (Cyclic) + Standby | 185 W |
@@ -656,14 +656,14 @@ This test case validates **Hypothesis 3 ($H_3$)**, which states that under highl
 2. The simulation is run continuously until the token balance is exhausted (actual depletion occurs at exactly $104.5$ hours).
 3. At five distinct test intervals during the depletion cycle (e.g., during night standby, morning peak, midday pump, and evening entertainment), we record the forecasted remaining runway (hours) generated by:
     *   **The Static Linear Division model:** $\text{Runway} = \text{Remaining Token} / \text{Instantaneous Wattage}$
-    *   **The ZEC-5 Iterative Numerical Integration model:** Steps forward hour-by-hour over the RHS matrix.
+    *   **The ZET-5 Iterative Numerical Integration model:** Steps forward hour-by-hour over the RHS matrix.
 4. We compute the prediction error (forecasted depletion time minus actual depletion time) and calculate the mathematical variance.
 
 ### 5.3.2 Results and Analysis
 Table 5.3 presents the comparative forecasting accuracy results.
 
 ### Table 5.3: Forecasting Accuracy and Runway Prediction Variance
-| Measurement Time | Current Household Power (W) | Remaining Token (kWh) | Static Linear Forecast Runway (Hours) | Static Model Prediction Error | ZEC-5 Iterative Forecast Runway (Hours) | ZEC-5 Model Prediction Error |
+| Measurement Time | Current Household Power (W) | Remaining Token (kWh) | Static Linear Forecast Runway (Hours) | Static Model Prediction Error | ZET-5 Iterative Forecast Runway (Hours) | ZET-5 Model Prediction Error |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **T1 (Hour 12 - Night)** | 185 W | 44.5 kWh | 240.5 Hrs | +148.0 Hrs (Overestimate) | 92.2 Hrs | **-0.3 Hrs** |
 | **T2 (Hour 18 - Morning)** | 2,450 W | 38.2 kWh | 15.6 Hrs | -68.9 Hrs (Underestimate) | 85.0 Hrs | **+0.5 Hrs** |
@@ -676,7 +676,7 @@ Table 5.3 presents the comparative forecasting accuracy results.
 Depletion Prediction Error (Hours):
 +150h |  o (Static Model Error: +148h during night)
       |
-   0h |==o===============o=================o=================o (ZEC-5 Error: +/- 0.5 Hrs)
+   0h |==o===============o=================o=================o (ZET-5 Error: +/- 0.5 Hrs)
       |
  -70h |         o (Static Model Error: -69h during geyser peak)
 ```
@@ -687,7 +687,7 @@ The empirical data shows the failure of static linear division under cyclic load
 *   During the **Morning peak (T2)** when the geyser was heating ($2,450\text{ W}$), the static model panicked, projecting only $15.6$ hours of runway, underestimating the remaining token life by **$68.9$ hours**.
 *   This produced a massive prediction variance of **$3,742.6\text{ Hours}^2$** (a standard deviation of $61.2$ hours).
 
-In contrast, the ZEC-5 Iterative Numerical Integration model maintained a maximum prediction error of only **$0.5\text{ hours}$ (30 minutes)**, resulting in a tiny variance of **$0.11\text{ Hours}^2$**. Because the ZEC-5 engine steps forward in virtual time and deducts the cyclic load signatures from the remaining energy balance hour-by-hour, its predictions remained extremely stable, completely validating and confirming **Hypothesis 3 ($H_3$)**.
+In contrast, the ZET-5 Iterative Numerical Integration model maintained a maximum prediction error of only **$0.5\text{ hours}$ (30 minutes)**, resulting in a tiny variance of **$0.11\text{ Hours}^2$**. Because the ZET-5 engine steps forward in virtual time and deducts the cyclic load signatures from the remaining energy balance hour-by-hour, its predictions remained extremely stable, completely validating and confirming **Hypothesis 3 ($H_3$)**.
 
 ---
 
@@ -724,19 +724,19 @@ The triage sequence shows a successful demand-side response execution:
 ---
 
 ## 5.5 Chapter Summary
-This chapter presented the empirical testing and performance analysis of the ZEC-5 prototype. Through four controlled test scenarios run inside the virtual clock sandbox, we evaluated the core algorithmic engines. 
+This chapter presented the empirical testing and performance analysis of the ZET-5 prototype. Through four controlled test scenarios run inside the virtual clock sandbox, we evaluated the core algorithmic engines. 
 
-Test Case 1 validated the closed-loop calibration factor, reducing cumulative metrology drift from $+5.0\%$ to **$-0.06\%$** within three manual sync cycles, confirming $H_1$. Test Case 2 validated the RHS online learning EMA model, achieving a **$94\%$ calibration confidence** within 72 hours, confirming $H_2$. Test Case 3 proved that the ZEC-5 iterative numerical forecasting model predicts token depletion with a tiny variance of **$0.11\text{ Hours}^2$**, outperforming the static model's $3,742.6\text{ Hours}^2$ variance, confirming $H_3$. Finally, Test Case 4 validated the graduated triage decision logic, stretching a $25\text{ kWh}$ token to its $14$-day target while maintaining **100% power to Tier 1 essentials**, confirming $H_4$. 
+Test Case 1 validated the closed-loop calibration factor, reducing cumulative metrology drift from $+5.0\%$ to **$-0.06\%$** within three manual sync cycles, confirming $H_1$. Test Case 2 validated the RHS online learning EMA model, achieving a **$94\%$ calibration confidence** within 72 hours, confirming $H_2$. Test Case 3 proved that the ZET-5 iterative numerical forecasting model predicts token depletion with a tiny variance of **$0.11\text{ Hours}^2$**, outperforming the static model's $3,742.6\text{ Hours}^2$ variance, confirming $H_3$. Finally, Test Case 4 validated the graduated triage decision logic, stretching a $25\text{ kWh}$ token to its $14$-day target while maintaining **100% power to Tier 1 essentials**, confirming $H_4$. 
 
 The next chapter concludes this dissertation and presents future recommendations.
 # CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATIONS
 
 ## 6.1 Dissertation Summary
-This research successfully designed, implemented, and validated **ZEC-5 (Zimbabwean Energy Controller - 5 Monitored Channels)**, a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype. Developed in response to persistent electrical utility instability and the constraints of prepaid ZESA billing systems in Zimbabwe, ZEC-5 shifts residential energy management from a passive protection paradigm to an active, self-learning, and predictive edge computing model.
+This research successfully designed, implemented, and validated **ZET-5 (Zimbabwean Energy Tracker - 5 Monitored Channels)**, a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype. Developed in response to persistent electrical utility instability and the constraints of prepaid ZESA billing systems in Zimbabwe, ZET-5 shifts residential energy management from a passive protection paradigm to an active, self-learning, and predictive edge computing model.
 
 Standard domestic electrical installations react only to dangerous overcurrent faults via passive circuit breakers. They are blind to depleting prepaid balances, resulting in sudden, uncoordinated, all-or-nothing blackouts. 
 
-ZEC-5 resolves this problem by implementing a modular software architecture consisting of:
+ZET-5 resolves this problem by implementing a modular software architecture consisting of:
 1. A **disaggregated metrology engine** with loop-specific **Power Factor (PF) correction** to reflect true utility billing.
 2. A **closed-loop Meter Sync Calibration Engine** to eliminate cumulative integration drift.
 3. A **Rolling Hourly Signature (RHS) online learning algorithm** that profiles daily domestic habits.
@@ -752,7 +752,7 @@ The quantitative testing and performance analysis detailed in Chapter 5 successf
 
 *   **Hypothesis 1 ($H_1$) - Confirmed:** The Meter Sync Calibration Engine successfully calibrated a simulated $+5.0\%$ metrology scaling drift down to **$-0.06\%$ integration error** within three manual synchronization cycles. This proved that a low-pass filtered feedback loop ($\beta = 0.30$) can dynamically lock onto a physical utility meter's state, eliminating cumulative metrology drift without expensive calibration instrumentation.
 *   **Hypothesis 2 ($H_2$) - Confirmed:** The Rolling Hourly Signature (RHS) algorithm successfully mapped typical household usage peaks, achieving a **calibration confidence index of $94\%$** within 72 simulated hours of active online learning, and hitting $100\%$ by 96 hours. This established that a 24-bin EMA profile requires only **96 bytes of SRAM memory** to build an adaptive, edge-level behavioral fingerprint.
-*   **Hypothesis 3 ($H_3$) - Confirmed:** Under highly cyclic load profiles, the ZEC-5 iterative numerical integration forecasting model predicted the actual token depletion time with a tiny variance of **$0.11\text{ Hours}^2$** (a maximum error of under 30 minutes). In contrast, the standard static linear division model exhibited a massive variance of **$3,742.6\text{ Hours}^2$** (fluctuating by up to 6 days depending on active load phases), proving the mathematical necessity of numerical signature integration for domestic forecasting.
+*   **Hypothesis 3 ($H_3$) - Confirmed:** Under highly cyclic load profiles, the ZET-5 iterative numerical integration forecasting model predicted the actual token depletion time with a tiny variance of **$0.11\text{ Hours}^2$** (a maximum error of under 30 minutes). In contrast, the standard static linear division model exhibited a massive variance of **$3,742.6\text{ Hours}^2$** (fluctuating by up to 6 days depending on active load phases), proving the mathematical necessity of numerical signature integration for domestic forecasting.
 *   **Hypothesis 4 ($H_4$) - Confirmed:** The autonomous triage engine maintained continuous electrical power to Tier 1 (Essential) circuit loops in **100% of budget critical test runs**. Under a severe token deficit, the system systematically recommended and executed graduated load shedding (shedding Tier 3 Geyser, then Tier 3 Borehole, then Tier 2 Comfort loads) to successfully stretch a $25\text{ kWh}$ balance to its $14$-day target runway, proving the reliability of the **Hardcoded Tier 1 Software Lock**.
 
 ---
@@ -767,20 +767,20 @@ This dissertation introduces three distinct contributions to the fields of edge 
 ---
 
 ## 6.4 Recommendations for Future Work
-While the ZEC-5 prototype has achieved all its primary design objectives and validated its core hypotheses, several pathways exist for commercial expansion and future academic research:
+While the ZET-5 prototype has achieved all its primary design objectives and validated its core hypotheses, several pathways exist for commercial expansion and future academic research:
 
 ### 6.4.1 Transitioning to Physical Hardware Metrology Nodes
-The ZEC-5 React dashboard is architected with a decoupled state layer, making it fully prepared to bridge from the Software-in-the-Loop sandbox to a physical hardware installation. 
+The ZET-5 React dashboard is architected with a decoupled state layer, making it fully prepared to bridge from the Software-in-the-Loop sandbox to a physical hardware installation. 
 
 Future work should focus on deploying a physical **ESP32 current-sensing metrology node** at a residential distribution board. The hardware node would utilize:
 *   Five **SCT-013-030 split-core current transformers** clamped around the active loop conductors.
 *   An active DC bias circuit ($1.65\text{V}$) routing into the ESP32's internal 12-bit ADCs.
 *   An external **opto-isolated 5V relay module** connected via GPIO pins.
 
-The physical ESP32 node would run a lightweight WebSocket server, streaming disaggregated current ticks in real-time to the ZEC-5 dashboard using the exact JSON communication structure developed in this project. The dashboard's predictive engines would process these physical streams without requiring a single line of algorithmic rewrite.
+The physical ESP32 node would run a lightweight WebSocket server, streaming disaggregated current ticks in real-time to the ZET-5 dashboard using the exact JSON communication structure developed in this project. The dashboard's predictive engines would process these physical streams without requiring a single line of algorithmic rewrite.
 
 ### 6.4.2 Direct Integration of Utility Load-Shedding API Schedules
-Currently, the forecasting engine projects depletion assuming continuous power availability. However, ZESA load shedding represents a major variable in ZEC-5's mathematical calculations. If a household undergoes 10 hours of blackouts a day, its physical prepaid units will deplete much slower because active loops are physically unpowered.
+Currently, the forecasting engine projects depletion assuming continuous power availability. However, ZESA load shedding represents a major variable in ZET-5's mathematical calculations. If a household undergoes 10 hours of blackouts a day, its physical prepaid units will deplete much slower because active loops are physically unpowered.
 
 Future work should integrate the **ZETDC national load-shedding API** directly into the Inference Engine. By fetching the household's zone schedule, the iterative numerical forecasting loop can dynamically mask out scheduled blackout hours:
 
@@ -794,4 +794,4 @@ The current metrology engine assumes a single-phase configuration. Scaling the s
 ---
 
 ## 6.5 Final Conclusion
-The ZEC-5 Predictive Energy Controller successfully demonstrates that edge-only, self-learning systems can resolve critical vulnerabilities in prepaid residential energy management. By replacing passive protection with active, tier-based triage, closed-loop drift calibration, and iterative numerical forecasting, ZEC-5 empowers consumers to actively stretch their energy budget and protect essential appliances. The Software-in-the-Loop prototype has been mathematically validated, proving highly stable and performant, and is completely prepared for direct transition to physical field deployment.
+The ZET-5 Predictive Energy Controller successfully demonstrates that edge-only, self-learning systems can resolve critical vulnerabilities in prepaid residential energy management. By replacing passive protection with active, tier-based triage, closed-loop drift calibration, and iterative numerical forecasting, ZET-5 empowers consumers to actively stretch their energy budget and protect essential appliances. The Software-in-the-Loop prototype has been mathematically validated, proving highly stable and performant, and is completely prepared for direct transition to physical field deployment.

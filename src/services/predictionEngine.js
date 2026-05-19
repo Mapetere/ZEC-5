@@ -1,5 +1,5 @@
 /**
- * ZEC-5 Predictive Forecasting Engine — Rolling Hourly Signature (RHS) Model
+ * ZET-5 Predictive Forecasting Engine — Rolling Hourly Signature (RHS) Model
  * 
  * WHY THIS IS ACADEMICALLY ADVANCED:
  * Instead of assuming flat power consumption (e.g. Current kW × 24h), this engine
@@ -12,8 +12,8 @@
  * hours dynamically.
  */
 
-const STORAGE_KEY = 'zec5_prediction_model';
-const TIME_KEY = 'zec5_virtual_time_offset';
+const STORAGE_KEY = 'zet5_prediction_model';
+const TIME_KEY = 'zet5_virtual_time_offset';
 const ALPHA = 0.20; // Learning rate (EMA weight for online adaptation)
 
 // Default "Starting Guess" for typical Zimbabwean household hourly usage in kWh
@@ -67,7 +67,7 @@ export function getPredictionModel() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {
-    console.warn('[ZEC-5 Model] Failed to load prediction state:', e);
+    console.warn('[ZET-5 Model] Failed to load prediction state:', e);
   }
 
   // Fallback: Initialize with baseline

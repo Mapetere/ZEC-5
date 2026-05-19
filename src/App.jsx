@@ -36,12 +36,12 @@ const MAINS_VOLTAGE = 230;
 
 export default function App() {
   const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('zec5_auth'))?.email || null; } catch { return null; }
+    try { return JSON.parse(localStorage.getItem('zet5_auth'))?.email || null; } catch { return null; }
   });
 
-  const [setupComplete, setSetupComplete] = useState(() => !!localStorage.getItem('zec5_setup'));
+  const [setupComplete, setSetupComplete] = useState(() => !!localStorage.getItem('zet5_setup'));
   const [setupData, setSetupData] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('zec5_setup')); } catch { return null; }
+    try { return JSON.parse(localStorage.getItem('zet5_setup')); } catch { return null; }
   });
 
   const [page, setPage] = useState('dashboard');
@@ -72,9 +72,9 @@ export default function App() {
 
   const [profiles, setProfiles] = useState(() => {
     try {
-      const stored = localStorage.getItem('zec5_profiles');
+      const stored = localStorage.getItem('zet5_profiles');
       if (stored) return JSON.parse(stored);
-      const setup = localStorage.getItem('zec5_setup');
+      const setup = localStorage.getItem('zet5_setup');
       if (setup) {
         const sd = JSON.parse(setup);
         return DEFAULT_PROFILES.map((p, i) => ({ ...p, name: sd.sensorNames?.[i] || p.name }));
@@ -148,7 +148,7 @@ export default function App() {
     setSetupComplete(true);
     const updated = DEFAULT_PROFILES.map((p, i) => ({ ...p, name: data.sensorNames?.[i] || p.name }));
     setProfiles(updated);
-    localStorage.setItem('zec5_profiles', JSON.stringify(updated));
+    localStorage.setItem('zet5_profiles', JSON.stringify(updated));
 
     // Initialize the energy engine with token data
     if (data.tokenData?.kwh && data.tokenData?.date) {
@@ -179,7 +179,7 @@ export default function App() {
           id: `blackout-${Date.now()}`,
           type: 'danger',
           title: 'Grid Power Outage Detected',
-          message: 'Utility voltage sags to 0V. ZEC-5 edge brain has frozen all behavioral updates to protect profiles.',
+          message: 'Utility voltage sags to 0V. ZET-5 edge brain has frozen all behavioral updates to protect profiles.',
           time: 'Now',
           actionable: false,
         }]);
@@ -236,7 +236,7 @@ export default function App() {
       engine.cumulativeKwh += kwhConsumed;
       engine.lastTickTime = Date.now();
       setEngineState({ ...engine });
-      localStorage.setItem('zec5_energy_engine', JSON.stringify(engine));
+      localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
     }
     showToast(`Successfully advanced virtual clock by ${hours} hours!`, 'success');
   }, [tokenState, showToast]);
@@ -246,7 +246,7 @@ export default function App() {
     const days = inject7DayHistory();
     setDailyAverages(days);
     try {
-      const refreshed = JSON.parse(localStorage.getItem('zec5_setup'));
+      const refreshed = JSON.parse(localStorage.getItem('zet5_setup'));
       setSetupData(refreshed);
     } catch { /* ignore */ }
     showToast("Successfully injected 7-day metrology history!", 'success');
@@ -257,7 +257,7 @@ export default function App() {
     if (setupData) {
       const updated = { ...setupData, notifyThreshold: newThreshold };
       setSetupData(updated);
-      localStorage.setItem('zec5_setup', JSON.stringify(updated));
+      localStorage.setItem('zet5_setup', JSON.stringify(updated));
     }
     showToast(`Trigger threshold updated to ${newThreshold} kWh!`, 'success');
   }, [setupData, showToast]);
@@ -276,7 +276,7 @@ export default function App() {
 
   const handleProfileSave = useCallback((newProfiles) => {
     setProfiles(newProfiles);
-    localStorage.setItem('zec5_profiles', JSON.stringify(newProfiles));
+    localStorage.setItem('zet5_profiles', JSON.stringify(newProfiles));
     showToast("Appliance sensor mapping profiles updated successfully!", 'success');
   }, [showToast]);
 
@@ -299,7 +299,7 @@ export default function App() {
       engine.cumulativeKwh = 0;
       engine.lastTickTime = Date.now();
       setEngineState({ ...engine });
-      localStorage.setItem('zec5_energy_engine', JSON.stringify(engine));
+      localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
       setDismissCutoff(false); // Re-arm cutoff alert
       showToast(`Loaded ${kwhAmount} kWh recharge successfully!`, 'success');
     }
@@ -315,14 +315,14 @@ export default function App() {
   }, [showToast]);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('zec5_auth');
+    localStorage.removeItem('zet5_auth');
     setUser(null);
     if (mockRef.current) mockRef.current.stop();
   }, []);
 
   const handleResetSetup = useCallback(() => {
-    localStorage.removeItem('zec5_setup');
-    localStorage.removeItem('zec5_daily_averages');
+    localStorage.removeItem('zet5_setup');
+    localStorage.removeItem('zet5_daily_averages');
     resetEngine();
     setSetupComplete(false);
     setSetupData(null);

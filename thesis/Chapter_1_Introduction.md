@@ -9,7 +9,7 @@ Prepaid tokens are purchased in kilowatt-hours (kWh) and continuously decline as
 
 Consequently, when a prepaid token balance depletes to zero, the utility meter abruptly disconnects all electrical supply to the residence. This binary, all-or-nothing cutoff treats all household loads equally. The refrigerator—which houses perishable foodstuffs—loses power at the exact same millisecond as non-essential convenience loads, such as geysers, air conditioners, or entertainment consoles. This systemic inability to prioritize loads based on the remaining energy runway leads to premature food spoilage, accelerated backup battery depletion, and high domestic utility anxiety.
 
-This research addresses this structural gap by designing, implementing, and validating **ZEC-5 (Zimbabwean Energy Controller - 5 Monitored Channels)**. Moving beyond passive protection, ZEC-5 is architected as a **High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Forecasting Prototype**. The system models five disaggregated residential circuit loops (e.g., Geyser, Fridge, Borehole Pump, Entertainment, and Lights) and utilizes **online machine learning** to establish cyclic daily load signatures. By doing so, ZEC-5 runs **iterative numerical integrations** to forecast the exact prepaid depletion date and hour, executing graduated demand-side response actions to stretch the remaining energy runway.
+This research addresses this structural gap by designing, implementing, and validating **ZET-5 (Zimbabwean Energy Tracker - 5 Monitored Channels)**. Moving beyond passive protection, ZET-5 is architected as a **High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Forecasting Prototype**. The system models five disaggregated residential circuit loops (e.g., Geyser, Fridge, Borehole Pump, Entertainment, and Lights) and utilizes **online machine learning** to establish cyclic daily load signatures. By doing so, ZET-5 runs **iterative numerical integrations** to forecast the exact prepaid depletion date and hour, executing graduated demand-side response actions to stretch the remaining energy runway.
 
 ---
 
@@ -27,7 +27,7 @@ There is a clear engineering requirement for a system that can disaggregate hous
 ## 1.3 Research Aim and Objectives
 
 ### 1.3.1 Research Aim
-To design, implement, and validate a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype (ZEC-5) that dynamically profiles residential consumption, mitigates metrology drift, and performs tier-based autonomous load triage to maximize the operational runway of a finite prepaid energy token.
+To design, implement, and validate a High-Fidelity Software-in-the-Loop (SIL) Simulated Metrology and Predictive Energy Forecasting Prototype (ZET-5) that dynamically profiles residential consumption, mitigates metrology drift, and performs tier-based autonomous load triage to maximize the operational runway of a finite prepaid energy token.
 
 ### 1.3.2 Research Objectives
 1. To engineer a high-fidelity disaggregated metrology engine that models five domestic circuit loops, incorporating appliance-specific **Power Factor (PF) correction** to reflect real utility billing.
@@ -44,7 +44,7 @@ This study contributes to the field of edge computing, smart grid technology, an
 
 *   **Academic Contribution:** The existing literature on smart home energy management systems (HEMS) and Non-Intrusive Load Monitoring (NILM) heavily assumes high-performance, cloud-connected hardware (e.g., Raspberry Pi clusters or GPU servers running deep learning networks like LSTMs). This research proves that highly accurate, adaptive residential load profiling and multi-day forecasting can be achieved using resource-constrained edge computing architectures. It establishes the mathematical validity of using **Rolling Hourly Signatures** and **double exponential moving averages** as an efficient, $O(1)$ memory-complexity alternative to heavy deep learning models.
 *   **Methodological Innovation:** By adopting a High-Fidelity Software-in-the-Loop (SIL) simulation framework, this research provides a highly repeatable, deterministic, and safe method for validating complex energy control algorithms. It isolates the algorithmic layer from the physical electrical noise and long validation cycles inherent in hardware-only testing, while providing a clear transition path to physical hardware deployment.
-*   **Socio-Economic Impact:** In the Zimbabwean context, premature energy depletion directly affects household food security (loss of refrigeration) and basic security (loss of lighting and internet access). By extending the prepaid token runway through intelligent, automated triage, ZEC-5 directly enhances household resilience against utility instability, optimizing the value of every dollar spent on prepaid energy.
+*   **Socio-Economic Impact:** In the Zimbabwean context, premature energy depletion directly affects household food security (loss of refrigeration) and basic security (loss of lighting and internet access). By extending the prepaid token runway through intelligent, automated triage, ZET-5 directly enhances household resilience against utility instability, optimizing the value of every dollar spent on prepaid energy.
 
 ---
 
@@ -74,7 +74,7 @@ This study is guided by the following core technical and analytical research que
 ---
 
 ## 1.7 Research Hypotheses
-Based on the system requirements and algorithmic architecture of the ZEC-5 prototype, we formulate the following measurable and falsifiable hypotheses:
+Based on the system requirements and algorithmic architecture of the ZET-5 prototype, we formulate the following measurable and falsifiable hypotheses:
 
 *   **Hypothesis 1 ($H_1$):** The closed-loop Meter Sync Calibration Engine will reduce cumulative metrology integration drift to **under 1.0%** within three manual synchronization cycles.
 *   **Hypothesis 2 ($H_2$):** The Rolling Hourly Signature (RHS) algorithm will achieve a **calibration confidence index exceeding 90%** within 72 simulated hours of active online learning.
@@ -86,7 +86,7 @@ Based on the system requirements and algorithmic architecture of the ZEC-5 proto
 ## 1.8 Project Gantt Chart
 ```mermaid
 gantt
-    title ZEC-5 Research & Implementation Schedule (14 Weeks)
+    title ZET-5 Research & Implementation Schedule (14 Weeks)
     dateFormat  YYYY-MM-DD
     section Research & Design
     Literature Review & Requirement Analysis   :active, des1, 2026-02-01, 3w

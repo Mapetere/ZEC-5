@@ -70,7 +70,7 @@ export default function MeterSync({ visible, onClose, onSync, engineState }) {
             {engineState && (
               <div className="meter-sync-comparison">
                 <div className="meter-sync-est">
-                  <span className="meter-sync-est-label">ZEC-5 Estimate</span>
+                  <span className="meter-sync-est-label">ZET-5 Estimate</span>
                   <span className="meter-sync-est-val">
                     {(engineState.tokenKwh - engineState.cumulativeKwh).toFixed(1)} kWh
                   </span>

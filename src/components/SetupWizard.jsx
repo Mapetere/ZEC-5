@@ -90,7 +90,7 @@ export default function SetupWizard({ onComplete }) {
         setupDate: new Date().toISOString(),
         calibrationStart: new Date().toISOString(),
       };
-      localStorage.setItem('zec5_setup', JSON.stringify(setupData));
+      localStorage.setItem('zet5_setup', JSON.stringify(setupData));
       onComplete(setupData);
       return;
     }
@@ -101,9 +101,9 @@ export default function SetupWizard({ onComplete }) {
     <div className="login-wrapper">
       <div className="setup-card fade-in">
         <div className="login-logo" style={{ marginBottom: 4 }}>
-          <div className="login-logo-icon">ZEC</div>
+          <div className="login-logo-icon">ZET</div>
           <h1 style={{ fontFamily: 'var(--font-sans)', fontSize: 22, fontWeight: 400, letterSpacing: 2 }}>
-            ZEC<span style={{ color: 'var(--accent-blue)' }}>-5</span>
+            ZET<span style={{ color: 'var(--accent-blue)' }}>-5</span>
           </h1>
         </div>
         <p className="login-subtitle" style={{ marginBottom: 24 }}>First-Run Configuration</p>
@@ -244,7 +244,7 @@ export default function SetupWizard({ onComplete }) {
           <div className="setup-body">
             <h3 className="setup-heading">Notification Trigger</h3>
             <p className="setup-desc">
-              Set the energy threshold at which ZEC-5 should start sending recommendations.
+              Set the energy threshold at which ZET-5 should start sending recommendations.
               The system will remain silent above this level.
             </p>
             <label className="login-label">Start recommendations when remaining units fall below</label>

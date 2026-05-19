@@ -1,5 +1,5 @@
 /**
- * ZEC-5 Mock Data Generator — Final Build
+ * ZET-5 Mock Data Generator — Final Build
  * - Moving average smoothing on all 5 sensor feeds
  * - Daily averages database (localStorage)
  * - Inject 7-day history for fast-forward testing
@@ -81,7 +81,7 @@ export function startMockStream(onData, intervalMs = 1500) {
 
 // ===== Daily Averages Database (localStorage) =====
 
-const DAILY_AVG_KEY = 'zec5_daily_averages';
+const DAILY_AVG_KEY = 'zet5_daily_averages';
 
 export function getDailyAverages() {
   try {
@@ -137,12 +137,12 @@ export function inject7DayHistory() {
 
   // Update calibration start to 8 days ago
   try {
-    const setup = JSON.parse(localStorage.getItem('zec5_setup'));
+    const setup = JSON.parse(localStorage.getItem('zet5_setup'));
     if (setup) {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 8);
       setup.calibrationStart = pastDate.toISOString();
-      localStorage.setItem('zec5_setup', JSON.stringify(setup));
+      localStorage.setItem('zet5_setup', JSON.stringify(setup));
     }
   } catch { /* ignore */ }
 

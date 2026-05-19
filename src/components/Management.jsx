@@ -91,7 +91,7 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
       <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border-color)' }}>
         <div className="section-title"><span className="dot" /> Notification Trigger</div>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
-          Set the energy level at which ZEC-5 starts sending recommendations.
+          Set the energy level at which ZET-5 starts sending recommendations.
           Alerts will only fire if the depletion trend also predicts running out before your target date.
         </p>
         <div className="threshold-config">
@@ -182,7 +182,7 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
                   if (val > 0 && onRecharge) {
                     onRecharge(val);
                     if (input) input.value = '';
-                    alert(`Successfully loaded ${val} kWh token onto ZEC-5!`);
+                    alert(`Successfully loaded ${val} kWh token onto ZET-5!`);
                   }
                 }}
                 className="mgmt-save"

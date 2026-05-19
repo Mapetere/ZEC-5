@@ -27,7 +27,7 @@ export default function LoginPage({ onLogin }) {
     setTimeout(() => {
       setLoading(false);
       setStep('otp');
-      console.log(`[ZEC-5] OTP for ${email}: ${code}`);
+      console.log(`[ZET-5] OTP for ${email}: ${code}`);
     }, 1200);
   };
 
@@ -70,7 +70,7 @@ export default function LoginPage({ onLogin }) {
     setLoading(true);
     setTimeout(() => {
       if (code === generatedOtp) {
-        localStorage.setItem('zec5_auth', JSON.stringify({ email, ts: Date.now() }));
+        localStorage.setItem('zet5_auth', JSON.stringify({ email, ts: Date.now() }));
         onLogin(email);
       } else {
         setError('Invalid verification code. Please try again.');
@@ -91,8 +91,8 @@ export default function LoginPage({ onLogin }) {
     <div className="login-wrapper">
       <div className="login-card fade-in">
         <div className="login-logo">
-          <div className="login-logo-icon">ZEC</div>
-          <h1>ZEC<span>-5</span></h1>
+          <div className="login-logo-icon">ZET</div>
+          <h1>ZET<span>-5</span></h1>
         </div>
         <p className="login-subtitle">Energy Controller Interface</p>
 
@@ -105,7 +105,7 @@ export default function LoginPage({ onLogin }) {
                 id="login-email"
                 className="login-input"
                 type="email"
-                placeholder="engineer@zec5.co.zw"
+                placeholder="engineer@zet5.co.zw"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 autoFocus
