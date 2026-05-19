@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 /**
  * EngineerSetupPage — Professional installation and telemetry mapping wizard.
- * Enables ZEC-55 / ZET5 authenticated calibration and client registration.
+ * Enables ZET-5 authenticated calibration and client registration.
  */
 export default function EngineerSetupPage({ onComplete }) {
   const [engineerName, setEngineerName] = useState('');
@@ -68,7 +68,7 @@ export default function EngineerSetupPage({ onComplete }) {
 
     setLoading(true);
 
-    // Simulate ZEC-55 / ZET5 cloud register matching and account link creation
+    // Simulate ZET-5 cloud register matching and account link creation
     setTimeout(() => {
       setLoading(false);
       setLinkFormed(true);
@@ -118,7 +118,7 @@ export default function EngineerSetupPage({ onComplete }) {
             OK
           </div>
           <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', color: '#fff', marginBottom: '8px' }}>
-            ZEC-55 Link Active
+            ZET-5 Link Active
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px' }}>
             Hardware profiles verified. Link formed with client account:<br />
@@ -149,7 +149,7 @@ export default function EngineerSetupPage({ onComplete }) {
           </h1>
         </div>
         <p className="login-subtitle" style={{ marginBottom: 24 }}>
-          Zimbabwe Energy Council ZEC-55 Telemetry Installation
+          ZET-5 Telemetry Installation
         </p>
 
         {error && <div className="login-error" style={{ marginBottom: 20 }}>{error}</div>}
@@ -173,7 +173,7 @@ export default function EngineerSetupPage({ onComplete }) {
               />
             </div>
 
-            <label className="login-label">ZET5 Badge Code (Registered ZEC-55)</label>
+            <label className="login-label">ZET5 Badge Code (Registered ZET5)</label>
             <div className="login-input-wrap">
               <input
                 className="login-input"

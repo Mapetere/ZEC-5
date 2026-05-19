@@ -238,6 +238,14 @@ export default function App() {
     }
   }, [tokenState?.belowThreshold, tokenState?.atRisk]);
 
+  // Scroll to top of page-container on page navigation
+  useEffect(() => {
+    const el = document.querySelector('.page-container');
+    if (el) {
+      el.scrollTop = 0;
+    }
+  }, [page]);
+
   // Time Machine Simulation Advancement (Fast-Forward clock & learn patterns)
   const handleSimulateHours = useCallback((hours) => {
     const dailyUsageKwh = tokenState?.dailyUsage || 8.5;

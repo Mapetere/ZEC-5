@@ -30,7 +30,7 @@ export default function Settings({
       {/* ===== ENGINEER LINK DETAILS ===== */}
       <div className="card full-width" style={{ marginBottom: 28 }}>
         <div className="card-header">
-          <span className="card-title">ZEC-55 Certified Link</span>
+          <span className="card-title">ZET-5 Certified Link</span>
           <span className="card-badge" style={{ background: 'var(--accent-green-dim)', color: 'var(--accent-green)' }}>
             Verified
           </span>
@@ -48,19 +48,19 @@ export default function Settings({
             fontSize: '24px',
             fontWeight: 'bold'
           }}>
-            ECZ
+            ZET
           </div>
           <div>
             <h4 style={{ margin: 0, fontSize: '15px', color: '#fff' }}>
-              {engineerSetup?.engineerName || 'Registered ECZ Engineer'}
+              {engineerSetup?.engineerName || 'ZET Certified Engineer'}
             </h4>
             <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Registration Code: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{engineerSetup?.badgeCode || 'ZEC-55-4694'}</span>
+              Registration Code: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>{engineerSetup?.badgeCode || 'ZET-5-4694'}</span>
             </p>
           </div>
         </div>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-          This hardware installation was calibrated and verified by a registered professional engineer under the Engineering Council of Zimbabwe ZEC-55 telemetry guidelines.
+          This hardware installation was calibrated and verified by a registered professional engineer under the ZET-5 telemetry guidelines.
         </p>
       </div>
 

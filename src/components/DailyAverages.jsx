@@ -6,6 +6,9 @@ export default function DailyAverages({ dailyAverages, profiles, vacant }) {
       <div className="section-title"><span className="dot" /> Daily Averages Database</div>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
         Historical daily averages used by the predictive engine for accurate baseline generation.
+        <span style={{ display: 'block', marginTop: '8px', color: 'var(--warning-amber)', fontWeight: '500' }}>
+          Note: These metrics show averages tracked specifically for the current active token's life span, not cumulative statistics since the day of hardware installation.
+        </span>
       </p>
       
       {recentDays.length > 0 ? (

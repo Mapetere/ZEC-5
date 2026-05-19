@@ -7,7 +7,7 @@ function generateMockTokens(profiles) {
 
   for (let i = 0; i < 6; i++) {
     const kwh = [50, 100, 150, 200][Math.floor(Math.random() * 4)];
-    const durationDays = kwh / 8.5; // approx 8.5 kWh per day
+    const durationDays = Math.ceil(kwh / 8.5); // approx 8.5 kWh per day
     const dateBought = new Date(currentDate);
     const dateDepleted = new Date(currentDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
     
@@ -23,17 +23,39 @@ function generateMockTokens(profiles) {
       };
     });
 
+    // Pick random blackout days (ZESA gone whole day) for this token session
+    const blackoutIndices = new Set();
+    // 60% chance this token session has 1 to 3 blackout days
+    if (Math.random() < 0.6 && durationDays > 5) {
+      const numBlackouts = Math.floor(Math.random() * 3) + 1;
+      while (blackoutIndices.size < numBlackouts) {
+        const randIndex = Math.floor(Math.random() * durationDays);
+        if (randIndex > 0 && randIndex < durationDays - 1) {
+          blackoutIndices.add(randIndex);
+        }
+      }
+    }
+
     // Generate daily logs
     const dailyLogs = [];
     let loopDate = new Date(dateBought);
+    let dayIndex = 0;
+    const activeDaysCount = durationDays - blackoutIndices.size;
+
     while (loopDate <= dateDepleted && loopDate <= new Date()) {
-       const dailyTotal = kwh / durationDays;
+       const isBlackout = blackoutIndices.has(dayIndex);
+       const dailyTotal = isBlackout ? 0 : (kwh / activeDaysCount);
        dailyLogs.push({
          date: loopDate.toISOString().split('T')[0],
          total: dailyTotal,
-         gadgets: gadgets.map(g => ({ name: g.name, kwh: g.totalKwh / durationDays }))
+         isBlackout,
+         gadgets: gadgets.map(g => ({
+           name: g.name,
+           kwh: isBlackout ? 0 : (g.totalKwh / activeDaysCount)
+         }))
        });
        loopDate.setDate(loopDate.getDate() + 1);
+       dayIndex++;
     }
 
     tokens.push({
@@ -91,25 +113,41 @@ export default function AuditTrail({ profiles }) {
 
   useEffect(() => {
     // Check if we have mock token history in storage, otherwise generate
-    const stored = localStorage.getItem('zet5_token_audit');
+    const stored = localStorage.getItem('zet5_token_audit_v2');
     if (stored) {
       try {
         setTokens(JSON.parse(stored));
       } catch {
         const mock = generateMockTokens(profiles);
         setTokens(mock);
-        localStorage.setItem('zet5_token_audit', JSON.stringify(mock));
+        localStorage.setItem('zet5_token_audit_v2', JSON.stringify(mock));
       }
     } else {
       const mock = generateMockTokens(profiles);
       setTokens(mock);
-      localStorage.setItem('zet5_token_audit', JSON.stringify(mock));
+      localStorage.setItem('zet5_token_audit_v2', JSON.stringify(mock));
     }
   }, [profiles]);
 
   const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-    setViewMode('day'); // reset view mode when expanding new
+    if (expandedId === id) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(id);
+      const token = tokens.find(t => t.id === id);
+      if (token && token.dailyLogs) {
+        const days = token.dailyLogs.length;
+        if (days >= 28) {
+          setViewMode('month');
+        } else if (days >= 7) {
+          setViewMode('week');
+        } else {
+          setViewMode('day');
+        }
+      } else {
+        setViewMode('day');
+      }
+    }
   };
 
   return (
@@ -209,7 +247,14 @@ export default function AuditTrail({ profiles }) {
                       <tbody>
                         {groupedData.map((row, i) => (
                           <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{row.label}</td>
+                            <td style={{ padding: '10px 12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {row.label}
+                              {row.isBlackout && (
+                                <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,107,107,0.12)', color: 'var(--alert-red)', fontWeight: 'bold' }}>
+                                  ZESA GONE
+                                </span>
+                              )}
+                            </td>
                             {token.gadgets.map(g => {
                               const match = row.gadgets.find(rg => rg.name === g.name);
                               return (
@@ -218,7 +263,7 @@ export default function AuditTrail({ profiles }) {
                                 </td>
                               );
                             })}
-                            <td style={{ padding: '10px 12px', fontWeight: 'bold', color: 'var(--accent-green)' }}>
+                            <td style={{ padding: '10px 12px', fontWeight: 'bold', color: row.isBlackout ? 'var(--alert-red)' : 'var(--accent-green)' }}>
                               {row.total.toFixed(1)} kWh
                             </td>
                           </tr>
