@@ -64,36 +64,51 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
   return (
     <div className="fade-in">
       <div className="section-title"><span className="dot" /> Appliance Profiling</div>
-      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-        Map sensor channels to domestic appliances. Names propagate to the dashboard gauges and inference alerts.
+      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, inlineHeight: 1.6 }}>
+        Domestic appliance sensor mappings linked to physical clamping channels.
       </p>
-      <div className="mgmt-grid">
+
+      {/* Locked configuration banner */}
+      <div className="card full-width" style={{ border: '1px solid rgba(255, 179, 0, 0.3)', background: 'rgba(255, 179, 0, 0.03)', marginBottom: '24px', padding: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--warning-amber)', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', marginBottom: '8px' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Locked Configuration
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: 0 }}>
+          This metrology and circuit mapping configuration was calibrated and locked during installation by your ZET-5 Certified Engineer. Residents cannot modify these channels. Please contact your certified installer to adjust physical clamping sensors or rename circuits.
+        </p>
+      </div>
+
+      <div className="mgmt-grid" style={{ marginBottom: 28 }}>
         {formData.map((item, i) => (
-          <div key={i} className="mgmt-card">
+          <div key={i} className="mgmt-card" style={{ opacity: 0.95, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Locked
+            </div>
             <div className="mgmt-card-header">
               <div className="mgmt-channel-badge">S{i + 1}</div>
               <div className="mgmt-card-title">Sensor Channel {i + 1}</div>
             </div>
-            <div className="mgmt-input-group">
-              <label htmlFor={`mgmt-name-${i}`}>Appliance Name</label>
-              <input id={`mgmt-name-${i}`} className="mgmt-input" type="text"
-                value={item.name} onChange={(e) => handleChange(i, 'name', e.target.value)} placeholder="e.g. Fridge" />
-            </div>
-            <div className="mgmt-input-group">
-              <label htmlFor={`mgmt-type-${i}`}>Load Type</label>
-              <input id={`mgmt-type-${i}`} className="mgmt-input" type="text"
-                value={item.type} onChange={(e) => handleChange(i, 'type', e.target.value)} placeholder="e.g. Continuous, Cyclic" />
-            </div>
-            <div className="mgmt-input-group">
-              <label htmlFor={`mgmt-load-${i}`}>Max Expected Load (A)</label>
-              <input id={`mgmt-load-${i}`} className="mgmt-input" type="text"
-                value={item.maxLoad} onChange={(e) => handleChange(i, 'maxLoad', e.target.value)} placeholder="e.g. 5.0" />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button className="mgmt-save" onClick={() => handleSave(i)} id={`mgmt-save-${i}`}>
-                Save Profile
-              </button>
-              <span className={`mgmt-saved ${savedIndex === i ? 'visible' : ''}`}>Saved</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '2px' }}>Appliance Name</span>
+                <span style={{ fontSize: '15px', color: '#fff', fontWeight: 'bold' }}>{item.name}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '2px' }}>Load Profile Type</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.type}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '2px' }}>Max Expected Load</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.maxLoad || item.base || '0.0'} A</span>
+              </div>
             </div>
           </div>
         ))}
