@@ -9,8 +9,6 @@ import SmartAdvice from './components/SmartAdvice.jsx';
 import EmergencyMode from './components/EmergencyMode.jsx';
 import MeterSync from './components/MeterSync.jsx';
 import DepletionModal from './components/DepletionModal.jsx';
-import EngineerSetupPage from './components/EngineerSetupPage.jsx';
-import Settings from './components/Settings.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
@@ -24,8 +22,6 @@ import { recordObservation, calculateForecast, simulateIntervalProgress, getVirt
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
   management: 'Appliance Management',
-  inference: 'Inference Engine Insights',
-  settings: 'System Settings',
 };
 
 const DEFAULT_PROFILES = [
@@ -47,17 +43,6 @@ export default function App() {
   const [setupData, setSetupData] = useState(() => {
     try { return JSON.parse(localStorage.getItem('zet5_setup')); } catch { return null; }
   });
-
-  const [engineerSetup, setEngineerSetup] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('zet5_engineer_setup')); } catch { return null; }
-  });
-
-  const handleEngineerSetupComplete = useCallback((engData, profs) => {
-    setEngineerSetup(engData);
-    setProfiles(profs);
-    localStorage.removeItem('zet5_auth');
-    setUser(null);
-  }, []);
 
   const [page, setPage] = useState('dashboard');
   const [sensors, setSensors] = useState([0, 0, 0, 0, 0]);
@@ -133,7 +118,7 @@ export default function App() {
     const calDays = (now - calStart) / (1000 * 60 * 60 * 24);
     const isPhase2 = calDays >= 7;
 
-    // Condition A: below user-configured threshold (kWh)
+    // Condition A: below user configured threshold (kWh)
     const belowThreshold = kwhRemaining < notifyThreshold;
 
     // Condition B: projected depletion before target date (supplied by forecast model)
@@ -338,20 +323,14 @@ export default function App() {
   const handleResetSetup = useCallback(() => {
     localStorage.removeItem('zet5_setup');
     localStorage.removeItem('zet5_daily_averages');
-    localStorage.removeItem('zet5_engineer_setup');
-    localStorage.removeItem('zet5_profiles');
-    localStorage.removeItem('zet5_auth');
     resetEngine();
     setSetupComplete(false);
     setSetupData(null);
     setDailyAverages([]);
     setEngineState(null);
-    setEngineerSetup(null);
-    setUser(null);
   }, []);
 
-  if (!engineerSetup) return <EngineerSetupPage onComplete={handleEngineerSetupComplete} />;
-  if (!user) return <LoginPage onLogin={setUser} linkedEmail={engineerSetup?.clientEmail} />;
+  if (!user) return <LoginPage onLogin={setUser} />;
   if (!setupComplete) return <SetupWizard onComplete={handleSetupComplete} />;
 
   return (
@@ -383,15 +362,6 @@ export default function App() {
               tokenState={tokenState}
               gridBlackout={gridBlackout}
               onToggleBlackout={handleToggleBlackout}
-              onRedirectToRecharge={() => {
-                setPage('management');
-                setTimeout(() => {
-                  const el = document.getElementById('recharge-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }, 100);
-              }}
             />
           )}
           {page === 'management' && (
@@ -404,56 +374,6 @@ export default function App() {
               onRecharge={handleRecharge}
               onSyncMeter={handleMeterSync}
               engineState={engineState}
-            />
-          )}
-          {page === 'inference' && (
-            <div className="fade-in">
-              <div className="section-title"><span className="dot" /> Active Insights & Telemetry Warnings</div>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
-                Real-time recommendations and anomalies parsed by ZET-5's predictive thermodynamic engine.
-              </p>
-              <div className="alerts-section">
-                {(alerts || []).map((a) => (
-                  <div key={a.id} className={`alert-item ${a.type}`}>
-                    <div className="alert-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        {a.type === 'danger' ? (
-                          <><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>
-                        ) : a.type === 'warning' ? (
-                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                        ) : (
-                          <><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></>
-                        )}
-                      </svg>
-                    </div>
-                    <div className="alert-text">
-                      <h4>{a.title}</h4>
-                      <p>{a.message}</p>
-                      {a.actionable && (
-                        <div style={{ marginTop: 12 }}>
-                          <button
-                            onClick={() => handleAcceptAdvice(a.relayIndex)}
-                            className="alert-action"
-                            id={`alert-shed-btn-${a.relayIndex}`}
-                          >
-                            Shed Load Now
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <span className="alert-time">{a.time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {page === 'settings' && (
-            <Settings
-              setupData={setupData}
-              notifyThreshold={notifyThreshold}
-              onThresholdUpdate={handleThresholdUpdate}
-              onResetSetup={handleResetSetup}
-              engineerSetup={engineerSetup}
             />
           )}
         </div>
@@ -492,13 +412,7 @@ export default function App() {
         onGoToRecharge={() => {
           setPage('management');
           setDismissCutoff(true);
-          setTimeout(() => {
-            const el = document.getElementById('recharge-section');
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-          }, 100);
-          showToast("Redirected to settings panel for Recharge/Sync!", 'success');
+          showToast("Redirected toSettings panel for Recharge/Sync!", 'success');
         }}
       />
 
