@@ -201,7 +201,7 @@ export default function Dashboard({
             border: '2px solid rgba(255, 61, 0, 0.3)',
             animation: 'pulse 2s infinite'
           }}>
-            🔌
+            <span style={{ fontWeight: 'bold' }}>!</span>
           </div>
           <h2 style={{
             fontFamily: 'var(--font-mono)',
@@ -420,32 +420,7 @@ export default function Dashboard({
             <span className="card-title">Predictive Controller Status</span>
           </div>
 
-          {/* Behavioral Learning Phase */}
-          <div className="calibration-section" style={{ marginBottom: 16 }}>
-            <div className="calibration-header">
-              <span className="calibration-label">
-                {calibration.complete ? 'Behavioral Model: Calibrated' : `Habit Profiling Phase | Day ${calibration.day}/7`}
-              </span>
-              <span className="calibration-pct">{Math.round(calibration.pct)}%</span>
-            </div>
-            <div className="calibration-bar-track">
-              <div className={`calibration-bar-fill ${calibration.complete ? 'complete' : ''}`} style={{ width: `${calibration.pct}%` }} />
-            </div>
-            {!calibration.complete && (
-              <div className="calibration-actions" style={{ marginTop: 8 }}>
-                <p className="calibration-hint">Analyzing cyclic household habits. Dynamic advices unlock after Day 7.</p>
-                <button className="fast-forward-btn" onClick={onFastForward} id="fast-forward">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" y1="5" x2="19" y2="19" />
-                  </svg>
-                  Simulate 7-Day History
-                </button>
-              </div>
-            )}
-            {calibration.complete && (
-              <p className="calibration-hint" style={{ marginTop: 6 }}>Behavioral baselines fully established. Running dynamic forecast integrations.</p>
-            )}
-          </div>
+
 
           {/* Time Machine Simulator Widget */}
           <div className="time-machine-widget" style={{ padding: '12px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', marginBottom: 14 }}>
@@ -489,7 +464,7 @@ export default function Dashboard({
                   fontWeight: gridBlackout ? 'bold' : 'normal'
                 }}
               >
-                {gridBlackout ? '⚡ RESTORE UTILITY POWER' : '🔌 SIMULATE ZESA BLACKOUT'}
+                {gridBlackout ? 'RESTORE UTILITY POWER' : 'SIMULATE ZESA BLACKOUT'}
               </button>
             </div>
           </div>
@@ -512,25 +487,15 @@ export default function Dashboard({
             <span className="threshold-value" style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{notifyThreshold} kWh</span>
           </div>
 
-          {/* Smart Advice Button */}
-          {calibration.complete ? (
-            <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice" style={{ width: '100%' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-              </svg>
-              Smart Advice
-              {(alerts || []).filter(a => a.type !== 'info').length > 0 && (
-                <span className="advice-count">{(alerts || []).filter(a => a.type !== 'info').length}</span>
-              )}
-            </button>
-          ) : (
-            <div className="advice-locked" style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-color)', display: 'flex', gap: 8, alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" /><path d="M7 11V7a5 5 0 0110 0v4" />
-              </svg>
-              Habit Profiling... Advices unlock in {calibration.daysLeft} days.
-            </div>
-          )}
+          <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice" style={{ width: '100%' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+            </svg>
+            Smart Advice
+            {(alerts || []).filter(a => a.type !== 'info').length > 0 && (
+              <span className="advice-count">{(alerts || []).filter(a => a.type !== 'info').length}</span>
+            )}
+          </button>
         </div>
       </div>
 

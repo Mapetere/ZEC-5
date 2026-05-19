@@ -138,39 +138,7 @@ export function storeDailyAverage(sensors) {
   return trimmed;
 }
 
-/**
- * Inject 7 days of synthetic history for fast-forward testing.
- * Sets calibrationStart to 8 days ago in setup data.
- */
-export function inject7DayHistory() {
-  const days = [];
-  for (let d = 7; d >= 1; d--) {
-    const date = new Date();
-    date.setDate(date.getDate() - d);
-    days.push({
-      date: date.toISOString().split('T')[0],
-      sensors: SENSOR_PROFILES.map(p => {
-        const variance = (Math.random() - 0.5) * p.variance * 2;
-        return parseFloat((p.base + variance).toFixed(3));
-      }),
-      count: 960, // ~1 reading per 1.5s for 24h
-    });
-  }
-  localStorage.setItem(DAILY_AVG_KEY, JSON.stringify(days));
 
-  // Update calibration start to 8 days ago
-  try {
-    const setup = JSON.parse(localStorage.getItem('zet5_setup'));
-    if (setup) {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 8);
-      setup.calibrationStart = pastDate.toISOString();
-      localStorage.setItem('zet5_setup', JSON.stringify(setup));
-    }
-  } catch { /* ignore */ }
-
-  return days;
-}
 
 /**
  * Check if house is vacant (near-zero current across all sensors).
@@ -192,15 +160,8 @@ export function isHouseVacant() {
 export function generateAlerts(sensors, profiles, tokenState) {
   const alerts = [];
 
-  if (!tokenState || !tokenState.isPhase2) {
-    return [{
-      id: 'learning',
-      type: 'info',
-      title: 'Learning Phase Active',
-      message: 'Collecting behavioral data. Intelligent recommendations will activate after the learning period.',
-      time: 'Now',
-      actionable: false,
-    }];
+  if (!tokenState) {
+    return [];
   }
 
   // Only generate if below user-configured threshold (Condition A)

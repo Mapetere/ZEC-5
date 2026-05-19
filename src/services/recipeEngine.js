@@ -48,24 +48,28 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
   // Lighting ring (LED): 100W for 10 hours at night -> average 41.6W
   // Wifi router / Standby: 15W continuous -> average 15W
   const ESSENTIAL_STANDBY_POWER_W = 95.0; // Total baseline continuous draw (kW: 0.095)
-  const essentialKwhNeeded = (ESSENTIAL_STANDBY_POWER_W * targetHours) / 1000;
+  const hoursPossible = (remainingKwh * 1000) / ESSENTIAL_STANDBY_POWER_W;
   
   // Check if the budget target is mathematically unfeasible
-  if (remainingKwh < essentialKwhNeeded) {
-    const hoursPossible = (remainingKwh * 1000) / ESSENTIAL_STANDBY_POWER_W;
+  if (hoursPossible < 24) {
+    const isLessThanOneHour = hoursPossible < 1;
     return {
       feasible: false,
-      deficitKwh: parseFloat((essentialKwhNeeded - remainingKwh).toFixed(2)),
-      diagnostic: `UNFEASIBLE GOAL: Your essential standby loads (refrigerator cycles, security lighting, router) draw an average of ${ESSENTIAL_STANDBY_POWER_W}W, requiring a minimum of ${essentialKwhNeeded.toFixed(2)} kWh to survive ${targetHours} hours. With only ${remainingKwh.toFixed(2)} kWh remaining, the system will experience a blackout in ${hoursPossible.toFixed(1)} hours regardless of heavy appliance control. You must recharge or lower your hourly expectation.`,
+      deficitKwh: parseFloat(((ESSENTIAL_STANDBY_POWER_W * 24 / 1000) - remainingKwh).toFixed(2)),
+      diagnostic: isLessThanOneHour
+        ? `CRITICAL: Remaining time is less than 1 hour (${hoursPossible.toFixed(1)} hours). Your time will be less than 24 hours regardless.`
+        : `CRITICAL: Remaining time will be less than 24 hours (${hoursPossible.toFixed(1)} hours) regardless of appliance control. Recharge immediately.`,
       recipes: []
     };
   }
 
-  // 2. We have a feasible budget! Calculate excess energy left for comfort/heavy loads
+  // Adjust targetHours for recipe calculations to the maximum possible hours if targetHours is longer
+  const effectiveHours = Math.min(targetHours, hoursPossible);
+  const essentialKwhNeeded = (ESSENTIAL_STANDBY_POWER_W * effectiveHours) / 1000;
   const surplusKwh = remainingKwh - essentialKwhNeeded;
   
-  const dailySurplusKwh = parseFloat(((surplusKwh / targetHours) * 24).toFixed(2));
-  const totalDays = Math.ceil(targetHours / 24);
+  const dailySurplusKwh = parseFloat(((surplusKwh / effectiveHours) * 24).toFixed(2));
+  const totalDays = Math.ceil(effectiveHours / 24);
 
   // Generate 3 Actionable "Daily Recipes" based on surplus
   const recipes = [];
@@ -75,7 +79,7 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
     id: "survival",
     name: "Survival Mode",
     description: "Guarantees you hit your budget runway by completely locking out heavy appliances.",
-    dailyBudget: parseFloat(((essentialKwhNeeded / targetHours) * 24).toFixed(2)),
+    dailyBudget: parseFloat(((essentialKwhNeeded / effectiveHours) * 24).toFixed(2)),
     feasible: true,
     schedules: [
       { appliance: "Fridge Loop", schedule: "Cycled automatically (15m ON, 45m OFF) to prevent spoilage." },
@@ -96,7 +100,7 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
     id: "balanced",
     name: "Smart Budget Balance",
     description: "Distributes energy to heavy appliances at minimum functional thresholds.",
-    dailyBudget: parseFloat(((remainingKwh / targetHours) * 24).toFixed(2)),
+    dailyBudget: parseFloat(((remainingKwh / effectiveHours) * 24).toFixed(2)),
     feasible: true,
     schedules: [
       { appliance: "Fridge Loop", schedule: "Continuous operation (100% normal cycle)." },
@@ -118,7 +122,7 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
     id: "comfort",
     name: "Comfort Priority",
     description: "Slightly shorter runway, but offers hot water and pump operations daily.",
-    dailyBudget: parseFloat((((remainingKwh / targetHours) * 24) * 1.2).toFixed(2)),
+    dailyBudget: parseFloat((((remainingKwh / effectiveHours) * 24) * 1.2).toFixed(2)),
     feasible: true,
     schedules: [
       { appliance: "Fridge Loop", schedule: "Continuous operation (100% normal)." },

@@ -133,9 +133,7 @@ export default function App() {
     // Call our advanced dynamic prediction model to calculate forecast
     const forecast = calculateForecast(kwhRemaining, goal);
 
-    const calStart = setupData.calibrationStart ? new Date(setupData.calibrationStart) : now;
-    const calDays = (now - calStart) / (1000 * 60 * 60 * 24);
-    const isPhase2 = calDays >= 7;
+
 
     // Condition A: below user-configured threshold (kWh)
     const belowThreshold = kwhRemaining < notifyThreshold;
@@ -148,7 +146,7 @@ export default function App() {
     const isEmergency = kwhRemaining <= 5;
 
     return {
-      isPhase2,
+      isPhase2: true,
       belowThreshold: isVacant ? false : belowThreshold,
       atRisk: isVacant ? false : atRisk,
       isEmergency: isVacant ? false : isEmergency,
@@ -238,7 +236,7 @@ export default function App() {
     if (sensors.some(v => v > 0)) {
       setAlerts(generateAlerts(sensors, profiles, tokenState));
     }
-  }, [tokenState?.isPhase2, tokenState?.belowThreshold, tokenState?.atRisk]);
+  }, [tokenState?.belowThreshold, tokenState?.atRisk]);
 
   // Time Machine Simulation Advancement (Fast-Forward clock & learn patterns)
   const handleSimulateHours = useCallback((hours) => {
@@ -260,16 +258,7 @@ export default function App() {
     showToast(`Successfully advanced virtual clock by ${hours} hours!`, 'success');
   }, [tokenState, showToast]);
 
-  // Fast-forward: inject 7-day history
-  const handleFastForward = useCallback(() => {
-    const days = inject7DayHistory();
-    setDailyAverages(days);
-    try {
-      const refreshed = JSON.parse(localStorage.getItem('zet5_setup'));
-      setSetupData(refreshed);
-    } catch { /* ignore */ }
-    showToast("Successfully injected 7-day metrology history!", 'success');
-  }, [showToast]);
+
 
   // Update notification threshold
   const handleThresholdUpdate = useCallback((newThreshold) => {
@@ -372,12 +361,10 @@ export default function App() {
               profiles={profiles}
               tokenData={setupData?.tokenData}
               durationGoal={setupData?.durationGoal}
-              calibrationStart={setupData?.calibrationStart}
               onOpenAdvice={() => setShowAdvice(true)}
               onOpenEmergency={() => setShowEmergency(true)}
               onOpenMeterSync={() => setShowMeterSync(true)}
               onSimulateHours={handleSimulateHours}
-              onFastForward={handleFastForward}
               tickCount={tickCount}
               dataCollectionMinutes={dataCollectionMinutes}
               dailyAverages={dailyAverages}

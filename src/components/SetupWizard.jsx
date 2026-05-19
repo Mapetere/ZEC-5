@@ -101,7 +101,6 @@ export default function SetupWizard({ onComplete }) {
         targetDate: goalMode === 'date' ? targetDate : null,
         notifyThreshold: parseFloat(notifyThreshold),
         setupDate: new Date().toISOString(),
-        calibrationStart: new Date().toISOString(),
       };
       localStorage.setItem('zet5_setup', JSON.stringify(setupData));
       onComplete(setupData);
