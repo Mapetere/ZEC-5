@@ -13,6 +13,7 @@ import EngineerSetupPage from './components/EngineerSetupPage.jsx';
 import Settings from './components/Settings.jsx';
 import DailyAverages from './components/DailyAverages.jsx';
 import AuditTrail from './components/AuditTrail.jsx';
+import TourGuide from './components/TourGuide.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
@@ -72,6 +73,8 @@ export default function App() {
   const [showAdvice, setShowAdvice] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const [showMeterSync, setShowMeterSync] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const [tickCount, setTickCount] = useState(0);
   const [dataStartTime] = useState(() => Date.now());
   const [dailyAverages, setDailyAverages] = useState(() => getDailyAverages());
@@ -357,7 +360,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar activePage={page} onNavigate={setPage} onLogout={handleLogout} />
+      <Sidebar activePage={page} onNavigate={setPage} onLogout={handleLogout} onStartTour={() => setShowTour(true)} />
       <div className="main-content">
         <Header title={PAGE_TITLES[page] || 'Dashboard'} connected={connected} />
         <div className="page-container">
@@ -391,6 +394,10 @@ export default function App() {
                   }
                 }, 100);
               }}
+              relays={relays}
+              onToggleRelay={handleRelayToggle}
+              showBreakdown={showBreakdown}
+              setShowBreakdown={setShowBreakdown}
             />
           )}
           {page === 'management' && (
@@ -512,6 +519,16 @@ export default function App() {
           showToast("Redirected to settings panel for Recharge/Sync!", 'success');
         }}
       />
+
+      {showTour && (
+        <TourGuide
+          activePage={page}
+          setPage={setPage}
+          onClose={() => setShowTour(false)}
+          showBreakdown={showBreakdown}
+          setShowBreakdown={setShowBreakdown}
+        />
+      )}
 
       {/* FLOAT-IN PREMIUM GLASSMORPHIC TOAST SYSTEM */}
       <div style={{

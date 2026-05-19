@@ -1,7 +1,7 @@
 /**
  * Sidebar — Fixed left navigation with icon buttons.
  */
-export default function Sidebar({ activePage, onNavigate, onLogout }) {
+export default function Sidebar({ activePage, onNavigate, onLogout, onStartTour }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">ZET</div>
@@ -86,6 +86,19 @@ export default function Sidebar({ activePage, onNavigate, onLogout }) {
         </button>
       </nav>
       <div className="sidebar-bottom">
+        <button 
+          className="sidebar-btn" 
+          onClick={onStartTour} 
+          title="System Tour Guide" 
+          id="nav-tour"
+          style={{ color: 'var(--accent-blue)', marginBottom: 8 }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
         <button className="sidebar-btn" onClick={onLogout} title="Logout" id="nav-logout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />

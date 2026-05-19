@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { calculateRealPower, calculateRunway } from '../services/energyEngine.js';
 import { getVirtualTime } from '../services/predictionEngine.js';
+import RelayControl from './RelayControl.jsx';
 
 /**
  * Dashboard — Rewired from scratch for clarity.
@@ -29,7 +30,8 @@ export default function Dashboard({
   onOpenMeterSync, onSimulateHours,
   tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold,
   engineState, tokenState, gridBlackout, onToggleBlackout,
-  onHardwareFault, onRedirectToRecharge
+  onHardwareFault, onRedirectToRecharge,
+  relays, onToggleRelay, showBreakdown, setShowBreakdown
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -306,7 +308,7 @@ export default function Dashboard({
       <div className="dashboard-grid" style={{ marginBottom: 24 }}>
 
         {/* --- UNITS REMAINING (Primary Metric) --- */}
-        <div className="card units-card">
+        <div className="card units-card" id="tour-runway">
           <div className="card-header">
             <span className="card-title">Meter Units Remaining</span>
             {runway && (
@@ -390,6 +392,21 @@ export default function Dashboard({
                     <path d="M12 6v6l4 2" />
                   </svg>
                   Sync Meter
+                </button>
+                <button 
+                  className="meter-sync-btn" 
+                  onClick={() => setShowBreakdown(!showBreakdown)} 
+                  id="toggle-breakdown"
+                  style={{
+                    background: showBreakdown ? 'var(--accent-blue-dim)' : 'transparent',
+                    borderColor: showBreakdown ? 'var(--accent-blue)' : 'var(--border-color)',
+                    color: showBreakdown ? 'var(--accent-blue)' : 'var(--text-secondary)'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                  {showBreakdown ? 'Hide Breakdown' : 'Live Breakdown'}
                 </button>
                 {runway.isEmergency && unitsRemaining > beyondSavingThreshold && (
                   <button className="emergency-trigger-btn" onClick={onOpenEmergency} id="open-emergency">
@@ -487,7 +504,7 @@ export default function Dashboard({
             <span className="threshold-value" style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{notifyThreshold} kWh</span>
           </div>
 
-          <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice" style={{ width: '100%' }}>
+          <button className="advice-trigger-btn" onClick={onOpenAdvice} id="tour-advice-btn" style={{ width: '100%' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
             </svg>
@@ -502,54 +519,56 @@ export default function Dashboard({
       {/* ============================================================
           ROW 2: POWER BREAKDOWN (per-appliance real vs apparent power)
           ============================================================ */}
-      <div className="section-title"><span className="dot" /> Instantaneous Power Breakdown</div>
-      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
-        These percentages represent the exact power draw of each appliance <strong>right at this very second</strong>.
-      </p>
-      <div className="card full-width power-breakdown-card" style={{ marginBottom: 28 }}>
-        <div className="power-breakdown-header">
-          <div className="power-breakdown-total">
-            <span className="power-total-val">{Math.round(totalRealW)}</span>
-            <span className="power-total-unit">W</span>
-            <span className="power-total-label">Real Power</span>
-          </div>
-          <div className="power-breakdown-total apparent">
-            <span className="power-total-val">{Math.round(totalApparentW)}</span>
-            <span className="power-total-unit">W</span>
-            <span className="power-total-label">Apparent Power</span>
-          </div>
-          <div className="power-breakdown-note">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-            </svg>
-            <span>Real Power = V × I × cos(φ). ZESA meters bill real power, not apparent.</span>
-          </div>
-        </div>
-        <div className="power-breakdown-bars">
-          {powerBreakdown.map(p => {
-            const pctOfTotal = totalRealW > 0 ? (p.realW / totalRealW * 100) : 0;
-            return (
-              <div key={p.index} className="power-bar-row">
-                <div className="power-bar-label">
-                  <span className="power-bar-name">{p.name}</span>
-                  <span className="power-bar-detail">
-                    {Math.round(p.realW)}W · PF {p.powerFactor.toFixed(2)} · {p.amps.toFixed(2)}A
-                  </span>
-                </div>
-                <div className="power-bar-track">
-                  <div
-                    className="power-bar-fill"
-                    style={{ width: `${pctOfTotal}%` }}
-                  />
-                </div>
-                <span className="power-bar-pct">{pctOfTotal.toFixed(0)}%</span>
+      {showBreakdown && (
+        <>
+          <div className="section-title"><span className="dot" /> Instantaneous Power Breakdown</div>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+            These percentages represent the exact power draw of each appliance <strong>right at this very second</strong>.
+          </p>
+          <div className="card full-width power-breakdown-card" id="tour-breakdown" style={{ marginBottom: 28 }}>
+            <div className="power-breakdown-header">
+              <div className="power-breakdown-total">
+                <span className="power-total-val">{Math.round(totalRealW)}</span>
+                <span className="power-total-unit">W</span>
+                <span className="power-total-label">Real Power</span>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-
+              <div className="power-breakdown-total apparent">
+                <span className="power-total-val">{Math.round(totalApparentW)}</span>
+                <span className="power-total-unit">W</span>
+                <span className="power-total-label">Apparent Power</span>
+              </div>
+              <div className="power-breakdown-note">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+                </svg>
+                <span>Real Power = V × I × cos(φ). ZESA meters bill real power, not apparent.</span>
+              </div>
+            </div>
+            <div className="power-breakdown-bars">
+              {powerBreakdown.map(p => {
+                const pctOfTotal = totalRealW > 0 ? (p.realW / totalRealW * 100) : 0;
+                return (
+                  <div key={p.index} className="power-bar-row">
+                    <div className="power-bar-label">
+                      <span className="power-bar-name">{p.name}</span>
+                      <span className="power-bar-detail">
+                        {Math.round(p.realW)}W · PF {p.powerFactor.toFixed(2)} · {p.amps.toFixed(2)}A
+                      </span>
+                    </div>
+                    <div className="power-bar-track">
+                      <div
+                        className="power-bar-fill"
+                        style={{ width: `${pctOfTotal}%` }}
+                      />
+                    </div>
+                    <span className="power-bar-pct">{pctOfTotal.toFixed(0)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ============================================================
           ROW 4: MONITORED CIRCUIT LOOPS
@@ -573,6 +592,12 @@ export default function Dashboard({
         ))}
       </div>
 
+      {/* ============================================================
+          ROW 5: RELAY CONTROL GRID
+          ============================================================ */}
+      <div id="tour-relays" style={{ marginTop: 12 }}>
+        <RelayControl relays={relays} onToggle={onToggleRelay} />
+      </div>
 
     </div>
   );
