@@ -193,16 +193,26 @@ export default function Dashboard({
               <div className="runway-countdown">
                 <div className="runway-stats">
                   <div className="runway-stat">
-                    <span className="runway-stat-val">{runway.daysRemaining}</span>
-                    <span className="runway-stat-label">Days Left</span>
+                    <span className="runway-stat-val" style={{ fontSize: '18px' }}>
+                      {runway.hoursRemaining !== undefined ? (() => {
+                        const totalH = runway.hoursRemaining;
+                        const d = Math.floor(totalH / 24);
+                        const h = Math.floor(totalH % 24);
+                        const m = Math.floor((totalH % 1) * 60);
+                        if (d > 0) return `${d}d ${h}h`;
+                        if (h > 0) return `${h}h ${m}m`;
+                        return `${m}m`;
+                      })() : `${runway.daysRemaining}d`}
+                    </span>
+                    <span className="runway-stat-label">Time Left</span>
                   </div>
                   <div className="runway-stat">
                     <span className="runway-stat-val">{runway.dailyUsage}</span>
                     <span className="runway-stat-label">kWh/Day</span>
                   </div>
                   <div className="runway-stat">
-                    <span className="runway-stat-val">{runway.goal}</span>
-                    <span className="runway-stat-label">Day Goal</span>
+                    <span className="runway-stat-val" style={{ fontSize: '18px' }}>{runway.goal}d 0h</span>
+                    <span className="runway-stat-label">Target Goal</span>
                   </div>
                   <div className="runway-stat">
                     <span className="runway-stat-val">{Math.round(totalRealW)}</span>
@@ -226,7 +236,7 @@ export default function Dashboard({
                 <div style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
                   <span>RHS Predictive Forecast:</span>
                   <span style={{ color: runway.onTrack ? 'var(--accent-green)' : 'var(--warning-amber)', fontWeight: 'bold' }}>
-                    Depletion: {new Date(runway.depletionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} at {new Date(runway.depletionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                    Depletion: {new Date(runway.depletionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} at {new Date(runway.depletionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
                 </div>
               )}

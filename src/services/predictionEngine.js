@@ -205,14 +205,23 @@ export function calculateForecast(kwhRemaining, targetDaysGoal) {
   // Iteratively deduct hourly signature loads until units run out
   while (tempKwh > 0 && hoursCount < 8760) {
     const hourToDeduct = (currentHour + hoursCount) % 24;
-    const loadSignature = model.hourlySignature[hourToDeduct] || 0.35; // Fallback to 0.35 kWh if zeroed
+    const loadSignature = model.hourlySignature[hourToDeduct] || 0.35;
+    
+    if (tempKwh < loadSignature) {
+      // Calculate exact fraction of the hour remaining
+      const fraction = tempKwh / loadSignature;
+      hoursCount += fraction;
+      tempKwh = 0;
+      break;
+    }
     
     tempKwh -= loadSignature;
     hoursCount++;
   }
 
   const daysRemaining = hoursCount / 24;
-  const depletionDate = new Date(now.getTime() + hoursCount * 60 * 60 * 1000);
+  const exactMilliseconds = Math.floor(hoursCount * 60 * 60 * 1000);
+  const depletionDate = new Date(now.getTime() + exactMilliseconds);
   
   // Calculate Target Goal Date
   const goalDate = new Date(now.getTime() + targetDaysGoal * 24 * 60 * 60 * 1000);
@@ -222,8 +231,8 @@ export function calculateForecast(kwhRemaining, targetDaysGoal) {
   const signatureDailySum = model.hourlySignature.reduce((sum, val) => sum + val, 0);
 
   return {
-    hoursRemaining: Math.round(hoursCount),
-    daysRemaining: Math.max(0, parseFloat(daysRemaining.toFixed(1))),
+    hoursRemaining: hoursCount, // Now a float with exact precision
+    daysRemaining: Math.max(0, parseFloat(daysRemaining.toFixed(2))),
     depletionDate: depletionDate.toISOString(),
     atRisk,
     projectedDailyKwh: signatureDailySum.toFixed(2),
