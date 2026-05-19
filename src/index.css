@@ -157,6 +157,15 @@ body {
 }
 .login-input::placeholder { color: var(--text-muted); }
 
+.login-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
+}
+.login-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .otp-inputs {
   display: flex;
   gap: 10px;

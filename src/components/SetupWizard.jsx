@@ -17,6 +17,7 @@ export default function SetupWizard({ onComplete }) {
   const [durationGoal, setDurationGoal] = useState('21');
   const [targetDate, setTargetDate] = useState('');
   const [notifyThreshold, setNotifyThreshold] = useState('50');
+  const [dateConsent, setDateConsent] = useState(false);
   const [error, setError] = useState('');
 
   const steps = [
@@ -57,6 +58,10 @@ export default function SetupWizard({ onComplete }) {
       }
       if (isNaN(Number(tokenData.kwh)) || isNaN(Number(tokenData.amount))) {
         setError('kWh and Amount must be numbers.');
+        return;
+      }
+      if (!dateConsent) {
+        setError('Please acknowledge the strict date requirement to continue.');
         return;
       }
     } else if (step === 2) {
@@ -170,6 +175,18 @@ export default function SetupWizard({ onComplete }) {
               <input className="login-input" type="date" value={tokenData.date}
                 onChange={e => setTokenData(d => ({ ...d, date: e.target.value }))} id="setup-date" />
             </div>
+            
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '16px', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={dateConsent} 
+                onChange={(e) => setDateConsent(e.target.checked)} 
+                style={{ marginTop: '4px', accentColor: 'var(--accent-blue)', width: '16px', height: '16px' }}
+              />
+              <span style={{ fontSize: '12px', color: 'var(--warning-amber)', lineHeight: '1.4' }}>
+                I acknowledge that entering an inaccurate date will permanently skew the Rolling Hourly Signature model and cause backsliding in ZET-5's predictive thermodynamic equations.
+              </span>
+            </label>
           </div>
         )}
 
