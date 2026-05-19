@@ -21,7 +21,10 @@ export default function MeterSync({ visible, onClose, onSync, engineState }) {
 
   const handleSync = () => {
     const reading = parseFloat(meterReading);
-    if (isNaN(reading) || reading < 0) return;
+    if (isNaN(reading) || reading <= 0) {
+      alert("Please enter a valid positive meter reading greater than 0.");
+      return;
+    }
 
     const syncResult = onSync(reading);
     setResult(syncResult);
@@ -111,7 +114,7 @@ export default function MeterSync({ visible, onClose, onSync, engineState }) {
             <button
               className="btn-primary"
               onClick={handleSync}
-              disabled={!meterReading || isNaN(parseFloat(meterReading))}
+              disabled={!meterReading || isNaN(parseFloat(meterReading)) || parseFloat(meterReading) <= 0}
               id="meter-sync-submit"
             >
               Sync With Meter

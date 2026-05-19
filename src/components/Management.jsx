@@ -42,7 +42,19 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
 
   const handleThresholdSave = () => {
     const val = parseFloat(threshold);
-    if (!isNaN(val) && val > 0 && onThresholdUpdate) {
+    if (isNaN(val) || val <= 0) {
+      alert('Please enter a valid positive threshold greater than 0.');
+      return;
+    }
+    
+    // Check if threshold exceeds available units
+    const unitsRemaining = engineState ? (engineState.tokenKwh - engineState.cumulativeKwh) : 0;
+    if (unitsRemaining > 0 && val >= unitsRemaining) {
+      alert(`Notification threshold (${val} kWh) cannot exceed or equal your available units (${unitsRemaining.toFixed(1)} kWh).`);
+      return;
+    }
+    
+    if (onThresholdUpdate) {
       onThresholdUpdate(val);
       setThresholdSaved(true);
       setTimeout(() => setThresholdSaved(false), 2000);
@@ -179,7 +191,11 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
                 onClick={() => {
                   const input = document.getElementById('mgmt-recharge-input');
                   const val = parseFloat(input?.value);
-                  if (val > 0 && onRecharge) {
+                  if (isNaN(val) || val <= 0) {
+                    alert("Please enter a valid positive token amount greater than 0.");
+                    return;
+                  }
+                  if (onRecharge) {
                     onRecharge(val);
                     if (input) input.value = '';
                     alert(`Successfully loaded ${val} kWh token onto ZET-5!`);
@@ -249,7 +265,11 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
                 onClick={() => {
                   const input = document.getElementById('mgmt-sync-input');
                   const val = parseFloat(input?.value);
-                  if (val >= 0 && onSyncMeter) {
+                  if (isNaN(val) || val <= 0) {
+                    alert("Please enter a valid positive meter reading greater than 0.");
+                    return;
+                  }
+                  if (onSyncMeter) {
                     const res = onSyncMeter(val);
                     if (res && input) {
                       input.value = '';

@@ -52,12 +52,14 @@ export default function SetupWizard({ onComplete }) {
         return;
       }
     } else if (step === 1) {
+      const kwhNum = Number(tokenData.kwh);
+      const amountNum = Number(tokenData.amount);
       if (!tokenData.kwh || !tokenData.amount || !tokenData.date) {
         setError('Please fill in all ZESA token fields.');
         return;
       }
-      if (isNaN(Number(tokenData.kwh)) || isNaN(Number(tokenData.amount))) {
-        setError('kWh and Amount must be numbers.');
+      if (isNaN(kwhNum) || isNaN(amountNum) || kwhNum <= 0 || amountNum <= 0) {
+        setError('kWh and Amount must be valid positive numbers greater than 0.');
         return;
       }
       if (!dateConsent) {
@@ -67,18 +69,23 @@ export default function SetupWizard({ onComplete }) {
     } else if (step === 2) {
       if (goalMode === 'days') {
         if (!durationGoal || isNaN(Number(durationGoal)) || Number(durationGoal) < 1) {
-          setError('Please enter a valid duration (days).');
+          setError('Please enter a valid duration of at least 1 day.');
           return;
         }
       } else {
         if (!targetDate || !computedDays) {
-          setError('Please select a future target date.');
+          setError('Please select a valid future target date.');
           return;
         }
       }
     } else if (step === 3) {
-      if (!notifyThreshold || isNaN(Number(notifyThreshold)) || Number(notifyThreshold) < 1) {
-        setError('Please enter a valid threshold (kWh).');
+      const threshold = Number(notifyThreshold);
+      if (isNaN(threshold) || threshold <= 0) {
+        setError('Please enter a valid positive threshold (kWh).');
+        return;
+      }
+      if (threshold >= Number(tokenData.kwh)) {
+        setError(`Notification threshold (${threshold} kWh) cannot exceed or equal your available units (${tokenData.kwh} kWh).`);
         return;
       }
       const finalDays = goalMode === 'date' ? computedDays : parseInt(durationGoal);
