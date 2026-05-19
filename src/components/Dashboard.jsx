@@ -377,7 +377,7 @@ export default function Dashboard({
                 <div style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
                   <span>RHS Predictive Forecast:</span>
                   <span style={{ color: runway.onTrack ? 'var(--accent-green)' : 'var(--warning-amber)', fontWeight: 'bold' }}>
-                    Depletion: {new Date(runway.depletionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} at {new Date(runway.depletionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    Depletion: {new Date(runway.depletionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} at {new Date(runway.depletionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               )}

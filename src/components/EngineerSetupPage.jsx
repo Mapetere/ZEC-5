@@ -215,9 +215,20 @@ export default function EngineerSetupPage({ onComplete }) {
             <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)', marginBottom: 8 }}>
               3. Telemetry Circuit Calibration
             </h3>
-            <p className="setup-desc" style={{ marginBottom: 16 }}>
+            <p className="setup-desc" style={{ marginBottom: 12 }}>
               Calibrate and name active appliance sensors attached to the 5 physical CT clamps.
             </p>
+            <details style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 500 }}>
+                📖 Readme: Load Profile Types Explained
+              </summary>
+              <ul style={{ margin: '8px 0 0 20px', padding: 0, lineHeight: 1.6 }}>
+                <li><strong style={{color: '#fff'}}>Continuous:</strong> Always on with a steady draw (e.g., Fridge, Server, Router).</li>
+                <li><strong style={{color: '#fff'}}>Cyclic:</strong> Turns on and off at intervals, often thermostat-driven (e.g., Geyser, Heater, AC).</li>
+                <li><strong style={{color: '#fff'}}>Scheduled:</strong> Runs for specific, predictable durations when triggered (e.g., Borehole Pump).</li>
+                <li><strong style={{color: '#fff'}}>Variable:</strong> Unpredictable, user-driven loads with varying power draw (e.g., TV, Stove).</li>
+              </ul>
+            </details>
 
             {gadgets.map((g, i) => (
               <div key={i} style={{
@@ -234,26 +245,29 @@ export default function EngineerSetupPage({ onComplete }) {
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 2, minWidth: '150px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Appliance Name</div>
                     <input
                       className="login-input"
                       type="text"
                       value={g.name}
                       onChange={(e) => handleGadgetChange(i, 'name', e.target.value)}
-                      placeholder="Appliance Name"
+                      placeholder="e.g. Fridge"
                       style={{ padding: '8px 12px', fontSize: '13px' }}
                     />
                   </div>
                   <div style={{ flex: 1, minWidth: '90px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Peak Wattage</div>
                     <input
                       className="login-input"
                       type="number"
                       value={g.watts}
                       onChange={(e) => handleGadgetChange(i, 'watts', e.target.value)}
-                      placeholder="Wattage (W)"
+                      placeholder="Watts (W)"
                       style={{ padding: '8px 12px', fontSize: '13px', textAlign: 'center' }}
                     />
                   </div>
                   <div style={{ flex: 1.2, minWidth: '110px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Load Profile</div>
                     <select
                       className="login-input"
                       value={g.type}
