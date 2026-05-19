@@ -309,7 +309,7 @@ export default function App() {
   const handleToggleBlackout = useCallback(() => {
     setGridBlackout(prev => {
       const next = !prev;
-      showToast(next ? "🔌 simulated grid outage active! RHS brain frozen." : "⚡ ZESA Utility power restored! Resuming metrology.", next ? 'warning' : 'success');
+      showToast(next ? "simulated grid outage active! RHS brain frozen." : "Power restored! Resuming metrology.", next ? 'warning' : 'success');
       return next;
     });
   }, [showToast]);
