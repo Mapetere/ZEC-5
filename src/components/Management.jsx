@@ -127,7 +127,7 @@ export default function Management({ profiles, onSave, onResetSetup, notifyThres
       </div>
 
       {/* Prepaid ZESA Token Recharge & Sync Card */}
-      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border-color)' }}>
+      <div id="recharge-section" style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border-color)' }}>
         <div className="section-title"><span className="dot" /> Prepaid Meter Recharge & Sync</div>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.6 }}>
           Manage your prepaid ZESA units. Perform active token recharges or sync actual physical meter readings to auto-calibrate metrology drift.

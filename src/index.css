@@ -37,7 +37,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
-  height: 100%;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
 }
@@ -51,20 +51,31 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 0; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
 
 /* ===== LOGIN PAGE ===== */
 .login-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-primary);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
 }
 .login-wrapper::before {
   content: '';
@@ -249,7 +260,7 @@ body {
 /* ===== APP LAYOUT ===== */
 .app-layout {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -257,13 +268,13 @@ body {
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
-  height: 100vh;
+  height: 100dvh;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0;
+  padding: calc(16px + env(safe-area-inset-top)) 0 calc(16px + env(safe-area-inset-bottom)) 0;
   z-index: 10;
 }
 .sidebar-logo {
@@ -331,6 +342,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100dvh;
 }
 
 /* Header */
@@ -379,6 +391,8 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== DASHBOARD ===== */
@@ -1117,12 +1131,13 @@ body {
 .advice-panel {
   width: 420px;
   max-width: 90vw;
-  height: 100vh;
+  height: 100dvh;
   background: var(--bg-secondary);
   border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .advice-header {
   display: flex;
@@ -1997,12 +2012,13 @@ body {
 .meter-sync-panel {
   width: 420px;
   max-width: 90vw;
-  height: 100vh;
+  height: 100dvh;
   background: var(--bg-secondary);
   border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .meter-sync-body {
   flex: 1;

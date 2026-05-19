@@ -41,7 +41,8 @@ export default function SetupWizard({ onComplete }) {
   const minDate = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    const dateStr = d.toISOString().split('T')[0];
+    return `${dateStr}T00:00`;
   }, []);
 
   const handleNext = () => {
@@ -177,9 +178,9 @@ export default function SetupWizard({ onComplete }) {
               <input className="login-input" type="text" inputMode="decimal" value={tokenData.amount}
                 onChange={e => setTokenData(d => ({ ...d, amount: e.target.value }))} placeholder="e.g. 25.00" id="setup-amount" />
             </div>
-            <label className="login-label">Purchase Date</label>
+            <label className="login-label">Purchase Date & Time</label>
             <div className="login-input-wrap">
-              <input className="login-input" type="date" value={tokenData.date}
+              <input className="login-input" type="datetime-local" value={tokenData.date}
                 onChange={e => setTokenData(d => ({ ...d, date: e.target.value }))} id="setup-date" />
             </div>
             
@@ -241,11 +242,11 @@ export default function SetupWizard({ onComplete }) {
               </div>
             ) : (
               <div className="setup-goal-display">
-                <label className="login-label">I want this to last until</label>
+                <label className="login-label">I want this to last until (Date & Time)</label>
                 <div className="login-input-wrap">
                   <input
                     className="login-input"
-                    type="date"
+                    type="datetime-local"
                     value={targetDate}
                     min={minDate}
                     onChange={e => setTargetDate(e.target.value)}

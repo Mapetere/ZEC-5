@@ -362,6 +362,15 @@ export default function App() {
               tokenState={tokenState}
               gridBlackout={gridBlackout}
               onToggleBlackout={handleToggleBlackout}
+              onRedirectToRecharge={() => {
+                setPage('management');
+                setTimeout(() => {
+                  const el = document.getElementById('recharge-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 100);
+              }}
             />
           )}
           {page === 'management' && (
@@ -412,7 +421,13 @@ export default function App() {
         onGoToRecharge={() => {
           setPage('management');
           setDismissCutoff(true);
-          showToast("Redirected toSettings panel for Recharge/Sync!", 'success');
+          setTimeout(() => {
+            const el = document.getElementById('recharge-section');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 100);
+          showToast("Redirected to settings panel for Recharge/Sync!", 'success');
         }}
       />
 

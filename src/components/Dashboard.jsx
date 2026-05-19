@@ -28,7 +28,8 @@ export default function Dashboard({
   onOpenAdvice, onOpenEmergency, onFastForward,
   onOpenMeterSync, onSimulateHours,
   tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold,
-  engineState, tokenState, gridBlackout, onToggleBlackout
+  engineState, tokenState, gridBlackout, onToggleBlackout,
+  onHardwareFault, onRedirectToRecharge
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -159,6 +160,66 @@ export default function Dashboard({
 
   return (
     <div className="fade-in">
+      {/* Depletion Warning Banner */}
+      {unitsRemaining <= 0 && (
+        <div style={{
+          background: 'rgba(255, 61, 0, 0.08)',
+          border: '1px solid rgba(255, 61, 0, 0.4)',
+          borderRadius: '8px',
+          padding: '18px 24px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+          backdropFilter: 'blur(10px)',
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'rgba(255, 61, 0, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--alert-red)',
+              flexShrink: 0
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#fff' }}>Emergency: Prepaid Token Depleted</h4>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Your prepaid ZESA balance is 0.0 kWh. Please recharge to resume system calculations.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onRedirectToRecharge}
+            className="btn-primary"
+            style={{
+              width: 'auto',
+              padding: '10px 20px',
+              fontSize: '12px',
+              background: 'linear-gradient(135deg, var(--alert-red), #FF5722)',
+              color: '#fff',
+              fontWeight: 'bold',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+            id="dashboard-recharge-redirect"
+          >
+            Go to Recharge Section
+          </button>
+        </div>
+      )}
+
       {/* ============================================================
           ROW 1: UNITS REMAINING + SYSTEM STATUS
           ============================================================ */}
