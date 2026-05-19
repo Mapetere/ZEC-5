@@ -158,8 +158,88 @@ export default function Dashboard({
   const confidenceLabel = confidence >= 80 ? 'High' : confidence >= 50 ? 'Moderate' : 'Low';
   const confidenceColor = confidence >= 80 ? 'var(--accent-green)' : confidence >= 50 ? 'var(--warning-amber)' : 'var(--alert-red)';
 
+  const beyondSavingThreshold = useMemo(() => {
+    const dailyUsage = tokenState?.dailyUsage || 8.5;
+    const typicalUsagePerHour = dailyUsage / 24;
+    return Math.max(0.1, typicalUsagePerHour * 0.5); // 30 minutes of typical usage, minimum 0.1 kWh
+  }, [tokenState]);
+
+  const isBlackout = unitsRemaining <= beyondSavingThreshold;
+
   return (
-    <div className="fade-in">
+    <div className="fade-in" style={{ position: 'relative' }}>
+      {/* Complete Blackout Overlay (Instantly Darkness) */}
+      {isBlackout && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(5, 8, 10, 0.98)',
+          backdropFilter: 'blur(20px)',
+          zIndex: 10000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          textAlign: 'center',
+          padding: '40px 24px',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 61, 0, 0.2)',
+          minHeight: '500px'
+        }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            background: 'rgba(255, 61, 0, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '36px',
+            color: 'var(--alert-red)',
+            marginBottom: '24px',
+            border: '2px solid rgba(255, 61, 0, 0.3)',
+            animation: 'pulse 2s infinite'
+          }}>
+            🔌
+          </div>
+          <h2 style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '20px',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            color: 'var(--alert-red)',
+            margin: '0 0 12px 0'
+          }}>
+            METER CUT-OFF: BLACKOUT ENGAGED
+          </h2>
+          <p style={{
+            maxWidth: '440px',
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            lineHeight: '1.6',
+            margin: '0 0 32px 0'
+          }}>
+            Prepaid ZESA balance is <strong style={{ color: '#fff' }}>{unitsRemaining.toFixed(2)} kWh</strong>, falling below the calculated saving threshold of {beyondSavingThreshold.toFixed(2)} kWh. The smart meter has tripped, cutting power completely. Emergency plan is unavailable.
+          </p>
+          <button
+            onClick={onRedirectToRecharge}
+            className="btn-primary"
+            style={{
+              width: 'auto',
+              padding: '14px 32px',
+              background: 'linear-gradient(135deg, var(--alert-red), #FF5722)',
+              fontSize: '13px',
+              fontWeight: 'bold'
+            }}
+            id="blackout-recharge-redirect"
+          >
+            Recharge Prepaid Token
+          </button>
+        </div>
+      )}
+
       {/* Depletion Warning Banner */}
       {unitsRemaining <= 0 && (
         <div style={{
@@ -311,7 +391,7 @@ export default function Dashboard({
                   </svg>
                   Sync Meter
                 </button>
-                {runway.isEmergency && (
+                {runway.isEmergency && unitsRemaining > beyondSavingThreshold && (
                   <button className="emergency-trigger-btn" onClick={onOpenEmergency} id="open-emergency">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -558,7 +638,7 @@ export default function Dashboard({
       </div>
 
       {/* ============================================================
-          ROW 5: ENERGY FINGERPRINTS (Chart)
+          ROW 5: ENERGY FINGERPRINTS (Chart Redesign)
           ============================================================ */}
       <div className="section-title"><span className="dot" /> Energy Fingerprints</div>
       <div className="card full-width" style={{ marginBottom: 28 }}>
@@ -568,37 +648,17 @@ export default function Dashboard({
           options={{
             ...chartOptions,
             colors: ['#25D366', '#128C7E', '#FFB300', '#FF6B6B', '#8696A0'],
+            markers: {
+              size: 5,
+              colors: ['#25D366', '#128C7E', '#FFB300', '#FF6B6B', '#8696A0'],
+              strokeColors: '#0e1619',
+              strokeWidth: 2,
+              hover: { size: 7 }
+            },
             legend: { show: true, position: 'top', horizontalAlign: 'right', labels: { colors: '#8696A0' }, fontFamily: 'Inter', fontSize: '11px' },
           }}
           series={(profiles || []).slice(0, 5).map((p, i) => ({ name: p.name, data: history?.[i] || [] }))}
         />
-      </div>
-
-      {/* ============================================================
-          ROW 6: INFERENCE ENGINE (Alerts)
-          ============================================================ */}
-      <div className="section-title"><span className="dot" /> Inference Engine</div>
-      <div className="alerts-section">
-        {(alerts || []).map((a) => (
-          <div key={a.id} className={`alert-item ${a.type} slide-in`}>
-            <div className="alert-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {a.type === 'danger' ? (
-                  <><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>
-                ) : a.type === 'warning' ? (
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                ) : (
-                  <><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></>
-                )}
-              </svg>
-            </div>
-            <div className="alert-text">
-              <h4>{a.title}</h4>
-              <p>{a.message}</p>
-            </div>
-            <span className="alert-time">{a.time}</span>
-          </div>
-        ))}
       </div>
     </div>
   );

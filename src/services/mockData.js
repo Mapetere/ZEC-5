@@ -171,7 +171,7 @@ export function generateAlerts(sensors, profiles, tokenState) {
 
   if (!tokenState || !tokenState.isPhase2) {
     return [{
-      id: `learning-${Date.now()}`,
+      id: 'learning',
       type: 'info',
       title: 'Learning Phase Active',
       message: 'Collecting behavioral data. Intelligent recommendations will activate after the learning period.',
@@ -184,7 +184,7 @@ export function generateAlerts(sensors, profiles, tokenState) {
   // AND depletion trend shows risk (Condition B)
   if (!tokenState.belowThreshold && !tokenState.atRisk) {
     return [{
-      id: `nominal-${Date.now()}`,
+      id: 'nominal',
       type: 'info',
       title: 'System Nominal',
       message: 'Consumption within target parameters. No intervention required.',
@@ -209,7 +209,7 @@ export function generateAlerts(sensors, profiles, tokenState) {
           : 0;
 
         alerts.push({
-          id: `trend-${i}-${Date.now()}`,
+          id: `trend-${i}`,
           type: 'warning',
           title: `${name} | Depletion Trend Risk`,
           message: `${name} drawing ${watts.toFixed(0)}W (baseline ${baselineWatts.toFixed(0)}W). At current rate, tokens will deplete before target date. Shedding this load could extend runway by ~${hoursSaved} hours.`,
@@ -226,7 +226,7 @@ export function generateAlerts(sensors, profiles, tokenState) {
 
   if (tokenState.isEmergency) {
     alerts.unshift({
-      id: `emergency-${Date.now()}`,
+      id: 'emergency',
       type: 'danger',
       title: 'Critical Token Level',
       message: `Remaining: ${tokenState.kwhRemaining} kWh. Enter Emergency Mode to activate survival strategies.`,
@@ -237,7 +237,7 @@ export function generateAlerts(sensors, profiles, tokenState) {
 
   if (alerts.length === 0) {
     alerts.push({
-      id: `nominal-${Date.now()}`,
+      id: 'nominal',
       type: 'info',
       title: 'System Nominal',
       message: 'All loads within expected range. Depletion trend is stable.',

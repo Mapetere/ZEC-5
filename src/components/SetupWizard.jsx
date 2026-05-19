@@ -1,17 +1,14 @@
 import { useState, useMemo } from 'react';
 
 /**
- * SetupWizard — First-Run onboarding flow.
- * Step 1: Name 5 sensors
- * Step 2: ZESA token data (kWh, Amount, Date)
- * Step 3: Duration Goal (days input OR target date picker)
- * Step 4: Notification Trigger threshold
+ * SetupWizard — Client-side onboarding flow.
+ * Skips the circuit naming step (done by the engineer) and gathers:
+ * Step 1: ZESA token data (kWh, Amount, Date)
+ * Step 2: Duration Goal (days input OR target date picker)
+ * Step 3: Notification Trigger threshold
  */
-const DEFAULT_NAMES = ['Fridge', 'Geyser', 'Borehole', 'Entertainment', 'Lighting'];
-
 export default function SetupWizard({ onComplete }) {
   const [step, setStep] = useState(0);
-  const [sensorNames, setSensorNames] = useState(DEFAULT_NAMES.map(n => n));
   const [tokenData, setTokenData] = useState({ kwh: '', amount: '', date: '' });
   const [goalMode, setGoalMode] = useState('days'); // 'days' | 'date'
   const [durationGoal, setDurationGoal] = useState('21');
@@ -20,11 +17,19 @@ export default function SetupWizard({ onComplete }) {
   const [dateConsent, setDateConsent] = useState(false);
   const [error, setError] = useState('');
 
+  // Retrieve sensor names configured by the engineer
+  const sensorNames = useMemo(() => {
+    try {
+      const engProfs = JSON.parse(localStorage.getItem('zet5_profiles'));
+      if (engProfs) return engProfs.map(p => p.name);
+    } catch {}
+    return ['Fridge', 'Geyser', 'Borehole', 'Entertainment', 'Lighting'];
+  }, []);
+
   const steps = [
-    { label: 'Circuits', num: '01' },
-    { label: 'Token', num: '02' },
-    { label: 'Goal', num: '03' },
-    { label: 'Alerts', num: '04' },
+    { label: 'Token', num: '01' },
+    { label: 'Goal', num: '02' },
+    { label: 'Alerts', num: '03' },
   ];
 
   // Compute days from target date
@@ -48,11 +53,6 @@ export default function SetupWizard({ onComplete }) {
   const handleNext = () => {
     setError('');
     if (step === 0) {
-      if (sensorNames.some(n => !n.trim())) {
-        setError('Please name all 5 circuit loops.');
-        return;
-      }
-    } else if (step === 1) {
       const kwhNum = Number(tokenData.kwh);
       const amountNum = Number(tokenData.amount);
       if (!tokenData.kwh || !tokenData.amount || !tokenData.date) {
@@ -67,7 +67,7 @@ export default function SetupWizard({ onComplete }) {
         setError('Please acknowledge the strict date requirement to continue.');
         return;
       }
-    } else if (step === 2) {
+    } else if (step === 1) {
       if (goalMode === 'days') {
         if (!durationGoal || isNaN(Number(durationGoal)) || Number(durationGoal) < 1) {
           setError('Please enter a valid duration of at least 1 day.');
@@ -79,7 +79,7 @@ export default function SetupWizard({ onComplete }) {
           return;
         }
       }
-    } else if (step === 3) {
+    } else if (step === 2) {
       const threshold = Number(notifyThreshold);
       if (isNaN(threshold) || threshold <= 0) {
         setError('Please enter a valid positive threshold (kWh).');
@@ -119,7 +119,7 @@ export default function SetupWizard({ onComplete }) {
             ZET<span style={{ color: 'var(--accent-blue)' }}>-5</span>
           </h1>
         </div>
-        <p className="login-subtitle" style={{ marginBottom: 24 }}>First-Run Configuration</p>
+        <p className="login-subtitle" style={{ marginBottom: 24 }}>Client Configuration</p>
 
         <div className="setup-steps">
           {steps.map((s, i) => (
@@ -138,33 +138,8 @@ export default function SetupWizard({ onComplete }) {
 
         {error && <div className="login-error">{error}</div>}
 
-        {/* Step 1: Name Circuits */}
+        {/* Step 1: ZESA Token Data */}
         {step === 0 && (
-          <div className="setup-body">
-            <h3 className="setup-heading">Monitored Loops</h3>
-            <p className="setup-desc">Assign appliance names to each of the 5 active circuit loops.</p>
-            {sensorNames.map((name, i) => (
-              <div key={i} className="setup-sensor-row">
-                <div className="setup-sensor-badge">C{i + 1}</div>
-                <input
-                  className="login-input"
-                  type="text"
-                  value={name}
-                  onChange={e => {
-                    const next = [...sensorNames];
-                    next[i] = e.target.value;
-                    setSensorNames(next);
-                  }}
-                  placeholder={`Circuit ${i + 1} name`}
-                  id={`setup-sensor-${i}`}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Step 2: ZESA Token Data */}
-        {step === 1 && (
           <div className="setup-body">
             <h3 className="setup-heading">ZESA Token Entry</h3>
             <p className="setup-desc">Enter your most recent electricity token purchase for depletion tracking.</p>
@@ -198,8 +173,8 @@ export default function SetupWizard({ onComplete }) {
           </div>
         )}
 
-        {/* Step 3: Duration Goal — Days OR Target Date */}
-        {step === 2 && (
+        {/* Step 2: Duration Goal — Days OR Target Date */}
+        {step === 1 && (
           <div className="setup-body">
             <h3 className="setup-heading">Duration Goal</h3>
             <p className="setup-desc">
@@ -264,8 +239,8 @@ export default function SetupWizard({ onComplete }) {
           </div>
         )}
 
-        {/* Step 4: Notification Trigger */}
-        {step === 3 && (
+        {/* Step 3: Notification Trigger */}
+        {step === 2 && (
           <div className="setup-body">
             <h3 className="setup-heading">Notification Trigger</h3>
             <p className="setup-desc">
@@ -300,7 +275,7 @@ export default function SetupWizard({ onComplete }) {
             </button>
           )}
           <button className="btn-primary" onClick={handleNext} style={{ marginLeft: 'auto' }} id="setup-next">
-            {step === 3 ? 'Complete Setup' : 'Continue'}
+            {step === 2 ? 'Complete Setup' : 'Continue'}
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
  * LoginPage — Email + OTP authentication flow (LocalLink-style).
  * Simulates OTP verification for demo purposes.
  */
-export default function LoginPage({ onLogin }) {
+export default function LoginPage({ onLogin, linkedEmail }) {
   const [step, setStep] = useState('email'); // 'email' | 'otp'
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -18,6 +18,11 @@ export default function LoginPage({ onLogin }) {
     setError('');
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address.');
+      return;
+    }
+    const isEngineer = email.toLowerCase().trim() === 'engineer@zet5.co.zw';
+    if (linkedEmail && email.toLowerCase().trim() !== linkedEmail.toLowerCase().trim() && !isEngineer) {
+      setError(`Access Denied: This ZET-5 device is linked to client: ${linkedEmail}. Please log in with the registered client email.`);
       return;
     }
     setLoading(true);
@@ -69,7 +74,8 @@ export default function LoginPage({ onLogin }) {
     }
     setLoading(true);
     setTimeout(() => {
-      if (code === generatedOtp || code === '111111') {
+      const isEngineer = email.toLowerCase().trim() === 'engineer@zet5.co.zw';
+      if (code === generatedOtp || code === '111111' || (isEngineer && code === '555555')) {
         localStorage.setItem('zet5_auth', JSON.stringify({ email, ts: Date.now() }));
         onLogin(email);
       } else {
@@ -105,7 +111,7 @@ export default function LoginPage({ onLogin }) {
                 id="login-email"
                 className="login-input"
                 type="email"
-                placeholder="engineer@zet5.co.zw"
+                placeholder="client@zet5.co.zw"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
                 autoFocus
