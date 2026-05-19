@@ -239,9 +239,6 @@ export default function EngineerSetupPage({ onComplete }) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
                   <span>Clamping Channel C{i + 1}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>
-                    Base Load: {g.baseAmps} A
-                  </span>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 2, minWidth: '150px' }}>

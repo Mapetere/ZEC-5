@@ -16,7 +16,7 @@ import AuditTrail from './components/AuditTrail.jsx';
 import TourGuide from './components/TourGuide.jsx';
 import {
   startMockStream, generateAlerts,
-  storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
+  storeDailyAverage, getDailyAverages, isHouseVacant
 } from './services/mockData.js';
 import {
   initEngine, processTick, getUnitsRemaining,
