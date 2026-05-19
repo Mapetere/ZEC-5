@@ -1,8 +1,7 @@
 /**
- * ZET-5 Energy Engine — Corrected Power Estimation
- * 
- * WHY THIS EXISTS:
- * CT clamps measure CURRENT (Amps), but ZESA meters bill REAL POWER (kWh).
+ * ZET-5 Energy Engine
+ * NOTE: The raw values from the clamping channels drift from actual ZESA meters.
+ * Clamping channels measure CURRENT (Amps), but ZESA meters bill REAL POWER (kWh).
  * Real Power = V × I × cos(φ)  ← power factor matters!
  * 
  * Without accounting for power factor, we overestimate consumption by 15-30%.

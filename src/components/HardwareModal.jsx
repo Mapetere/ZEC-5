@@ -19,8 +19,8 @@ export default function HardwareModal({ sensorName, sensorIndex, onClose }) {
           Sensor <span>S{sensorIndex + 1}</span> | {sensorName || `Channel ${sensorIndex + 1}`}
         </div>
         <p className="hw-modal-desc">
-          Data ping returned Null while system is armed. This may indicate a wiring fault, 
-          a disconnected CT clamp, or an ADC failure on the ESP32 controller module.
+          Data ping returned Null while system is armed. This is likely due to the device being fully powered off, an offline controller, 
+          a disconnected clamping channel, or an ADC failure on the ESP32 controller module.
           Immediate inspection is recommended.
         </p>
         <div className="hw-modal-contact">

@@ -537,7 +537,10 @@ export default function Dashboard({
       {/* ============================================================
           ROW 2: POWER BREAKDOWN (per-appliance real vs apparent power)
           ============================================================ */}
-      <div className="section-title"><span className="dot" /> Real-Time Power Breakdown</div>
+      <div className="section-title"><span className="dot" /> Instantaneous Power Breakdown</div>
+      <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+        These percentages represent the exact power draw of each appliance <strong>right at this very second</strong>.
+      </p>
       <div className="card full-width power-breakdown-card" style={{ marginBottom: 28 }}>
         <div className="power-breakdown-header">
           <div className="power-breakdown-total">
@@ -581,39 +584,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* ============================================================
-          ROW 3: DAILY AVERAGES
-          ============================================================ */}
-      {recentDays.length > 0 && (
-        <>
-          <div className="section-title"><span className="dot" /> Daily Averages Database</div>
-          <div className="card full-width daily-avg-table" style={{ marginBottom: 28 }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  {(profiles || []).slice(0, 5).map((p, i) => <th key={i}>{p.name}</th>)}
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentDays.map(day => (
-                  <tr key={day.date}>
-                    <td>{day.date}</td>
-                    {day.sensors.map((v, i) => <td key={i}>{v.toFixed(2)}A</td>)}
-                    <td>{day.sensors.reduce((a, b) => a + b, 0).toFixed(2)}A</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {vacant && (
-              <div className="vacant-notice">
-                Near-zero current detected. Household appears vacant. Duration goal validated as Achievable.
-              </div>
-            )}
-          </div>
-        </>
-      )}
+
 
       {/* ============================================================
           ROW 4: MONITORED CIRCUIT LOOPS
@@ -637,29 +608,7 @@ export default function Dashboard({
         ))}
       </div>
 
-      {/* ============================================================
-          ROW 5: ENERGY FINGERPRINTS (Chart Redesign)
-          ============================================================ */}
-      <div className="section-title"><span className="dot" /> Energy Fingerprints</div>
-      <div className="card full-width" style={{ marginBottom: 28 }}>
-        <Chart
-          type="area"
-          height={260}
-          options={{
-            ...chartOptions,
-            colors: ['#25D366', '#128C7E', '#FFB300', '#FF6B6B', '#8696A0'],
-            markers: {
-              size: 5,
-              colors: ['#25D366', '#128C7E', '#FFB300', '#FF6B6B', '#8696A0'],
-              strokeColors: '#0e1619',
-              strokeWidth: 2,
-              hover: { size: 7 }
-            },
-            legend: { show: true, position: 'top', horizontalAlign: 'right', labels: { colors: '#8696A0' }, fontFamily: 'Inter', fontSize: '11px' },
-          }}
-          series={(profiles || []).slice(0, 5).map((p, i) => ({ name: p.name, data: history?.[i] || [] }))}
-        />
-      </div>
+
     </div>
   );
 }

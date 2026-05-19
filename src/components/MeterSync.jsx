@@ -4,7 +4,7 @@ import { useState } from 'react';
  * MeterSync — Slide-out panel for syncing with the actual ZESA prepaid meter.
  * 
  * WHY:
- * CT clamp readings drift from the actual meter by ±8-15%.
+ * Clamping channel readings drift from the actual meter by ±8-15%.
  * Periodically entering the real meter reading lets the system
  * self-correct and improve future estimates.
  * 

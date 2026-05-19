@@ -11,6 +11,8 @@ import MeterSync from './components/MeterSync.jsx';
 import DepletionModal from './components/DepletionModal.jsx';
 import EngineerSetupPage from './components/EngineerSetupPage.jsx';
 import Settings from './components/Settings.jsx';
+import DailyAverages from './components/DailyAverages.jsx';
+import AuditTrail from './components/AuditTrail.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
@@ -24,6 +26,8 @@ import { recordObservation, calculateForecast, simulateIntervalProgress, getVirt
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
   management: 'Appliance Management',
+  history: 'Daily Averages Database',
+  audit: 'Token Audit Trail',
   inference: 'Inference Engine Insights',
   settings: 'System Settings',
 };
@@ -406,6 +410,18 @@ export default function App() {
               engineState={engineState}
             />
           )}
+          {page === 'history' && (
+            <DailyAverages
+              dailyAverages={dailyAverages}
+              profiles={profiles}
+              vacant={vacant}
+            />
+          )}
+          {page === 'audit' && (
+            <AuditTrail
+              profiles={profiles}
+            />
+          )}
           {page === 'inference' && (
             <div className="fade-in">
               <div className="section-title"><span className="dot" /> Active Insights & Telemetry Warnings</div>
@@ -537,7 +553,7 @@ export default function App() {
               fontWeight: 'bold',
               lineHeight: 1
             }}>
-              {t.type === 'warning' ? '⚠' : '✓'}
+              {t.type === 'warning' ? '!' : 'OK'}
             </span>
             <span style={{ letterSpacing: '0.01em' }}>{t.message}</span>
           </div>

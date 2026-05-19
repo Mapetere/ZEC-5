@@ -115,7 +115,7 @@ export default function EngineerSetupPage({ onComplete }) {
             fontSize: '36px',
             margin: '0 auto 24px'
           }}>
-            ✓
+            OK
           </div>
           <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', color: '#fff', marginBottom: '8px' }}>
             ZEC-55 Link Active
@@ -216,11 +216,11 @@ export default function EngineerSetupPage({ onComplete }) {
               3. Telemetry Circuit Calibration
             </h3>
             <p className="setup-desc" style={{ marginBottom: 12 }}>
-              Calibrate and name active appliance sensors attached to the 5 physical CT clamps.
+              Calibrate and name active appliance sensors attached to the 5 physical clamping channels.
             </p>
             <details style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 500 }}>
-                📖 Readme: Load Profile Types Explained
+                Readme: Load Profile Types Explained
               </summary>
               <ul style={{ margin: '8px 0 0 20px', padding: 0, lineHeight: 1.6 }}>
                 <li><strong style={{color: '#fff'}}>Continuous:</strong> Always on with a steady draw (e.g., Fridge, Server, Router).</li>
@@ -238,7 +238,7 @@ export default function EngineerSetupPage({ onComplete }) {
                 marginBottom: '10px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <span>CT Clamp Channel C{i + 1}</span>
+                  <span>Clamping Channel C{i + 1}</span>
                   <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-blue)' }}>
                     Base Load: {g.baseAmps} A
                   </span>

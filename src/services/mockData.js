@@ -7,11 +7,11 @@
  */
 
 const SENSOR_PROFILES = [
-  { name: 'Fridge', base: 1.2, variance: 0.08 },
-  { name: 'Geyser', base: 3.8, variance: 0.15 },
-  { name: 'Borehole', base: 2.1, variance: 0.10 },
-  { name: 'Entertainment', base: 0.6, variance: 0.05 },
-  { name: 'Lighting', base: 0.4, variance: 0.03 },
+  { name: 'Fridge', base: 1.2, variance: 0.08, type: 'Continuous' },
+  { name: 'Geyser', base: 3.8, variance: 0.15, type: 'Cyclic' },
+  { name: 'Borehole', base: 2.1, variance: 0.10, type: 'Scheduled' },
+  { name: 'Entertainment', base: 0.6, variance: 0.05, type: 'Variable' },
+  { name: 'Lighting', base: 0.4, variance: 0.03, type: 'Variable' },
 ];
 
 const MOVING_AVG_WINDOW = 8;
@@ -21,10 +21,33 @@ let smoothedHistory = [[], [], [], [], []];
 const MAX_HISTORY = 60;
 let tickCount = 0;
 
-function generateRawValue(profile) {
+function generateRawValue(profile, index) {
+  let cycleLength = 200;
+  let dutyCycle = 1.0;
+  
+  switch(profile.type) {
+    case 'Continuous':
+      cycleLength = 120; dutyCycle = 0.5; break; // Fridge cycles 50%
+    case 'Cyclic':
+      cycleLength = 300; dutyCycle = 0.25; break; // Geyser cycles 25%
+    case 'Scheduled':
+      cycleLength = 500; dutyCycle = 0.1; break; // Borehole cycles 10%
+    case 'Variable':
+      cycleLength = 80; dutyCycle = 0.35; break; // Lighting/Entertainment variable
+    default:
+      dutyCycle = 0.5;
+  }
+  
+  const cyclePosition = (tickCount + (index * 47)) % cycleLength;
+  const isOn = cyclePosition < (cycleLength * dutyCycle);
+
+  if (!isOn) {
+    return Math.max(0, parseFloat((Math.random() * 0.02).toFixed(3)));
+  }
+
   const drift = Math.sin(tickCount * 0.1 + profile.base) * profile.variance;
   const noise = (Math.random() - 0.5) * profile.variance * 0.3;
-  return Math.max(0, parseFloat((profile.base + drift + noise).toFixed(3)));
+  return Math.max(0.1, parseFloat((profile.base + drift + noise).toFixed(3)));
 }
 
 function movingAverage(arr, window) {
@@ -40,7 +63,7 @@ export function startMockStream(onData, intervalMs = 1500) {
   intervalId = setInterval(() => {
     tickCount++;
     const sensors = SENSOR_PROFILES.map((p, i) => {
-      const raw = generateRawValue(p);
+      const raw = generateRawValue(p, i);
       rawHistory[i].push(raw);
       if (rawHistory[i].length > MAX_HISTORY) rawHistory[i].shift();
       const smoothed = parseFloat(movingAverage(rawHistory[i], MOVING_AVG_WINDOW).toFixed(2));
@@ -60,7 +83,7 @@ export function startMockStream(onData, intervalMs = 1500) {
   // Initial data point
   tickCount++;
   const sensors = SENSOR_PROFILES.map((p, i) => {
-    const raw = generateRawValue(p);
+    const raw = generateRawValue(p, i);
     rawHistory[i].push(raw);
     const smoothed = parseFloat(movingAverage(rawHistory[i], MOVING_AVG_WINDOW).toFixed(2));
     smoothedHistory[i].push(smoothed);

@@ -127,7 +127,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
                               {sched.schedule}
                               {sched.appliance === "Geyser Loop" && kwh >= minGeyser.kwhRequired && (
                                 <span style={{ display: 'block', fontSize: '9px', color: 'var(--warning-amber)', marginTop: 2 }}>
-                                  ⚠️ Thermodynamic lock: runtimes below {minGeyser.minutes} mins output 100% cold water.
+                                  WARNING: Thermodynamic lock: runtimes below {minGeyser.minutes} mins output 100% cold water.
                                 </span>
                               )}
                             </span>
