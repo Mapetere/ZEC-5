@@ -7,7 +7,7 @@ export default function Header({ title, connected }) {
       <h2 className="header-title">{title}</h2>
       <div className="header-status">
         <span className={`status-dot ${connected ? 'connected' : ''}`} />
-        <span>ESP32 {connected ? 'Connected' : 'Disconnected'}</span>
+        <span>Predictive Core: {connected ? 'Active (Real-time)' : 'Offline'}</span>
       </div>
     </header>
   );

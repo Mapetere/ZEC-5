@@ -6,9 +6,9 @@ import Header from './components/Header.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Management from './components/Management.jsx';
 import SmartAdvice from './components/SmartAdvice.jsx';
-import HardwareModal from './components/HardwareModal.jsx';
 import EmergencyMode from './components/EmergencyMode.jsx';
 import MeterSync from './components/MeterSync.jsx';
+import DepletionModal from './components/DepletionModal.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, inject7DayHistory, isHouseVacant
@@ -17,7 +17,7 @@ import {
   initEngine, processTick, getUnitsRemaining,
   syncWithMeter, resetEngine, getEngineState
 } from './services/energyEngine.js';
-import wsService from './services/websocket.js';
+import { recordObservation, calculateForecast, simulateIntervalProgress, getVirtualTime } from './services/predictionEngine.js';
 
 const PAGE_TITLES = {
   dashboard: 'Behavioral Dashboard',
@@ -53,12 +53,22 @@ export default function App() {
   const [showAdvice, setShowAdvice] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const [showMeterSync, setShowMeterSync] = useState(false);
-  const [hwFault, setHwFault] = useState(null);
   const [tickCount, setTickCount] = useState(0);
   const [dataStartTime] = useState(() => Date.now());
   const [dailyAverages, setDailyAverages] = useState(() => getDailyAverages());
   const [vacant, setVacant] = useState(false);
   const [engineState, setEngineState] = useState(() => getEngineState());
+  const [gridBlackout, setGridBlackout] = useState(false);
+  const [dismissCutoff, setDismissCutoff] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = useCallback((message, type = 'success') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3500);
+  }, []);
 
   const [profiles, setProfiles] = useState(() => {
     try {
@@ -88,25 +98,21 @@ export default function App() {
     const goal = setupData.durationGoal || 21;
     const purchaseDate = new Date(td.date);
     const now = new Date();
-    const daysSincePurchase = Math.max(1, (now - purchaseDate) / (1000 * 60 * 60 * 24));
+    const daysSincePurchase = Math.max(0.01, (now - purchaseDate) / (1000 * 60 * 60 * 24));
 
     // Use engine's corrected remaining if available, otherwise fallback
     let kwhRemaining;
-    let dailyUsageKwh;
     if (engineState) {
       kwhRemaining = Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh);
-      // Estimate daily from current real power draw
-      const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
-      const avgRealPowerKw = (totalAmps * MAINS_VOLTAGE * 0.80) / 1000; // 0.80 avg PF
-      dailyUsageKwh = avgRealPowerKw * 24 * 0.45;
     } else {
       const totalAmps = sensors.reduce((s, v) => s + (v || 0), 0);
       const avgPowerKw = (totalAmps * MAINS_VOLTAGE) / 1000;
-      dailyUsageKwh = avgPowerKw * 8;
+      const dailyUsageKwh = avgPowerKw * 8;
       kwhRemaining = Math.max(0, td.kwh - (dailyUsageKwh * daysSincePurchase));
     }
 
-    const daysRemaining = dailyUsageKwh > 0 ? kwhRemaining / dailyUsageKwh : goal;
+    // Call our advanced dynamic prediction model to calculate forecast
+    const forecast = calculateForecast(kwhRemaining, goal);
 
     const calStart = setupData.calibrationStart ? new Date(setupData.calibrationStart) : now;
     const calDays = (now - calStart) / (1000 * 60 * 60 * 24);
@@ -115,12 +121,8 @@ export default function App() {
     // Condition A: below user-configured threshold (kWh)
     const belowThreshold = kwhRemaining < notifyThreshold;
 
-    // Condition B: projected depletion before target date
-    const targetEndDate = new Date(purchaseDate.getTime() + goal * 24 * 60 * 60 * 1000);
-    const projectedEndDate = dailyUsageKwh > 0
-      ? new Date(now.getTime() + daysRemaining * 24 * 60 * 60 * 1000)
-      : new Date(now.getTime() + goal * 24 * 60 * 60 * 1000);
-    const atRisk = projectedEndDate < targetEndDate;
+    // Condition B: projected depletion before target date (supplied by forecast model)
+    const atRisk = forecast.atRisk;
 
     // Vacancy override: if house is vacant, goal is always achievable
     const isVacant = vacant;
@@ -133,8 +135,10 @@ export default function App() {
       isEmergency: isVacant ? false : isEmergency,
       isVacant,
       kwhRemaining: kwhRemaining.toFixed(1),
-      daysRemaining: Math.round(daysRemaining),
-      dailyUsage: dailyUsageKwh,
+      daysRemaining: Math.round(forecast.daysRemaining),
+      dailyUsage: parseFloat(forecast.projectedDailyKwh),
+      hoursRemaining: forecast.hoursRemaining,
+      depletionDate: forecast.depletionDate,
     };
   })();
 
@@ -153,7 +157,7 @@ export default function App() {
     }
   }, []);
 
-  // Mock data stream + daily average storage + energy engine tick + WebSocket integration
+  // Dynamic simulation data stream + daily average storage + predictive online learning ticks
   useEffect(() => {
     if (!user || !setupComplete) return;
 
@@ -162,97 +166,54 @@ export default function App() {
       initEngine(setupData.tokenData.kwh, setupData.tokenData.date);
     }
 
-    let mockStream = null;
-    let localTickCount = 0;
-
-    // Subscribe to live ESP32 status updates
-    const unsubscribeStatus = wsService.onStatus((isConnected) => {
-      setConnected(isConnected);
-      if (isConnected) {
-        // Hardware connected! Stop local client simulation to prevent duplicate ticks
-        if (mockStream) {
-          mockStream.stop();
-          mockStream = null;
+    // Start high-fidelity client-side behavioral simulation
+    const mockStream = startMockStream((data) => {
+      if (gridBlackout) {
+        setSensors([0, 0, 0, 0, 0]);
+        const es = processTick([0, 0, 0, 0, 0], profiles);
+        if (es) {
+          setEngineState(es);
+          // CRITICAL: Skip recordObservation (freezing learning array)
         }
-        console.log('[ZEC-5] Active ESP32 connection established. Streaming live telemetry.');
-      } else if (!mockStream) {
-        // Hardware offline. Start client-side simulation failover
-        console.log('[ZEC-5] ESP32 disconnected. Initiating client-side simulation failover.');
-        startLocalSimulation();
-      }
-    });
-
-    // Subscribe to live sensor telemetry from the ESP32
-    const unsubscribeData = wsService.onData((data) => {
-      // Parse sensors: ESP32 sends raw floats, clamp index 0 to 4
-      const liveSensors = (data.sensors || [0, 0, 0, 0, 0]).map(v => parseFloat(v) || 0);
-      setSensors(liveSensors);
-      
-      // Update history arrays
-      setHistory(prev => {
-        return prev.map((arr, i) => {
-          const next = [...arr, liveSensors[i] || 0];
-          if (next.length > 50) next.shift();
-          return next;
-        });
-      });
-
-      localTickCount++;
-      setTickCount(localTickCount);
-
-      // Process live tick in the self-correcting calibration engine
-      const es = processTick(liveSensors, profiles);
-      if (es) setEngineState(es);
-
-      // Process daily averages
-      dailyStoreCounter.current++;
-      if (dailyStoreCounter.current % 40 === 0) {
-        const updated = storeDailyAverage(liveSensors);
-        setDailyAverages(updated);
-        setVacant(isHouseVacant());
-      }
-    });
-
-    // Subscribe to relay updates from the ESP32
-    const unsubscribeRelays = wsService.onRelayUpdate((liveRelays) => {
-      if (liveRelays) {
-        setRelays(liveRelays);
-      }
-    });
-
-    // Start client-side simulation failover
-    function startLocalSimulation() {
-      mockStream = startMockStream((data) => {
+        setAlerts([{
+          id: `blackout-${Date.now()}`,
+          type: 'danger',
+          title: 'Grid Power Outage Detected',
+          message: 'Utility voltage sags to 0V. ZEC-5 edge brain has frozen all behavioral updates to protect profiles.',
+          time: 'Now',
+          actionable: false,
+        }]);
+      } else {
         setSensors(data.sensors);
         setHistory(data.history);
-        setTickCount(data.tickCount);
-
         const es = processTick(data.sensors, profiles);
-        if (es) setEngineState(es);
+        if (es) {
+          setEngineState(es);
+          recordObservation(es.totalRealW);
+        }
+        setAlerts(generateAlerts(data.sensors, profiles, tokenState));
+      }
+      setTickCount(data.tickCount);
 
+      // Process daily averages
+      if (!gridBlackout) {
         dailyStoreCounter.current++;
         if (dailyStoreCounter.current % 40 === 0) {
           const updated = storeDailyAverage(data.sensors);
           setDailyAverages(updated);
           setVacant(isHouseVacant());
         }
+      }
+    }, 1500);
 
-        setAlerts(generateAlerts(data.sensors, profiles, tokenState));
-      }, 1500);
-      mockRef.current = mockStream;
-    }
-
-    // Connect to the ESP32 access point IP
-    wsService.connect();
+    mockRef.current = mockStream;
+    setConnected(true); // Simulation engine active
 
     return () => {
-      unsubscribeStatus();
-      unsubscribeData();
-      unsubscribeRelays();
-      wsService.disconnect();
       if (mockStream) mockStream.stop();
+      setConnected(false);
     };
-  }, [user, setupComplete]);
+  }, [user, setupComplete, gridBlackout, profiles, tokenState]);
 
   useEffect(() => {
     if (sensors.some(v => v > 0)) {
@@ -260,16 +221,36 @@ export default function App() {
     }
   }, [tokenState?.isPhase2, tokenState?.belowThreshold, tokenState?.atRisk]);
 
+  // Time Machine Simulation Advancement (Fast-Forward clock & learn patterns)
+  const handleSimulateHours = useCallback((hours) => {
+    const dailyUsageKwh = tokenState?.dailyUsage || 8.5;
+    const avgPowerW = (dailyUsageKwh * 1000) / 24;
+
+    // Simulate intervals in model
+    simulateIntervalProgress(hours, avgPowerW);
+
+    // Consume prepaid units
+    const kwhConsumed = (avgPowerW / 1000) * hours;
+    const engine = getEngineState();
+    if (engine) {
+      engine.cumulativeKwh += kwhConsumed;
+      engine.lastTickTime = Date.now();
+      setEngineState({ ...engine });
+      localStorage.setItem('zec5_energy_engine', JSON.stringify(engine));
+    }
+    showToast(`Successfully advanced virtual clock by ${hours} hours!`, 'success');
+  }, [tokenState, showToast]);
+
   // Fast-forward: inject 7-day history
   const handleFastForward = useCallback(() => {
     const days = inject7DayHistory();
     setDailyAverages(days);
-    // Reload setup data from localStorage (calibrationStart was updated)
     try {
       const refreshed = JSON.parse(localStorage.getItem('zec5_setup'));
       setSetupData(refreshed);
     } catch { /* ignore */ }
-  }, []);
+    showToast("Successfully injected 7-day metrology history!", 'success');
+  }, [showToast]);
 
   // Update notification threshold
   const handleThresholdUpdate = useCallback((newThreshold) => {
@@ -278,35 +259,60 @@ export default function App() {
       setSetupData(updated);
       localStorage.setItem('zec5_setup', JSON.stringify(updated));
     }
-  }, [setupData]);
+    showToast(`Trigger threshold updated to ${newThreshold} kWh!`, 'success');
+  }, [setupData, showToast]);
 
   const handleRelayToggle = useCallback((index, state) => {
     setRelays(prev => { const n = [...prev]; n[index] = state; return n; });
-    // Propagate over-the-air to the physical ESP32 via WebSocket
-    wsService.toggleRelay(index, state);
-    // Fallback sync in simulation mode
     if (mockRef.current) mockRef.current.toggleRelay(index, state);
   }, []);
 
   const handleAcceptAdvice = useCallback((relayIndex) => {
-    if (relayIndex != null && relayIndex < 8) handleRelayToggle(relayIndex, false);
-  }, [handleRelayToggle]);
+    if (relayIndex != null && relayIndex < 8) {
+      handleRelayToggle(relayIndex, false);
+      showToast("Triage command active: shedded non-essential load!", 'success');
+    }
+  }, [handleRelayToggle, showToast]);
 
   const handleProfileSave = useCallback((newProfiles) => {
     setProfiles(newProfiles);
     localStorage.setItem('zec5_profiles', JSON.stringify(newProfiles));
-  }, []);
-
-  const handleHardwareFault = useCallback((index, name) => {
-    if (!hwFault) setHwFault({ index, name });
-  }, [hwFault]);
+    showToast("Appliance sensor mapping profiles updated successfully!", 'success');
+  }, [showToast]);
 
   // Meter sync handler
   const handleMeterSync = useCallback((meterReading) => {
     const result = syncWithMeter(meterReading);
-    if (result) setEngineState(result);
+    if (result) {
+      setEngineState(result);
+      if (meterReading > 0) setDismissCutoff(false); // Re-arm cutoff alert when synced above 0
+      showToast(`Drift calibrated! New scaling coefficient: ×${result.correctionFactor.toFixed(3)}`, 'success');
+    }
     return result;
-  }, []);
+  }, [showToast]);
+
+  // Recharge handler
+  const handleRecharge = useCallback((kwhAmount) => {
+    const engine = getEngineState();
+    if (engine) {
+      engine.tokenKwh = kwhAmount;
+      engine.cumulativeKwh = 0;
+      engine.lastTickTime = Date.now();
+      setEngineState({ ...engine });
+      localStorage.setItem('zec5_energy_engine', JSON.stringify(engine));
+      setDismissCutoff(false); // Re-arm cutoff alert
+      showToast(`Loaded ${kwhAmount} kWh recharge successfully!`, 'success');
+    }
+  }, [showToast]);
+
+  // Blackout toggle handler
+  const handleToggleBlackout = useCallback(() => {
+    setGridBlackout(prev => {
+      const next = !prev;
+      showToast(next ? "🔌 simulated grid outage active! RHS brain frozen." : "⚡ ZESA Utility power restored! Resuming metrology.", next ? 'warning' : 'success');
+      return next;
+    });
+  }, [showToast]);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('zec5_auth');
@@ -345,7 +351,7 @@ export default function App() {
               onOpenAdvice={() => setShowAdvice(true)}
               onOpenEmergency={() => setShowEmergency(true)}
               onOpenMeterSync={() => setShowMeterSync(true)}
-              onHardwareFault={handleHardwareFault}
+              onSimulateHours={handleSimulateHours}
               onFastForward={handleFastForward}
               tickCount={tickCount}
               dataCollectionMinutes={dataCollectionMinutes}
@@ -353,6 +359,9 @@ export default function App() {
               vacant={vacant}
               notifyThreshold={notifyThreshold}
               engineState={engineState}
+              tokenState={tokenState}
+              gridBlackout={gridBlackout}
+              onToggleBlackout={handleToggleBlackout}
             />
           )}
           {page === 'management' && (
@@ -362,6 +371,9 @@ export default function App() {
               onResetSetup={handleResetSetup}
               notifyThreshold={notifyThreshold}
               onThresholdUpdate={handleThresholdUpdate}
+              onRecharge={handleRecharge}
+              onSyncMeter={handleMeterSync}
+              engineState={engineState}
             />
           )}
         </div>
@@ -373,6 +385,8 @@ export default function App() {
         onAcceptAdvice={handleAcceptAdvice}
         visible={showAdvice}
         onClose={() => setShowAdvice(false)}
+        tokenKwhRemaining={engineState ? Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh) : (setupData?.tokenData?.kwh || 3.0)}
+        targetHours={setupData?.durationGoal ? setupData.durationGoal * 24 : 504}
       />
 
       <MeterSync
@@ -393,13 +407,57 @@ export default function App() {
         />
       )}
 
-      {hwFault && (
-        <HardwareModal
-          sensorName={hwFault.name}
-          sensorIndex={hwFault.index}
-          onClose={() => setHwFault(null)}
-        />
-      )}
+      <DepletionModal
+        visible={setupComplete && !dismissCutoff && (engineState ? (engineState.tokenKwh - engineState.cumulativeKwh <= 0) : false)}
+        onGoToRecharge={() => {
+          setPage('management');
+          setDismissCutoff(true);
+          showToast("Redirected toSettings panel for Recharge/Sync!", 'success');
+        }}
+      />
+
+      {/* FLOAT-IN PREMIUM GLASSMORPHIC TOAST SYSTEM */}
+      <div style={{
+        position: 'fixed',
+        top: '24px',
+        right: '24px',
+        zIndex: 999999,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        pointerEvents: 'none'
+      }}>
+        {toasts.map(t => (
+          <div key={t.id} className="slide-in" style={{
+            pointerEvents: 'auto',
+            background: 'rgba(20, 28, 33, 0.92)',
+            backdropFilter: 'blur(15px)',
+            border: t.type === 'warning' ? '1px solid rgba(243, 156, 18, 0.4)' : '1px solid rgba(46, 204, 113, 0.4)',
+            borderRadius: '10px',
+            padding: '14px 20px',
+            color: '#fff',
+            fontSize: '12px',
+            fontFamily: 'Outfit, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.4)',
+            minWidth: '280px',
+            transition: 'all 0.3s ease'
+          }}>
+            <span style={{
+              color: t.type === 'warning' ? '#f39c12' : '#2ecc71',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              lineHeight: 1
+            }}>
+              {t.type === 'warning' ? '⚠' : '✓'}
+            </span>
+            <span style={{ letterSpacing: '0.01em' }}>{t.message}</span>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }

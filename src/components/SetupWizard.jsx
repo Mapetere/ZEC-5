@@ -20,7 +20,7 @@ export default function SetupWizard({ onComplete }) {
   const [error, setError] = useState('');
 
   const steps = [
-    { label: 'Sensors', num: '01' },
+    { label: 'Circuits', num: '01' },
     { label: 'Token', num: '02' },
     { label: 'Goal', num: '03' },
     { label: 'Alerts', num: '04' },
@@ -47,7 +47,7 @@ export default function SetupWizard({ onComplete }) {
     setError('');
     if (step === 0) {
       if (sensorNames.some(n => !n.trim())) {
-        setError('Please name all 5 sensor channels.');
+        setError('Please name all 5 circuit loops.');
         return;
       }
     } else if (step === 1) {
@@ -125,14 +125,14 @@ export default function SetupWizard({ onComplete }) {
 
         {error && <div className="login-error">{error}</div>}
 
-        {/* Step 1: Name Sensors */}
+        {/* Step 1: Name Circuits */}
         {step === 0 && (
           <div className="setup-body">
-            <h3 className="setup-heading">Sensor Mapping</h3>
-            <p className="setup-desc">Assign appliance names to each of the 5 current sensor inputs.</p>
+            <h3 className="setup-heading">Monitored Loops</h3>
+            <p className="setup-desc">Assign appliance names to each of the 5 active circuit loops.</p>
             {sensorNames.map((name, i) => (
               <div key={i} className="setup-sensor-row">
-                <div className="setup-sensor-badge">S{i + 1}</div>
+                <div className="setup-sensor-badge">C{i + 1}</div>
                 <input
                   className="login-input"
                   type="text"
@@ -142,7 +142,7 @@ export default function SetupWizard({ onComplete }) {
                     next[i] = e.target.value;
                     setSensorNames(next);
                   }}
-                  placeholder={`Sensor ${i + 1} name`}
+                  placeholder={`Circuit ${i + 1} name`}
                   id={`setup-sensor-${i}`}
                 />
               </div>

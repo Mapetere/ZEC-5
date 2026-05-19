@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { calculateRealPower, calculateRunway } from '../services/energyEngine.js';
+import { getVirtualTime } from '../services/predictionEngine.js';
 
 /**
  * Dashboard — Rewired from scratch for clarity.
@@ -24,10 +25,10 @@ import { calculateRealPower, calculateRunway } from '../services/energyEngine.js
 export default function Dashboard({
   sensors, history, alerts, profiles,
   tokenData, durationGoal, calibrationStart,
-  onOpenAdvice, onHardwareFault, onOpenEmergency, onFastForward,
-  onOpenMeterSync,
+  onOpenAdvice, onOpenEmergency, onFastForward,
+  onOpenMeterSync, onSimulateHours,
   tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold,
-  engineState
+  engineState, tokenState, gridBlackout, onToggleBlackout
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -73,6 +74,22 @@ export default function Dashboard({
     const goal = durationGoal || 21;
     const hasStableData = (dataCollectionMinutes || 0) >= 60;
 
+    // Use our advanced forecast model if available
+    if (tokenState) {
+      return {
+        daysRemaining: tokenState.daysRemaining,
+        kwhRemaining: tokenState.kwhRemaining,
+        dailyUsage: tokenState.dailyUsage,
+        goal,
+        onTrack: vacant ? true : !tokenState.atRisk,
+        isCalibrating: false,
+        pct: Math.min(100, (tokenState.daysRemaining / goal) * 100),
+        isEmergency: vacant ? false : tokenState.isEmergency,
+        depletionDate: tokenState.depletionDate,
+        hoursRemaining: tokenState.hoursRemaining,
+      };
+    }
+
     if (!hasStableData) {
       return {
         daysRemaining: goal,
@@ -83,6 +100,7 @@ export default function Dashboard({
         isCalibrating: true,
         pct: 100,
         isEmergency: false,
+        depletionDate: null,
       };
     }
 
@@ -96,8 +114,9 @@ export default function Dashboard({
       isCalibrating: false,
       pct: proj.pct,
       isEmergency: vacant ? false : proj.isEmergency,
+      depletionDate: null,
     };
-  }, [tokenData, totalRealW, unitsRemaining, durationGoal, dataCollectionMinutes, vacant]);
+  }, [tokenData, totalRealW, unitsRemaining, durationGoal, dataCollectionMinutes, vacant, tokenState]);
 
   // --- Sensor Cards ---
   const sensorCards = useMemo(() => {
@@ -203,6 +222,15 @@ export default function Dashboard({
                 <div className={`runway-bar-fill ${runway.pct < 30 ? 'danger' : runway.pct < 60 ? 'warning' : ''}`} style={{ width: `${runway.pct}%` }} />
               </div>
 
+              {runway.depletionDate && (
+                <div style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <span>RHS Predictive Forecast:</span>
+                  <span style={{ color: runway.onTrack ? 'var(--accent-green)' : 'var(--warning-amber)', fontWeight: 'bold' }}>
+                    Depletion: {new Date(runway.depletionDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} at {new Date(runway.depletionDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="units-actions">
                 <button className="meter-sync-btn" onClick={onOpenMeterSync} id="open-meter-sync">
@@ -235,16 +263,17 @@ export default function Dashboard({
           )}
         </div>
 
-        {/* --- SYSTEM STATUS --- */}
+        {/* --- SYSTEM STATUS & TIME MACHINE --- */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">System Status</span>
+            <span className="card-title">Predictive Controller Status</span>
           </div>
+
           {/* Behavioral Learning Phase */}
-          <div className="calibration-section">
+          <div className="calibration-section" style={{ marginBottom: 16 }}>
             <div className="calibration-header">
               <span className="calibration-label">
-                {calibration.complete ? 'Learning Complete' : `Behavioral Learning Phase | Day ${calibration.day}/7`}
+                {calibration.complete ? 'Behavioral Model: Calibrated' : `Habit Profiling Phase | Day ${calibration.day}/7`}
               </span>
               <span className="calibration-pct">{Math.round(calibration.pct)}%</span>
             </div>
@@ -252,39 +281,89 @@ export default function Dashboard({
               <div className={`calibration-bar-fill ${calibration.complete ? 'complete' : ''}`} style={{ width: `${calibration.pct}%` }} />
             </div>
             {!calibration.complete && (
-              <div className="calibration-actions">
-                <p className="calibration-hint">Collecting signatures. Recommendations unlock after Day 7.</p>
+              <div className="calibration-actions" style={{ marginTop: 8 }}>
+                <p className="calibration-hint">Analyzing cyclic household habits. Dynamic advices unlock after Day 7.</p>
                 <button className="fast-forward-btn" onClick={onFastForward} id="fast-forward">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="5 4 15 12 5 20 5 4" /><line x1="19" y1="5" x2="19" y2="19" />
                   </svg>
-                  Inject 7-Day History
+                  Simulate 7-Day History
                 </button>
               </div>
             )}
             {calibration.complete && (
-              <p className="calibration-hint">Behavioral baselines established. Intelligent monitoring active.</p>
+              <p className="calibration-hint" style={{ marginTop: 6 }}>Behavioral baselines fully established. Running dynamic forecast integrations.</p>
             )}
           </div>
-          {/* Notification Threshold */}
-          <div className="threshold-display">
-            <span className="threshold-label">Notification Trigger</span>
-            <span className="threshold-value">{notifyThreshold} kWh</span>
+
+          {/* Time Machine Simulator Widget */}
+          <div className="time-machine-widget" style={{ padding: '12px 0', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Virtual System Clock</span>
+              <span className="status-dot connected" style={{ width: 6, height: 6 }} />
+            </div>
+            <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--accent-green)', fontFamily: 'Outfit, sans-serif', marginBottom: 10 }}>
+              {getVirtualTime().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button 
+                onClick={() => onSimulateHours(1)} 
+                className="meter-sync-btn" 
+                style={{ padding: '6px 12px', fontSize: '11px', flex: 1, justifyContent: 'center' }}
+              >
+                +1 Hour Jump
+              </button>
+              <button 
+                onClick={() => onSimulateHours(24)} 
+                className="meter-sync-btn" 
+                style={{ padding: '6px 12px', fontSize: '11px', flex: 1, justifyContent: 'center', background: 'var(--accent-green-dim)', borderColor: 'var(--accent-green)' }}
+              >
+                Fast-Forward 24h
+              </button>
+            </div>
+            
+            {/* BLACKOUT SIMULATION BUTTON */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <button 
+                onClick={onToggleBlackout} 
+                className="meter-sync-btn" 
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '11px', 
+                  flex: 1, 
+                  justifyContent: 'center', 
+                  background: gridBlackout ? 'rgba(255, 107, 107, 0.12)' : 'rgba(255,255,255,0.03)', 
+                  borderColor: gridBlackout ? 'var(--alert-red)' : 'var(--border-color)',
+                  color: gridBlackout ? 'var(--alert-red)' : 'var(--text-primary)',
+                  fontWeight: gridBlackout ? 'bold' : 'normal'
+                }}
+              >
+                {gridBlackout ? '⚡ RESTORE UTILITY POWER' : '🔌 SIMULATE ZESA BLACKOUT'}
+              </button>
+            </div>
           </div>
-          {/* Hardware Integrity */}
-          <div className="hw-health">
-            <div className="hw-health-label">Hardware Integrity</div>
-            <div className="hw-health-grid">
+
+          {/* Circuit Integrity Monitor */}
+          <div className="hw-health" style={{ marginBottom: 14 }}>
+            <div className="hw-health-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Monitored Circuit Status</div>
+            <div className="hw-health-grid" style={{ display: 'flex', gap: 8 }}>
               {sensorCards.map(s => (
-                <div key={s.index} className={`hw-dot ${s.isNull ? 'fault' : 'ok'}`} title={`${s.name}: ${s.isNull ? 'FAULT' : 'OK'}`}>
-                  S{s.index + 1}
+                <div key={s.index} className="hw-dot ok" style={{ fontSize: '10px', width: 28, height: 28, borderRadius: '6px', background: 'var(--accent-green-dim)', border: '1px solid var(--accent-green)', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }} title={`${s.name} Monitored Loop: OK`}>
+                  C{s.index + 1}
                 </div>
               ))}
             </div>
           </div>
-          {/* Smart Advice */}
+
+          {/* Notification Threshold */}
+          <div className="threshold-display" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: 14 }}>
+            <span className="threshold-label" style={{ color: 'var(--text-secondary)' }}>Low-Energy Trigger Threshold:</span>
+            <span className="threshold-value" style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{notifyThreshold} kWh</span>
+          </div>
+
+          {/* Smart Advice Button */}
           {calibration.complete ? (
-            <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice">
+            <button className="advice-trigger-btn" onClick={onOpenAdvice} id="open-advice" style={{ width: '100%' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
               </svg>
@@ -294,11 +373,11 @@ export default function Dashboard({
               )}
             </button>
           ) : (
-            <div className="advice-locked">
+            <div className="advice-locked" style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px dashed var(--border-color)', display: 'flex', gap: 8, alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" /><path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
-              Learning Household Signatures... Unlock in {calibration.daysLeft} days.
+              Habit Profiling... Advices unlock in {calibration.daysLeft} days.
             </div>
           )}
         </div>
@@ -386,22 +465,22 @@ export default function Dashboard({
       )}
 
       {/* ============================================================
-          ROW 4: LIVE SENSOR FEEDS
+          ROW 4: MONITORED CIRCUIT LOOPS
           ============================================================ */}
-      <div className="section-title"><span className="dot" /> Live Sensor Feeds</div>
+      <div className="section-title"><span className="dot" /> Monitored Circuit Loops</div>
       <div className="dashboard-grid three-col" style={{ marginBottom: 28 }}>
         {sensorCards.map((s) => (
-          <div key={s.index} className={`card gauge-card ${s.isNull ? 'fault-card' : ''}`}>
+          <div key={s.index} className="card gauge-card">
             <div className="card-header">
               <span className="card-title">{s.name}</span>
-              <span className={`card-badge ${s.isNull ? 'badge-fault' : ''}`}>{s.isNull ? 'FAULT' : `CH ${s.index + 1}`}</span>
+              <span className="card-badge">Loop {s.index + 1}</span>
             </div>
             <div className="gauge-value">
-              {s.isNull ? '--' : s.val.toFixed(2)}
+              {s.val.toFixed(2)}
               <span className="unit">A</span>
             </div>
             <div className="gauge-bar-track">
-              <div className={`gauge-bar-fill ${s.level}`} style={{ width: s.isNull ? '0%' : `${s.pct}%` }} />
+              <div className={`gauge-bar-fill ${s.level}`} style={{ width: `${s.pct}%` }} />
             </div>
           </div>
         ))}
