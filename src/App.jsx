@@ -254,6 +254,8 @@ export default function App() {
     const dailyUsageKwh = tokenState?.dailyUsage || 8.5;
     const avgPowerW = (dailyUsageKwh * 1000) / 24;
 
+    const startVirtualTime = getVirtualTime();
+
     // Simulate intervals in model
     simulateIntervalProgress(hours, avgPowerW);
 
@@ -266,8 +268,27 @@ export default function App() {
       setEngineState({ ...engine });
       localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
     }
+
+    // Populate intermediate daily averages for all virtual dates crossed
+    const passedDates = [];
+    let timeCursor = new Date(startVirtualTime.getTime());
+    for (let h = 1; h <= hours; h++) {
+      timeCursor = new Date(timeCursor.getTime() + 60 * 60 * 1000);
+      const dateStr = timeCursor.toISOString().split('T')[0];
+      if (!passedDates.includes(dateStr)) {
+        passedDates.push(dateStr);
+      }
+    }
+
+    let updatedAverages = getDailyAverages();
+    passedDates.forEach(dateStr => {
+      updatedAverages = storeDailyAverage(sensors, dateStr);
+    });
+    setDailyAverages(updatedAverages);
+    setVacant(isHouseVacant());
+
     showToast(`Successfully advanced virtual clock by ${hours} hours!`, 'success');
-  }, [tokenState, showToast]);
+  }, [tokenState, showToast, sensors]);
 
 
 

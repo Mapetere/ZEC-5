@@ -102,6 +102,8 @@ export function startMockStream(onData, intervalMs = 1500) {
   };
 }
 
+import { getVirtualTime } from './predictionEngine.js';
+
 // ===== Daily Averages Database (localStorage) =====
 
 const DAILY_AVG_KEY = 'zet5_daily_averages';
@@ -112,8 +114,9 @@ export function getDailyAverages() {
   } catch { return []; }
 }
 
-export function storeDailyAverage(sensors) {
-  const today = new Date().toISOString().split('T')[0];
+export function storeDailyAverage(sensors, customDate = null) {
+  const dateObj = customDate || getVirtualTime();
+  const today = dateObj instanceof Date ? dateObj.toISOString().split('T')[0] : dateObj;
   const existing = getDailyAverages();
   const todayEntry = existing.find(e => e.date === today);
 

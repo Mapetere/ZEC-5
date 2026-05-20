@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" modified="2026-05-20T12:53:20.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
+  <diagram id="ZET5-Level1" name="Level 1 Diagram">
+    <mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- EXTERNAL ENTITY: Synthetic Generator -->
+        <mxCell id="generator" value="&lt;b&gt;Synthetic Generator&lt;/b&gt;&lt;br&gt;[External Entity]" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=2;align=center;verticalAlign=middle;rounded=0;glass=0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="100" width="160" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- EXTERNAL ENTITY: User -->
+        <mxCell id="user" value="&lt;b&gt;User&lt;/b&gt;&lt;br&gt;[External Entity]" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=2;align=center;verticalAlign=middle;rounded=0;glass=0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="310" width="160" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- PROCESS 1: Telemetry Ingestion -->
+        <mxCell id="process1" value="&lt;b&gt;1&lt;/b&gt;&lt;hr&gt;&lt;b&gt;Telemetry Ingestion&lt;/b&gt;&lt;br&gt;Applies Power Factors" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=2.5;align=center;verticalAlign=middle;shadow=1;glass=0;" vertex="1" parent="1">
+          <mxGeometry x="290" y="100" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- PROCESS 2: Numerical Integration -->
+        <mxCell id="process2" value="&lt;b&gt;2&lt;/b&gt;&lt;hr&gt;&lt;b&gt;Numerical Integration&lt;/b&gt;&lt;br&gt;Applies κ Drift Correction&lt;br&gt;Tracks Cumulative kWh" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=2.5;align=center;verticalAlign=middle;shadow=1;glass=0;" vertex="1" parent="1">
+          <mxGeometry x="290" y="260" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- DATA STORE: D1 localJS Storage -->
+        <mxCell id="datastore1" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;4&quot; cellspacing=&quot;0&quot;&gt;&lt;tr&gt;&lt;td style=&quot;border-right: 1px solid #D97706; font-weight:bold; color:#B45309; width: 25%; align: center;&quot;&gt;D1&lt;/td&gt;&lt;td style=&quot;font-weight:bold; color:#B45309;&quot;&gt;localJS Storage&lt;br&gt;&lt;span style=&quot;font-size:10px; font-weight:normal; color:#D97706;&quot;&gt;(localStorage keys)&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#FFFDF5;strokeColor=#D97706;strokeWidth=2.5;align=center;verticalAlign=middle;rounded=0;glass=0;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="260" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- PROCESS 3: Triage Engine -->
+        <mxCell id="process3" value="&lt;b&gt;3&lt;/b&gt;&lt;hr&gt;&lt;b&gt;Triage Engine&lt;/b&gt;&lt;br&gt;Evaluates Runway Budget" style="shape=rect;rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0284C7;strokeWidth=2.5;align=center;verticalAlign=middle;shadow=1;glass=0;" vertex="1" parent="1">
+          <mxGeometry x="590" y="410" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: raw Amps -->
+        <mxCell id="flow_gen_to_p1" value="raw Amps" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="generator" target="process1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: active power -->
+        <mxCell id="flow_p1_to_p2" value="active power" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="process1" target="process2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: meter sync -->
+        <mxCell id="flow_user_to_p2" value="meter sync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="user" target="process2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: RHS load profiles & daily averages (Process 2 <-> Storage) -->
+        <mxCell id="flow_p2_store_bidir" value="RHS load profiles &amp;lt;br&amp;gt;daily averages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;startArrow=classic;startFill=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="process2" target="datastore1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: remaining budget -->
+        <mxCell id="flow_p2_to_p3" value="remaining budget (kWh) &amp;lt;br&amp;gt;&amp;amp; projected runway metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="process2" target="process3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: onboarding config -->
+        <mxCell id="flow_store_to_p3" value="onboarding config,&amp;lt;br&amp;gt;target duration" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="datastore1" target="process3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- FLOW: relay shedding states -->
+        <mxCell id="flow_p3_to_user" value="relay shedding states, warnings &amp;amp; alerts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeColor=#475569;strokeWidth=2;fontColor=#475569;labelBackgroundColor=#F8FAFC;" edge="1" parent="1" source="process3" target="user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
