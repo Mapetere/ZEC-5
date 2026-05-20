@@ -302,6 +302,16 @@ export default function App() {
     showToast(`Trigger threshold updated to ${newThreshold} kWh!`, 'success');
   }, [setupData, showToast]);
 
+  // Update target duration goal
+  const handleGoalUpdate = useCallback((newGoal) => {
+    if (setupData) {
+      const updated = { ...setupData, durationGoal: newGoal };
+      setSetupData(updated);
+      localStorage.setItem('zet5_setup', JSON.stringify(updated));
+    }
+    showToast(`Target duration goal updated to ${newGoal} days!`, 'success');
+  }, [setupData, showToast]);
+
   const handleRelayToggle = useCallback((index, state) => {
     setRelays(prev => { const n = [...prev]; n[index] = state; return n; });
     if (mockRef.current) mockRef.current.toggleRelay(index, state);
@@ -493,6 +503,7 @@ export default function App() {
               onThresholdUpdate={handleThresholdUpdate}
               onResetSetup={handleResetSetup}
               engineerSetup={engineerSetup}
+              onGoalUpdate={handleGoalUpdate}
             />
           )}
         </div>

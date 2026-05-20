@@ -9,13 +9,20 @@ export default function Settings({
   notifyThreshold,
   onThresholdUpdate,
   onResetSetup,
-  engineerSetup
+  engineerSetup,
+  onGoalUpdate
 }) {
   const [thresholdInput, setThresholdInput] = useState(notifyThreshold || 50);
+  const [goalInput, setGoalInput] = useState(setupData?.durationGoal || 21);
 
   const handleThresholdSave = (e) => {
     e.preventDefault();
     onThresholdUpdate(Number(thresholdInput));
+  };
+
+  const handleGoalSave = (e) => {
+    e.preventDefault();
+    onGoalUpdate(Number(goalInput));
   };
 
   // Construct WhatsApp assistance link
@@ -100,31 +107,62 @@ export default function Settings({
         </a>
       </div>
 
-      {/* ===== NOTIFICATION THRESHOLD CARD ===== */}
+      {/* ===== TARGET GOAL & THRESHOLD CARD ===== */}
       <div className="card full-width" style={{ marginBottom: 28 }}>
         <div className="card-header">
-          <span className="card-title">Recommendation Threshold</span>
+          <span className="card-title">Target Goal & Alert Threshold</span>
         </div>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 18, lineHeight: '1.6' }}>
-          Define the critical ZESA token balance (in kWh) below which the prediction engine begins making consumption warnings.
+          Configure your target duration goal and the low-energy warning threshold for ZET-5 calculations.
         </p>
-        <form onSubmit={handleThresholdSave} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div className="login-input-wrap" style={{ margin: 0, width: '120px' }}>
-            <input
-              type="number"
-              className="login-input"
-              value={thresholdInput}
-              onChange={(e) => setThresholdInput(e.target.value)}
-              style={{ textAlign: 'center' }}
-              min="1"
-              id="settings-threshold-input"
-            />
-          </div>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>kWh</span>
-          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '10px 24px' }} id="btn-save-threshold">
-            Save Threshold
-          </button>
-        </form>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+          {/* Form 1: Duration Goal */}
+          <form onSubmit={handleGoalSave} style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>Target Duration Goal</label>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Specify the number of days you want your ZESA prepaid tokens to last.</span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: 'auto' }}>
+              <div className="login-input-wrap" style={{ margin: 0, width: '100px' }}>
+                <input
+                  type="number"
+                  className="login-input"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                  style={{ textAlign: 'center' }}
+                  min="1"
+                  max="365"
+                  id="settings-goal-input"
+                />
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Days</span>
+              <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '8px 16px', fontSize: '12px' }} id="btn-save-goal">
+                Save Goal
+              </button>
+            </div>
+          </form>
+
+          {/* Form 2: Recommendation Threshold */}
+          <form onSubmit={handleThresholdSave} style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>Low-Energy Alert Threshold</label>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Threshold in kWh below which ZET-5 warns you of potential budget depletion.</span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: 'auto' }}>
+              <div className="login-input-wrap" style={{ margin: 0, width: '100px' }}>
+                <input
+                  type="number"
+                  className="login-input"
+                  value={thresholdInput}
+                  onChange={(e) => setThresholdInput(e.target.value)}
+                  style={{ textAlign: 'center' }}
+                  min="1"
+                  id="settings-threshold-input"
+                />
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>kWh</span>
+              <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '8px 16px', fontSize: '12px' }} id="btn-save-threshold">
+                Save Alert
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* ===== DIAGNOSTICS & RESET ===== */}
