@@ -193,27 +193,40 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
                 const isRecommended = recipe.id === 'balanced';
 
                 const cardStyle = {
-                  background: isRecommended ? 'rgba(37, 211, 102, 0.03)' : 'rgba(255,255,255,0.02)',
+                  background: isRecommended ? 'rgba(37, 211, 102, 0.04)' : 'rgba(255,255,255,0.02)',
                   border: isRecommended ? '1px solid rgba(37, 211, 102, 0.3)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
+                  borderLeft: isRecommended ? '3px solid var(--accent-green)' : '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: isRecommended ? '2px 10px 10px 2px' : '10px',
+                  padding: '0',
                   marginBottom: '14px',
                   transition: 'all 0.2s',
-                  boxShadow: isRecommended ? '0 4px 20px rgba(37, 211, 102, 0.05)' : 'none'
+                  boxShadow: isRecommended ? '0 4px 24px rgba(37, 211, 102, 0.08), inset 0 0 20px rgba(37, 211, 102, 0.02)' : 'none',
+                  overflow: 'hidden'
                 };
 
                 return (
                   <div key={recipe.id} className="recipe-card" style={cardStyle}>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <h5 style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', margin: 0 }}>{recipe.name}</h5>
-                        {isRecommended && (
-                          <span style={{ fontSize: '8px', color: 'var(--accent-green)', background: 'var(--accent-green-dim)', padding: '2px 5px', borderRadius: '3px', border: '1px solid var(--accent-green)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            ⭐ Recommended
-                          </span>
-                        )}
+                    {/* RECOMMENDED TOP BANNER */}
+                    {isRecommended && (
+                      <div style={{
+                        background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(7, 94, 84, 0.2))',
+                        borderBottom: '1px solid rgba(37, 211, 102, 0.2)',
+                        padding: '8px 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'var(--accent-green)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ZET-5 Recommended Plan</span>
                       </div>
+                    )}
+
+                    <div style={{ padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <h5 style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', margin: 0 }}>{recipe.name}</h5>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ fontSize: '10px', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
                           {recipe.dailyBudget} kWh/day
@@ -293,7 +306,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
                       </div>
                     )}
 
-                    <div style={{ marginTop: '12px' }}>
+                    <div style={{ marginTop: '12px', paddingBottom: '2px' }}>
                       <button 
                         onClick={() => {
                           if (recipe.id === 'survival') {
@@ -311,6 +324,7 @@ export default function SmartAdvice({ alerts, relays, onAcceptAdvice, visible, o
                         Apply Schedule & Shed Non-Essentials
                       </button>
                     </div>
+                    </div>{/* close inner padding div */}
                   </div>
                 );
               })}
