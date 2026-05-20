@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 450" width="100%" height="100%">
+  <!-- Definitions for Gradients, Shadows and Markers -->
+  <defs>
+    <!-- Box 1 Gradient (Simulated Telemetry) - Sleek Blue -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EBF5FF" />
+      <stop offset="100%" stop-color="#C3E0FF" />
+    </linearGradient>
+    
+    <!-- Box 2 Gradient (Processing Engine) - Sleek Purple/Indigo -->
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3E8FF" />
+      <stop offset="100%" stop-color="#E9D5FF" />
+    </linearGradient>
+    
+    <!-- Box 3 Gradient (React UI Dashboard) - Sleek Teal/Cyan -->
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E6FFFA" />
+      <stop offset="100%" stop-color="#B2F5EA" />
+    </linearGradient>
+    
+    <!-- Drop Shadow Filter for Boxes -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.08" />
+    </filter>
+    
+    <!-- Arrowhead Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#4B5563" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="450" fill="#F9FAFB" rx="16" />
+  
+  <!-- Diagram Title -->
+  <text x="50" y="55" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#1F2937">
+    ZEC-5 Telemetry &amp; Data Processing Architecture
+  </text>
+  <text x="50" y="80" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#6B7280">
+    Data flow diagram illustrating simulated telemetry ingestion, real-time analytics, and dashboard rendering.
+  </text>
+
+  <!-- ==================== BOX 1: Simulated Telemetry ==================== -->
+  <g transform="translate(60, 140)" filter="url(#dropShadow)">
+    <rect width="240" height="180" rx="12" fill="url(#blueGrad)" stroke="#3B82F6" stroke-width="2" />
+    
+    <!-- Header -->
+    <rect width="240" height="48" rx="12" fill="#3B82F6" />
+    <!-- Overlap bottom rounded corners to make only top rounded -->
+    <rect y="36" width="240" height="12" fill="#3B82F6" />
+    
+    <text x="120" y="30" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+      Simulated Telemetry
+    </text>
+    
+    <!-- Content / Filename -->
+    <text x="120" y="100" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#1E3A8A" text-anchor="middle">
+      mockData.js
+    </text>
+    <text x="120" y="130" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#2563EB" text-anchor="middle">
+      Generates simulated energy
+    </text>
+    <text x="120" y="148" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#2563EB" text-anchor="middle">
+      and weather sensor readings
+    </text>
+  </g>
+
+  <!-- ==================== ARROW 1 ==================== -->
+  <g>
+    <!-- Line -->
+    <path d="M 315, 230 L 365, 230" fill="none" stroke="#4B5563" stroke-width="3" marker-end="url(#arrow)" />
+    <!-- Label -->
+    <rect x="318" y="195" width="44" height="20" rx="4" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1" />
+    <text x="340" y="209" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#4B5563" text-anchor="middle">
+      Data
+    </text>
+  </g>
+
+  <!-- ==================== BOX 2: Processing Engine ==================== -->
+  <g transform="translate(380, 140)" filter="url(#dropShadow)">
+    <rect width="240" height="180" rx="12" fill="url(#purpleGrad)" stroke="#8B5CF6" stroke-width="2" />
+    
+    <!-- Header -->
+    <rect width="240" height="48" rx="12" fill="#8B5CF6" />
+    <rect y="36" width="240" height="12" fill="#8B5CF6" />
+    
+    <text x="120" y="30" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+      Processing Engine
+    </text>
+    
+    <!-- Content / Filename -->
+    <text x="120" y="90" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#4C1D95" text-anchor="middle">
+      energyEngine.js
+    </text>
+    <text x="120" y="112" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6D28D9" text-anchor="middle">
+      &amp;
+    </text>
+    <text x="120" y="135" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#4C1D95" text-anchor="middle">
+      predictionEngine.js
+    </text>
+    <text x="120" y="160" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#7C3AED" text-anchor="middle">
+      Aggregates &amp; predicts load
+    </text>
+  </g>
+
+  <!-- ==================== ARROW 2 ==================== -->
+  <g>
+    <!-- Line -->
+    <path d="M 635, 230 L 685, 230" fill="none" stroke="#4B5563" stroke-width="3" marker-end="url(#arrow)" />
+    <!-- Label -->
+    <rect x="636" y="195" width="48" height="20" rx="4" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1" />
+    <text x="660" y="209" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#4B5563" text-anchor="middle">
+      State
+    </text>
+  </g>
+
+  <!-- ==================== BOX 3: React UI Dashboard ==================== -->
+  <g transform="translate(700, 140)" filter="url(#dropShadow)">
+    <rect width="240" height="180" rx="12" fill="url(#tealGrad)" stroke="#14B8A6" stroke-width="2" />
+    
+    <!-- Header -->
+    <rect width="240" height="48" rx="12" fill="#14B8A6" />
+    <rect y="36" width="240" height="12" fill="#14B8A6" />
+    
+    <text x="120" y="30" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">
+      React UI Dashboard
+    </text>
+    
+    <!-- Content / Filename -->
+    <text x="120" y="100" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#115E59" text-anchor="middle">
+      Dashboard Component
+    </text>
+    <text x="120" y="130" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0D9488" text-anchor="middle">
+      Renders real-time graphs,
+    </text>
+    <text x="120" y="148" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#0D9488" text-anchor="middle">
+      metrics &amp; recommendations
+    </text>
+  </g>
+</svg>
