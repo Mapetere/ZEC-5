@@ -67,6 +67,8 @@ export default function SetupWizard({ onComplete }) {
         setError('Please acknowledge the strict date requirement to continue.');
         return;
       }
+      const halfKwh = Math.round(kwhNum * 0.5);
+      setNotifyThreshold(halfKwh.toString());
     } else if (step === 1) {
       if (goalMode === 'days') {
         if (!durationGoal || isNaN(Number(durationGoal)) || Number(durationGoal) < 1) {
