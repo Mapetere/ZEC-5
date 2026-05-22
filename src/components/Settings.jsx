@@ -223,7 +223,11 @@ export default function Settings({
         </p>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <button
-            onClick={onResetSetup}
+            onClick={() => {
+              if (window.confirm("Are you sure you want to unlink the system? This will clear all telemetry history and reset calibrations. This action cannot be undone.")) {
+                onResetSetup();
+              }
+            }}
             className="btn-secondary"
             style={{ width: 'auto', padding: '10px 20px', borderColor: 'var(--alert-red)', color: 'var(--alert-red)' }}
             id="btn-unlink-reset"
@@ -232,7 +236,11 @@ export default function Settings({
           </button>
           
           <button
-            onClick={onClearHistory}
+            onClick={() => {
+              if (window.confirm("Are you sure you want to clear the daily averages history? This action cannot be undone.")) {
+                onClearHistory();
+              }
+            }}
             className="btn-secondary"
             style={{ width: 'auto', padding: '10px 20px', borderColor: 'var(--accent-blue)', color: 'var(--accent-blue)' }}
             id="btn-clear-history"

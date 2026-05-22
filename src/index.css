@@ -50,20 +50,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
+/* Custom Sliding Bars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) rgba(0, 0, 0, 0.2);
+}
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 1px solid var(--border-color);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: var(--text-muted);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.2); /* Creates a padded look */
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--accent-blue);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* ===== LOGIN PAGE ===== */
@@ -75,6 +84,7 @@ body {
   background: var(--bg-primary);
   position: relative;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
 }
 .login-wrapper::before {
