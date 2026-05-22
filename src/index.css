@@ -770,11 +770,49 @@ body {
   .relay-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 640px) {
-  .sidebar { width: 56px; min-width: 56px; }
-  .page-container { padding: 16px; }
+  /* Fading Sidebar overlay */
+  .sidebar { 
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100dvh;
+    z-index: 50;
+    background: transparent;
+    border-right: none;
+    width: 44px; 
+    min-width: 44px; 
+    opacity: 0.15;
+    transition: all var(--transition-smooth);
+  }
+  .sidebar:hover, .sidebar:active, .sidebar:focus-within {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    opacity: 1;
+    width: 56px;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .sidebar-btn { width: 36px; height: 36px; }
+  .sidebar-btn svg { width: 20px; height: 20px; }
+  .sidebar-logo { margin-bottom: 24px; }
+  
+  .main-content {
+    margin-left: 24px; /* Give room for edge taps while maximizing space */
+  }
+
+  /* Calibrate mobile layout for data density */
+  .header { padding: 0 16px 0 28px; }
+  .header-title { font-size: 13px; }
+  .page-container { padding: 12px 12px 24px 12px; }
+  
+  .dashboard-grid { gap: 12px; margin-bottom: 16px; }
   .dashboard-grid.three-col { grid-template-columns: 1fr; }
-  .relay-grid { grid-template-columns: 1fr; }
-  .login-card { margin: 16px; padding: 32px 24px; }
+  .relay-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  
+  .card { padding: 16px; }
+  .card-value { font-size: 24px; }
+  .gauge-value { font-size: 28px; }
+  
+  .login-card { margin: 16px; padding: 32px 20px; }
 }
 
 /* ===== ANIMATIONS ===== */

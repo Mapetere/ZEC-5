@@ -21,7 +21,13 @@ export default function RelayControl({ relays, onToggle, profiles }) {
             <div className="toggle-wrap">
               <button
                 className={`toggle ${state ? 'on' : ''}`}
-                onClick={() => onToggle(i, !state)}
+                onClick={() => {
+                  const relayName = profiles?.[i]?.name || defaultNames[i];
+                  const action = state ? 'OFF' : 'ON';
+                  if (window.confirm(`Are you sure you want to turn ${action} ${relayName}?`)) {
+                    onToggle(i, !state);
+                  }
+                }}
                 id={`relay-toggle-${i}`}
                 aria-label={`Toggle relay ${i + 1}`}
               >

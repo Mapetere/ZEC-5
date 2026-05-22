@@ -14,6 +14,8 @@ import Settings from './components/Settings.jsx';
 import DailyAverages from './components/DailyAverages.jsx';
 import AuditTrail from './components/AuditTrail.jsx';
 import TourGuide from './components/TourGuide.jsx';
+import EmergencyInterceptModal from './components/EmergencyInterceptModal.jsx';
+import LoadingOverlay from './components/LoadingOverlay.jsx';
 import {
   startMockStream, generateAlerts,
   storeDailyAverage, getDailyAverages, isHouseVacant
@@ -86,6 +88,8 @@ export default function App() {
   const [showMeterSync, setShowMeterSync] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [showEmergencyIntercept, setShowEmergencyIntercept] = useState(false);
+  const [loadingState, setLoadingState] = useState({ isLoading: false, message: '' });
   const [tickCount, setTickCount] = useState(0);
   const [dataStartTime] = useState(() => Date.now());
   const [dailyAverages, setDailyAverages] = useState(() => getDailyAverages());
@@ -101,6 +105,17 @@ export default function App() {
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 3500);
+  }, []);
+
+  const withLoader = useCallback(async (message, actionFn) => {
+    setLoadingState({ isLoading: true, message });
+    // Add artificial delay to show loader as requested
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      await actionFn();
+    } finally {
+      setLoadingState({ isLoading: false, message: '' });
+    }
   }, []);
 
   const [profiles, setProfiles] = useState(() => {
@@ -314,118 +329,120 @@ export default function App() {
 
   // Time Machine Simulation Advancement (Fast-Forward clock & learn patterns)
   const handleSimulateHours = useCallback((hours) => {
-    const startVirtualTime = getVirtualTime();
-    let kwhConsumed = 0;
-    let finalRelayStates = [...relays];
+    withLoader(`SIMULATING ${hours} HOURS OF USAGE...`, () => {
+      const startVirtualTime = getVirtualTime();
+      let kwhConsumed = 0;
+      let finalRelayStates = [...relays];
 
-    // If an automated schedule is active, accurately simulate minute-by-minute load 
-    // based on the schedule's component-level rules.
-    const currentScheduleId = activeScheduleId;
-    if (currentScheduleId && currentScheduleId !== 'none') {
-      const ts = tokenState;
-      const sd = setupData;
-      const kwhAvailable = ts ? parseFloat(ts.kwhRemaining) : (sd?.tokenData?.kwh || 3.0);
-      const tHours = sd?.durationGoal ? sd.durationGoal * 24 : 504;
-      const allocation = solveEnergyAllocation(kwhAvailable, tHours);
-      const recipe = allocation.recipes.find(r => r.id === currentScheduleId);
+      // If an automated schedule is active, accurately simulate minute-by-minute load 
+      // based on the schedule's component-level rules.
+      const currentScheduleId = activeScheduleId;
+      if (currentScheduleId && currentScheduleId !== 'none') {
+        const ts = tokenState;
+        const sd = setupData;
+        const kwhAvailable = ts ? parseFloat(ts.kwhRemaining) : (sd?.tokenData?.kwh || 3.0);
+        const tHours = sd?.durationGoal ? sd.durationGoal * 24 : 504;
+        const allocation = solveEnergyAllocation(kwhAvailable, tHours);
+        const recipe = allocation.recipes.find(r => r.id === currentScheduleId);
 
-      if (recipe && recipe.rules) {
-        const totalMinutes = hours * 60;
-        let vTime = new Date(startVirtualTime.getTime());
-        
-        for (let min = 0; min < totalMinutes; min++) {
-          const h = vTime.getHours();
-          const m = vTime.getMinutes();
-          const currentMins = h * 60 + m;
-          let minutePowerW = 0;
+        if (recipe && recipe.rules) {
+          const totalMinutes = hours * 60;
+          let vTime = new Date(startVirtualTime.getTime());
+          
+          for (let min = 0; min < totalMinutes; min++) {
+            const h = vTime.getHours();
+            const m = vTime.getMinutes();
+            const currentMins = h * 60 + m;
+            let minutePowerW = 0;
 
-          // Base background power (essential constant loads not explicitly modeled)
-          minutePowerW += 150; 
+            // Base background power (essential constant loads not explicitly modeled)
+            minutePowerW += 150; 
 
-          recipe.rules.forEach(rule => {
-            const idx = rule.index + 1; // Offset by 1 because Relay 0 is Main Supply
-            let shouldBeOn = true;
-            if (rule.type === 'disabled') {
-              shouldBeOn = false;
-            } else if (rule.type === 'continuous') {
-              shouldBeOn = true;
-            } else if (rule.type === 'time_range') {
-              const startMins = rule.startH * 60 + rule.startM;
-              const endMins = rule.endH * 60 + rule.endM;
-              if (startMins <= endMins) {
-                shouldBeOn = (currentMins >= startMins && currentMins < endMins);
-              } else {
-                shouldBeOn = (currentMins >= startMins || currentMins < endMins);
+            recipe.rules.forEach(rule => {
+              const idx = rule.index + 1; // Offset by 1 because Relay 0 is Main Supply
+              let shouldBeOn = true;
+              if (rule.type === 'disabled') {
+                shouldBeOn = false;
+              } else if (rule.type === 'continuous') {
+                shouldBeOn = true;
+              } else if (rule.type === 'time_range') {
+                const startMins = rule.startH * 60 + rule.startM;
+                const endMins = rule.endH * 60 + rule.endM;
+                if (startMins <= endMins) {
+                  shouldBeOn = (currentMins >= startMins && currentMins < endMins);
+                } else {
+                  shouldBeOn = (currentMins >= startMins || currentMins < endMins);
+                }
+              } else if (rule.type === 'cycle') {
+                const cycleTotal = rule.onMins + rule.offMins;
+                const cyclePos = currentMins % cycleTotal;
+                shouldBeOn = (cyclePos < rule.onMins);
               }
-            } else if (rule.type === 'cycle') {
-              const cycleTotal = rule.onMins + rule.offMins;
-              const cyclePos = currentMins % cycleTotal;
-              shouldBeOn = (cyclePos < rule.onMins);
-            }
 
-            // Track final state for UI update
-            if (min === totalMinutes - 1) {
-              finalRelayStates[idx] = shouldBeOn;
-            }
+              // Track final state for UI update
+              if (min === totalMinutes - 1) {
+                finalRelayStates[idx] = shouldBeOn;
+              }
 
-            // Accumulate power if relay is ON
-            if (shouldBeOn && profiles[idx]) {
-              minutePowerW += profiles[idx].load; 
-            }
-          });
+              // Accumulate power if relay is ON
+              if (shouldBeOn && profiles[idx]) {
+                minutePowerW += profiles[idx].load; 
+              }
+            });
 
-          // Add minute's energy to total consumed (W -> kW / 60)
-          kwhConsumed += (minutePowerW / 1000) / 60;
-          vTime = new Date(vTime.getTime() + 60000); // add 1 min
+            // Add minute's energy to total consumed (W -> kW / 60)
+            kwhConsumed += (minutePowerW / 1000) / 60;
+            vTime = new Date(vTime.getTime() + 60000); // add 1 min
+          }
         }
       }
-    }
 
-    // Fallback if no schedule is active: use historical average
-    if (kwhConsumed === 0) {
-      const dailyUsageKwh = tokenState?.dailyUsage || 8.5;
-      const avgPowerW = (dailyUsageKwh * 1000) / 24;
-      kwhConsumed = (avgPowerW / 1000) * hours;
-    }
-
-    // Update real-world engine states
-    const averageSimulatedPowerW = (kwhConsumed * 1000) / hours;
-    simulateIntervalProgress(hours, averageSimulatedPowerW);
-
-    const engine = getEngineState();
-    if (engine) {
-      engine.cumulativeKwh += kwhConsumed;
-      engine.lastTickTime = Date.now();
-      setEngineState({ ...engine });
-      localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
-    }
-
-    // Immediately push new relay states to UI and hardware mock
-    setRelays(finalRelayStates);
-    finalRelayStates.forEach((state, i) => {
-      if (mockRef.current) mockRef.current.toggleRelay(i, state);
-    });
-
-    // Populate intermediate daily averages for all virtual dates crossed
-    const passedDates = [];
-    let timeCursor = new Date(startVirtualTime.getTime());
-    for (let h = 1; h <= hours; h++) {
-      timeCursor = new Date(timeCursor.getTime() + 60 * 60 * 1000);
-      const dateStr = timeCursor.toISOString().split('T')[0];
-      if (!passedDates.includes(dateStr)) {
-        passedDates.push(dateStr);
+      // Fallback if no schedule is active: use historical average
+      if (kwhConsumed === 0) {
+        const dailyUsageKwh = tokenState?.dailyUsage || 8.5;
+        const avgPowerW = (dailyUsageKwh * 1000) / 24;
+        kwhConsumed = (avgPowerW / 1000) * hours;
       }
-    }
 
-    let updatedAverages = getDailyAverages();
-    passedDates.forEach(dateStr => {
-      updatedAverages = storeDailyAverage(sensors, dateStr);
+      // Update real-world engine states
+      const averageSimulatedPowerW = (kwhConsumed * 1000) / hours;
+      simulateIntervalProgress(hours, averageSimulatedPowerW);
+
+      const engine = getEngineState();
+      if (engine) {
+        engine.cumulativeKwh += kwhConsumed;
+        engine.lastTickTime = Date.now();
+        setEngineState({ ...engine });
+        localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
+      }
+
+      // Immediately push new relay states to UI and hardware mock
+      setRelays(finalRelayStates);
+      finalRelayStates.forEach((state, i) => {
+        if (mockRef.current) mockRef.current.toggleRelay(i, state);
+      });
+
+      // Populate intermediate daily averages for all virtual dates crossed
+      const passedDates = [];
+      let timeCursor = new Date(startVirtualTime.getTime());
+      for (let h = 1; h <= hours; h++) {
+        timeCursor = new Date(timeCursor.getTime() + 60 * 60 * 1000);
+        const dateStr = timeCursor.toISOString().split('T')[0];
+        if (!passedDates.includes(dateStr)) {
+          passedDates.push(dateStr);
+        }
+      }
+
+      let updatedAverages = getDailyAverages();
+      passedDates.forEach(dateStr => {
+        updatedAverages = storeDailyAverage(sensors, dateStr);
+      });
+      setDailyAverages(updatedAverages);
+      setVacant(isHouseVacant());
+
+      showToast(`Fast-forwarded ${hours} hours. System auto-toggled relays per schedule and consumed ${kwhConsumed.toFixed(2)} kWh.`, 'success');
     });
-    setDailyAverages(updatedAverages);
-    setVacant(isHouseVacant());
-
-    showToast(`Fast-forwarded ${hours} hours. System auto-toggled relays per schedule and consumed ${kwhConsumed.toFixed(2)} kWh.`, 'success');
-  }, [tokenState, showToast, sensors, activeScheduleId, setupData, profiles, relays]);
+  }, [tokenState, showToast, sensors, activeScheduleId, setupData, profiles, relays, withLoader]);
 
 
 
@@ -492,40 +509,34 @@ export default function App() {
   }, [handleRelayToggle, showToast]);
 
   const handleApplySchedule = useCallback((scheduleId, isAutonomous = true) => {
-    if (scheduleId && isAutonomous) {
-      setActiveScheduleId(scheduleId);
-      localStorage.setItem('zet5_active_schedule', scheduleId);
-      const pre = [...relays];
-      setPreScheduleRelays(pre);
-      localStorage.setItem('zet5_pre_schedule_relays', JSON.stringify(pre));
-      showToast(`Automated schedule '${scheduleId}' activated! Relays will now toggle automatically.`, 'success');
-    } else {
-      setActiveScheduleId(null);
-      localStorage.removeItem('zet5_active_schedule');
-      
-      // Restore pre-schedule relays
-      if (preScheduleRelays) {
-        setRelays(preScheduleRelays);
-        preScheduleRelays.forEach((st, i) => {
-          if (mockRef.current) mockRef.current.toggleRelay(i, st);
-        });
-        setPreScheduleRelays(null);
-        localStorage.removeItem('zet5_pre_schedule_relays');
+    withLoader(isAutonomous && scheduleId ? `ACTIVATING SCHEDULE: ${scheduleId.toUpperCase()}...` : "DEACTIVATING SCHEDULE...", () => {
+      if (scheduleId && isAutonomous) {
+        setActiveScheduleId(scheduleId);
+        localStorage.setItem('zet5_active_schedule', scheduleId);
+        const pre = [...relays];
+        setPreScheduleRelays(pre);
+        localStorage.setItem('zet5_pre_schedule_relays', JSON.stringify(pre));
+        showToast(`Automated schedule '${scheduleId}' activated! Relays will now toggle automatically.`, 'success');
+      } else {
+        setActiveScheduleId(null);
+        localStorage.removeItem('zet5_active_schedule');
+        
+        // Restore pre-schedule relays
+        if (preScheduleRelays) {
+          setRelays(preScheduleRelays);
+          preScheduleRelays.forEach((st, i) => {
+            if (mockRef.current) mockRef.current.toggleRelay(i, st);
+          });
+          setPreScheduleRelays(null);
+          localStorage.removeItem('zet5_pre_schedule_relays');
+        }
+
+        showToast(isAutonomous ? `Automated schedule deactivated.` : `Manual mode selected. System will NOT automatically toggle relays.`, 'info');
       }
 
-      showToast(isAutonomous ? `Automated schedule deactivated.` : `Manual mode selected. System will NOT automatically toggle relays.`, 'info');
-    }
-
-    setShowAdvice(false); // Close the panel
-    
-    // Automatically scroll to the relay control grid
-    setTimeout(() => {
-      const el = document.getElementById('tour-relays');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 300);
-  }, [showToast]);
+      setShowAdvice(false); // Close the panel
+    });
+  }, [preScheduleRelays, relays, showToast, withLoader]);
 
   const handleProfileSave = useCallback((newProfiles) => {
     setProfiles(newProfiles);
@@ -568,10 +579,11 @@ export default function App() {
   }, [showToast]);
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('zet5_auth');
-    setUser(null);
-    if (mockRef.current) mockRef.current.stop();
-  }, []);
+    withLoader("LOGGING OUT...", () => {
+      localStorage.removeItem('zet5_auth');
+      setUser(null);
+    });
+  }, [withLoader]);
 
   const handleResetSetup = useCallback(() => {
     localStorage.removeItem('zet5_setup');
@@ -589,28 +601,21 @@ export default function App() {
   }, []);
 
   const handleClearHistory = useCallback(() => {
-    localStorage.removeItem('zet5_daily_averages');
-    setDailyAverages([]);
-    setHistory([[], [], [], [], []]);
-    showToast("Daily average history cleared successfully! Audit trail remains intact.", 'success');
-  }, [showToast]);
+    withLoader("CLEARING HISTORICAL DATA...", () => {
+      localStorage.removeItem('zet5_daily_averages');
+      setDailyAverages([]);
+      setHistory([[], [], [], [], []]);
+      showToast("Daily average history cleared successfully! Audit trail remains intact.", 'success');
+    });
+  }, [showToast, withLoader]);
 
   // --- Dissertation Requirement: Autonomous Emergency Shedding (5.5.2) ---
   const autoShedTriggered = useRef(false);
 
   useEffect(() => {
     if (tokenState?.isEmergency && !autoShedTriggered.current) {
-      // Find the Geyser profile index (default to index 1 if not named exactly 'Geyser')
-      const geyserIndex = profiles.findIndex(p => p.name.toLowerCase() === 'geyser');
-      const profileIdx = geyserIndex !== -1 ? geyserIndex : 1; 
-      const targetIndex = profileIdx + 1; // Offset by 1 for Main Supply
-
       if (setupData?.autoShedEmergency) {
-        // Only attempt to turn it off if it is currently ON
-        if (relays[targetIndex] === true) {
-          handleRelayToggle(targetIndex, false);
-          showToast(`EMERGENCY AUTONOMY: Critical threshold breached. Shedding Tier 3 load (${profiles[profileIdx].name}) immediately.`, 'danger');
-        }
+        setShowEmergencyIntercept(true);
       } else {
         showToast("EMERGENCY: Token balance is critical. Please manually shed high-load appliances!", 'error');
       }
@@ -618,7 +623,7 @@ export default function App() {
     } else if (tokenState && !tokenState.isEmergency) {
       autoShedTriggered.current = false;
     }
-  }, [tokenState?.isEmergency, profiles, relays, handleRelayToggle, showToast, setupData?.autoShedEmergency]);
+  }, [tokenState?.isEmergency, setupData?.autoShedEmergency, showToast]);
 
   if (!engineerSetup) return <EngineerSetupPage onComplete={handleEngineerSetupComplete} />;
   if (!user) return <LoginPage onLogin={setUser} linkedEmail={engineerSetup?.clientEmail} />;
@@ -776,6 +781,34 @@ export default function App() {
           onToggleRelay={handleRelayToggle}
           onClose={() => setShowEmergency(false)}
         />
+      )}
+
+      {showEmergencyIntercept && (
+        <EmergencyInterceptModal
+          kwhRemaining={(tokenState?.kwhRemaining || 0).toFixed(2)}
+          onKeepSchedule={() => {
+            setShowEmergencyIntercept(false);
+            showToast("Emergency Overridden: Existing load configuration maintained.", "warning");
+          }}
+          onAutoShed={() => {
+            setShowEmergencyIntercept(false);
+            const geyserIndex = profiles.findIndex(p => p.name.toLowerCase() === 'geyser');
+            const profileIdx = geyserIndex !== -1 ? geyserIndex : 1;
+            const targetIndex = profileIdx + 1;
+            if (relays[targetIndex] === true) {
+              handleRelayToggle(targetIndex, false);
+              showToast(`EMERGENCY AUTONOMY: Shedding Tier 3 load (${profiles[profileIdx].name}).`, 'danger');
+            }
+          }}
+          onOpenAdvice={() => {
+            setShowEmergencyIntercept(false);
+            setShowAdvice(true);
+          }}
+        />
+      )}
+
+      {loadingState.isLoading && (
+        <LoadingOverlay message={loadingState.message} />
       )}
 
       <DepletionModal
