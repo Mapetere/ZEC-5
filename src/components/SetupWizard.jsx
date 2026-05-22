@@ -14,6 +14,8 @@ export default function SetupWizard({ onComplete }) {
   const [durationGoal, setDurationGoal] = useState('21');
   const [targetDate, setTargetDate] = useState('');
   const [notifyThreshold, setNotifyThreshold] = useState('50');
+  const [emergencyThreshold, setEmergencyThreshold] = useState('5');
+  const [autoShedEmergency, setAutoShedEmergency] = useState(true);
   const [dateConsent, setDateConsent] = useState(false);
   const [error, setError] = useState('');
 
@@ -83,12 +85,21 @@ export default function SetupWizard({ onComplete }) {
       }
     } else if (step === 2) {
       const threshold = Number(notifyThreshold);
+      const emergThresh = Number(emergencyThreshold);
       if (isNaN(threshold) || threshold <= 0) {
         setError('Please enter a valid positive threshold (kWh).');
         return;
       }
+      if (isNaN(emergThresh) || emergThresh <= 0) {
+        setError('Please enter a valid emergency threshold (kWh).');
+        return;
+      }
       if (threshold >= Number(tokenData.kwh)) {
         setError(`Notification threshold (${threshold} kWh) cannot exceed or equal your available units (${tokenData.kwh} kWh).`);
+        return;
+      }
+      if (emergThresh >= threshold) {
+        setError(`Emergency threshold (${emergThresh} kWh) must be strictly lower than the notification threshold (${threshold} kWh).`);
         return;
       }
       const finalDays = goalMode === 'date' ? computedDays : parseInt(durationGoal);
@@ -102,6 +113,8 @@ export default function SetupWizard({ onComplete }) {
         durationGoal: finalDays,
         targetDate: goalMode === 'date' ? targetDate : null,
         notifyThreshold: parseFloat(notifyThreshold),
+        emergencyThreshold: parseFloat(emergencyThreshold),
+        autoShedEmergency: autoShedEmergency,
         setupDate: new Date().toISOString(),
       };
       localStorage.setItem('zet5_setup', JSON.stringify(setupData));
@@ -144,6 +157,17 @@ export default function SetupWizard({ onComplete }) {
           <div className="setup-body">
             <h3 className="setup-heading">ZESA Token Entry</h3>
             <p className="setup-desc">Enter your most recent electricity token purchase for depletion tracking.</p>
+
+            <div style={{ background: 'rgba(255,179,0,0.1)', border: '1px solid rgba(255, 179, 0, 0.4)', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--warning-amber)', fontWeight: 'bold', fontSize: '12px', marginBottom: 4 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                Best Practice Advice
+              </span>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, display: 'block' }}>
+                For absolute accuracy, complete this setup immediately after loading a fresh ZESA token. If you enter a token bought in the past, ZET-5 won't know how much you've already consumed! (You can fix this discrepancy later using the Meter Sync tool on the dashboard).
+              </span>
+            </div>
+
             <label className="login-label">Energy Purchased (kWh)</label>
             <div className="login-input-wrap">
               <input className="login-input" type="text" inputMode="decimal" value={tokenData.kwh}
@@ -240,13 +264,12 @@ export default function SetupWizard({ onComplete }) {
           </div>
         )}
 
-        {/* Step 3: Notification Trigger */}
+        {/* Step 3: Notification Trigger & Emergency */}
         {step === 2 && (
           <div className="setup-body">
-            <h3 className="setup-heading">Notification Trigger</h3>
+            <h3 className="setup-heading">Alerts & Emergencies</h3>
             <p className="setup-desc">
               Set the energy threshold at which ZET-5 should start sending recommendations.
-              The system will remain silent above this level.
             </p>
             <label className="login-label">Start recommendations when remaining units fall below</label>
             <div className="setup-goal-display">
@@ -265,6 +288,35 @@ export default function SetupWizard({ onComplete }) {
                 Your token: {tokenData.kwh || '---'} kWh | Suggested: {tokenData.kwh ? Math.round(parseFloat(tokenData.kwh) * 0.5) : '---'} kWh (50%)
               </p>
             </div>
+
+            <label className="login-label" style={{ marginTop: '24px', color: 'var(--alert-red)' }}>Critical Emergency Threshold</label>
+            <p className="setup-desc" style={{ marginBottom: '8px' }}>At what point should ZET-5 enter Survival Mode to prevent a complete blackout?</p>
+            <div className="setup-goal-display" style={{ padding: '12px' }}>
+              <div className="setup-goal-value">
+                <input
+                  className="setup-goal-input"
+                  type="text"
+                  inputMode="numeric"
+                  value={emergencyThreshold}
+                  onChange={e => setEmergencyThreshold(e.target.value.replace(/\D/g, ''))}
+                  id="setup-emergency-threshold"
+                />
+                <span className="setup-goal-unit">kWh</span>
+              </div>
+            </div>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '16px', cursor: 'pointer', background: 'rgba(255,107,107,0.06)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,107,107,0.2)' }}>
+              <input 
+                type="checkbox" 
+                checked={autoShedEmergency} 
+                onChange={(e) => setAutoShedEmergency(e.target.checked)} 
+                style={{ marginTop: '2px', accentColor: 'var(--alert-red)', width: '16px', height: '16px' }}
+              />
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.4' }}>
+                <strong style={{ color: 'var(--alert-red)', display: 'block', marginBottom: '4px' }}>Autonomous Emergency Overrides</strong>
+                If enabled, ZET-5 will automatically shed high-load appliances (e.g. Geyser) without asking when the emergency threshold is breached. If disabled, you will only receive a notification.
+              </span>
+            </label>
           </div>
         )}
 

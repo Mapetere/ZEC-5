@@ -87,6 +87,13 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
       { appliance: "Geyser Loop", schedule: "DISABLED. (Running it under this budget results in cold water/blackout)." },
       { appliance: "Borehole Pump", schedule: "DISABLED. Use manual reserves." },
       { appliance: "Entertainment", schedule: "DISABLED. Keep off." }
+    ],
+    rules: [
+      { index: 0, type: 'cycle', onMins: 15, offMins: 45 },
+      { index: 4, type: 'time_range', startH: 19, startM: 0, endH: 22, endM: 0 },
+      { index: 1, type: 'disabled' },
+      { index: 2, type: 'disabled' },
+      { index: 3, type: 'disabled' }
     ]
   });
 
@@ -114,6 +121,13 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
           : "Run 15 minutes every 2 days." 
       },
       { appliance: "Entertainment", schedule: "Limit to 1.5 hours in the evening (20:00 - 21:30)." }
+    ],
+    rules: [
+      { index: 0, type: 'continuous' },
+      { index: 4, type: 'time_range', startH: 18, startM: 0, endH: 23, endM: 0 },
+      { index: 1, type: canRunGeyser ? 'time_range' : 'disabled', startH: 5, startM: 0, endH: 5 + Math.floor(minGeyser.minutes / 60), endM: minGeyser.minutes % 60 },
+      { index: 2, type: 'time_range', startH: 12, startM: 0, endH: 12, endM: dailySurplusKwh >= 0.8 ? 20 : 15 },
+      { index: 3, type: 'time_range', startH: 20, startM: 0, endH: 21, endM: 30 }
     ]
   });
 
@@ -130,6 +144,13 @@ export function solveEnergyAllocation(remainingKwh, targetHours, activeAppliance
       { appliance: "Geyser Loop", schedule: `Run 1 full heating cycle (${minGeyser.minutes} mins) daily at 05:00 - 05:45.` },
       { appliance: "Borehole Pump", schedule: "Run 40 minutes daily at midday." },
       { appliance: "Entertainment", schedule: "Run 3 hours daily in the evening." }
+    ],
+    rules: [
+      { index: 0, type: 'continuous' },
+      { index: 4, type: 'continuous' },
+      { index: 1, type: 'time_range', startH: 5, startM: 0, endH: 5 + Math.floor(minGeyser.minutes / 60), endM: minGeyser.minutes % 60 },
+      { index: 2, type: 'time_range', startH: 12, startM: 0, endH: 12, endM: 40 },
+      { index: 3, type: 'time_range', startH: 19, startM: 0, endH: 22, endM: 0 }
     ]
   });
 

@@ -9,15 +9,26 @@ export default function Settings({
   notifyThreshold,
   onThresholdUpdate,
   onResetSetup,
+  onClearHistory,
   engineerSetup,
-  onGoalUpdate
+  onGoalUpdate,
+  onEmergencyThresholdUpdate
 }) {
   const [thresholdInput, setThresholdInput] = useState(notifyThreshold || 50);
+  const [emergencyInput, setEmergencyInput] = useState(setupData?.emergencyThreshold || 5);
+  const [autoShedEmergency, setAutoShedEmergency] = useState(setupData?.autoShedEmergency ?? true);
   const [goalInput, setGoalInput] = useState(setupData?.durationGoal || 21);
 
   const handleThresholdSave = (e) => {
     e.preventDefault();
     onThresholdUpdate(Number(thresholdInput));
+  };
+
+  const handleEmergencySave = (e) => {
+    e.preventDefault();
+    if (onEmergencyThresholdUpdate) {
+      onEmergencyThresholdUpdate(Number(emergencyInput), autoShedEmergency);
+    }
   };
 
   const handleGoalSave = (e) => {
@@ -162,6 +173,43 @@ export default function Settings({
               </button>
             </div>
           </form>
+
+          {/* Form 3: Critical Emergency Threshold */}
+          <form onSubmit={handleEmergencySave} style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--alert-red)' }}>Critical Emergency Threshold</label>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Threshold in kWh below which ZET-5 enters Emergency Mode. Default is 5 kWh.</span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: 'auto' }}>
+              <div className="login-input-wrap" style={{ margin: 0, width: '100px' }}>
+                <input
+                  type="number"
+                  className="login-input"
+                  value={emergencyInput}
+                  onChange={(e) => setEmergencyInput(e.target.value)}
+                  style={{ textAlign: 'center' }}
+                  min="1"
+                  max="100"
+                  id="settings-emergency-input"
+                />
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>kWh</span>
+              <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '8px 16px', fontSize: '12px', background: 'var(--alert-red)' }} id="btn-save-emergency">
+                Save
+              </button>
+            </div>
+            
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '12px', cursor: 'pointer', background: 'rgba(255,107,107,0.06)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,107,107,0.2)' }}>
+              <input 
+                type="checkbox" 
+                checked={autoShedEmergency} 
+                onChange={(e) => setAutoShedEmergency(e.target.checked)} 
+                style={{ marginTop: '2px', accentColor: 'var(--alert-red)' }}
+              />
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.4' }}>
+                <strong>Auto-Shed Overrides</strong><br/>
+                Automatically turn off heavy appliances when breached.
+              </span>
+            </label>
+          </form>
         </div>
       </div>
 
@@ -173,14 +221,25 @@ export default function Settings({
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 18, lineHeight: '1.6' }}>
           Unlinking the client account will clear all locally cached telemetry history, reset appliance calibrations, and return the console to the initial Engineer Authentication setup.
         </p>
-        <button
-          onClick={onResetSetup}
-          className="btn-secondary"
-          style={{ width: 'auto', padding: '10px 20px', borderColor: 'var(--alert-red)', color: 'var(--alert-red)' }}
-          id="btn-unlink-reset"
-        >
-          Unlink System (Factory Reset)
-        </button>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <button
+            onClick={onResetSetup}
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '10px 20px', borderColor: 'var(--alert-red)', color: 'var(--alert-red)' }}
+            id="btn-unlink-reset"
+          >
+            Unlink System (Factory Reset)
+          </button>
+          
+          <button
+            onClick={onClearHistory}
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '10px 20px', borderColor: 'var(--accent-blue)', color: 'var(--accent-blue)' }}
+            id="btn-clear-history"
+          >
+            Clear Daily Averages History
+          </button>
+        </div>
       </div>
     </div>
   );

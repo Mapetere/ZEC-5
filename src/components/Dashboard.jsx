@@ -31,7 +31,7 @@ export default function Dashboard({
   tickCount, dataCollectionMinutes, dailyAverages, vacant, notifyThreshold,
   engineState, tokenState, gridBlackout, onToggleBlackout,
   onHardwareFault, onRedirectToRecharge,
-  relays, onToggleRelay, showBreakdown, setShowBreakdown
+  relays, onToggleRelay, showBreakdown, setShowBreakdown, activeScheduleId
 }) {
   const MAINS_VOLTAGE = 230;
 
@@ -504,13 +504,35 @@ export default function Dashboard({
             <span className="threshold-value" style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{notifyThreshold} kWh</span>
           </div>
 
-          <button className="advice-trigger-btn" onClick={onOpenAdvice} id="tour-advice-btn" style={{ width: '100%' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
-            </svg>
-            Smart Advice
-            {(alerts || []).filter(a => a.type !== 'info').length > 0 && (
-              <span className="advice-count">{(alerts || []).filter(a => a.type !== 'info').length}</span>
+          <button 
+            className="advice-trigger-btn" 
+            onClick={onOpenAdvice} 
+            id="tour-advice-btn" 
+            style={{ 
+              width: '100%',
+              background: activeScheduleId ? 'rgba(37, 211, 102, 0.15)' : '',
+              borderColor: activeScheduleId ? 'rgba(37, 211, 102, 0.4)' : '',
+              color: activeScheduleId ? 'var(--accent-green)' : ''
+            }}
+          >
+            {activeScheduleId ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <span style={{ fontWeight: 'bold' }}>Active Schedule: {activeScheduleId.toUpperCase()}</span>
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+                </svg>
+                Smart Advice
+                {(alerts || []).filter(a => a.type !== 'info').length > 0 && (
+                  <span className="advice-count">{(alerts || []).filter(a => a.type !== 'info').length}</span>
+                )}
+              </>
             )}
           </button>
         </div>

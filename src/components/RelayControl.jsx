@@ -1,23 +1,20 @@
 /**
- * RelayControl — Interactive 8-channel relay toggle grid.
+ * RelayControl — Interactive 5-channel relay toggle grid.
  */
-export default function RelayControl({ relays, onToggle }) {
-  const relayNames = [
-    'Main Supply', 'Geyser', 'Borehole', 'Kitchen',
-    'Lighting', 'Entertainment', 'Garage', 'Auxiliary'
-  ];
+export default function RelayControl({ relays, onToggle, profiles }) {
+  const defaultNames = ['Main Supply', 'Geyser', 'Borehole', 'Entertainment', 'Lighting'];
 
   return (
     <div className="fade-in">
       <div className="section-title"><span className="dot" /> Relay Control Grid</div>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-        Manually override power distribution across 8 channels. Toggle relays to shed or restore load based on inference recommendations.
+        Manually override power distribution across 5 channels. Toggle relays to shed or restore load based on inference recommendations.
       </p>
-      <div className="relay-grid">
-        {(relays || Array(8).fill(false)).map((state, i) => (
+      <div className="relay-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+        {(relays || Array(5).fill(false)).slice(0, 5).map((state, i) => (
           <div key={i} className={`relay-card ${state ? 'on' : ''}`}>
             <div className="relay-number">Relay {String(i + 1).padStart(2, '0')}</div>
-            <div className="relay-name">{relayNames[i]}</div>
+            <div className="relay-name">{profiles?.[i]?.name || defaultNames[i]}</div>
             <div className={`relay-status ${state ? 'on' : 'off'}`}>
               {state ? 'ACTIVE' : 'IDLE'}
             </div>

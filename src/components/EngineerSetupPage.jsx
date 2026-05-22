@@ -11,6 +11,7 @@ export default function EngineerSetupPage({ onComplete }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [linkFormed, setLinkFormed] = useState(false);
+  const [step, setStep] = useState(1);
 
   // Default gadget profiles to be calibrated by the engineer
   const [gadgets, setGadgets] = useState([
@@ -35,11 +36,11 @@ export default function EngineerSetupPage({ onComplete }) {
     setGadgets(updated);
   };
 
-  const handleSubmit = (e) => {
+  const handleNextStep = (e) => {
     e.preventDefault();
     setError('');
 
-    // Validations
+    // Validations for step 1
     if (!engineerName.trim()) {
       setError('Engineer Name is required.');
       return;
@@ -56,6 +57,13 @@ export default function EngineerSetupPage({ onComplete }) {
       setError('Please provide a valid client email address to link.');
       return;
     }
+
+    setStep(2);
+  };
+
+  const handleSubmitFinal = (e) => {
+    e.preventDefault();
+    setError('');
 
     // Verify all gadgets are configured
     for (let i = 0; i < gadgets.length; i++) {
@@ -154,69 +162,81 @@ export default function EngineerSetupPage({ onComplete }) {
 
         {error && <div className="login-error" style={{ marginBottom: 20 }}>{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          {/* Section 1: Authentication */}
-          <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px' }}>
-            <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)' }}>
-              1. Professional Authentication
-            </h3>
-            
-            <label className="login-label">Installer Name</label>
-            <div className="login-input-wrap">
-              <input
-                className="login-input"
-                type="text"
-                value={engineerName}
-                onChange={(e) => setEngineerName(e.target.value)}
-                placeholder="e.g. Eng. Mapetere"
-                required
-              />
+        {step === 1 ? (
+          <form onSubmit={handleNextStep}>
+            {/* Section 1: Authentication */}
+            <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px' }}>
+              <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)' }}>
+                1. Professional Authentication
+              </h3>
+              
+              <label className="login-label">Installer Name</label>
+              <div className="login-input-wrap">
+                <input
+                  className="login-input"
+                  type="text"
+                  value={engineerName}
+                  onChange={(e) => setEngineerName(e.target.value)}
+                  placeholder="e.g. Eng. Mapetere"
+                  required
+                />
+              </div>
+
+              <label className="login-label">ZET5 Badge Code (Registered ZET5)</label>
+              <div className="login-input-wrap">
+                <input
+                  className="login-input"
+                  type="text"
+                  value={badgeCode}
+                  onChange={(e) => setBadgeCode(e.target.value)}
+                  placeholder="e.g. ZET5-4694"
+                  required
+                />
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Only engineers with active ZET5 credentials may calibrate this dashboard.
+              </span>
             </div>
 
-            <label className="login-label">ZET5 Badge Code (Registered ZET5)</label>
-            <div className="login-input-wrap">
-              <input
-                className="login-input"
-                type="text"
-                value={badgeCode}
-                onChange={(e) => setBadgeCode(e.target.value)}
-                placeholder="e.g. ZET5-4694"
-                required
-              />
+            {/* Section 2: Client Link */}
+            <div style={{ marginBottom: '20px' }}>
+              <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)' }}>
+                2. Client Account Linking
+              </h3>
+              <label className="login-label">Resident / Client Email Address</label>
+              <div className="login-input-wrap">
+                <input
+                  className="login-input"
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="client@zet5.co.zw"
+                  required
+                />
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Creates the official resident profile. The resident will use this email to log in and set up token targets.
+              </span>
             </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Only engineers with active ZET5 credentials may calibrate this dashboard.
-            </span>
-          </div>
 
-          {/* Section 2: Client Link */}
-          <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px' }}>
-            <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)' }}>
-              2. Client Account Linking
-            </h3>
-            <label className="login-label">Resident / Client Email Address</label>
-            <div className="login-input-wrap">
-              <input
-                className="login-input"
-                type="email"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder="client@zet5.co.zw"
-                required
-              />
-            </div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Creates the official resident profile. The resident will use this email to log in and set up token targets.
-            </span>
-          </div>
-
-          {/* Section 3: Gadgets Calibration */}
-          <div style={{ marginBottom: 24 }}>
-            <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)', marginBottom: 8 }}>
-              3. Telemetry Circuit Calibration
-            </h3>
+            <button
+              type="submit"
+              className="btn-primary"
+              id="btn-authenticate-next"
+              style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 'bold' }}
+            >
+              Continue to Channel Setup
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmitFinal}>
+            {/* Section 3: Gadgets Calibration */}
+            <div style={{ marginBottom: 24 }}>
+              <h3 className="setup-heading" style={{ fontSize: '14px', color: 'var(--accent-blue)', marginBottom: 8 }}>
+                3. Telemetry Circuit Calibration
+              </h3>
             <p className="setup-desc" style={{ marginBottom: 12 }}>
-              Calibrate and name active appliance sensors attached to the 5 physical clamping channels.
+              Calibrate and name active appliance sensors attached to the 5 physical channels.
             </p>
             <details style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <summary style={{ cursor: 'pointer', color: 'var(--accent-blue)', fontWeight: 500 }}>
@@ -238,7 +258,7 @@ export default function EngineerSetupPage({ onComplete }) {
                 marginBottom: '10px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                  <span>Clamping Channel C{i + 1}</span>
+                  <span>Channel C{i + 1}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <div style={{ flex: 2, minWidth: '150px' }}>
@@ -282,16 +302,27 @@ export default function EngineerSetupPage({ onComplete }) {
             ))}
           </div>
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={loading}
-            id="btn-authenticate-link"
-            style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 'bold' }}
-          >
-            {loading ? 'Validating Registry & Linking...' : 'Authenticate Engineer & Form Link'}
-          </button>
-        </form>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setStep(1)}
+                style={{ flex: 1, padding: '14px', fontSize: '14px' }}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={loading}
+                id="btn-authenticate-link"
+                style={{ flex: 2, padding: '14px', fontSize: '14px', fontWeight: 'bold' }}
+              >
+                {loading ? 'Validating Registry & Linking...' : 'Authenticate Engineer & Form Link'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
