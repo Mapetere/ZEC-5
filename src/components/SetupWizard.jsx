@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 /**
  * SetupWizard — Client-side onboarding flow.
@@ -18,6 +18,11 @@ export default function SetupWizard({ onComplete }) {
   const [autoShedEmergency, setAutoShedEmergency] = useState(true);
   const [dateConsent, setDateConsent] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const wrapper = document.querySelector('.login-wrapper');
+    if (wrapper) wrapper.scrollTop = 0;
+  }, [step]);
 
   // Retrieve sensor names configured by the engineer
   const sensorNames = useMemo(() => {

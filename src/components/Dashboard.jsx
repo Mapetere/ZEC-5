@@ -618,7 +618,7 @@ export default function Dashboard({
           ROW 5: RELAY CONTROL GRID
           ============================================================ */}
       <div id="tour-relays" style={{ marginTop: 12 }}>
-        <RelayControl relays={relays} onToggle={onToggleRelay} />
+        <RelayControl relays={relays} onToggle={onToggleRelay} profiles={profiles} activeScheduleId={activeScheduleId} />
       </div>
 
     </div>

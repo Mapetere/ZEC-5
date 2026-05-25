@@ -56,6 +56,7 @@ body {
   scrollbar-color: var(--text-muted) rgba(0, 0, 0, 0.2);
 }
 ::-webkit-scrollbar {
+  -webkit-appearance: none;
   width: 10px;
   height: 10px;
 }
@@ -83,7 +84,7 @@ body {
   min-height: 100dvh;
   background: var(--bg-primary);
   position: relative;
-  overflow-y: auto;
+  overflow-y: scroll; /* Force custom scrollbar visibility */
   overflow-x: hidden;
   padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
 }
@@ -399,7 +400,7 @@ body {
 /* Page Container */
 .page-container {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll; /* Force custom scrollbar visibility */
   padding: 28px;
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
   -webkit-overflow-scrolling: touch;
@@ -1492,10 +1493,17 @@ body {
   justify-content: center;
   gap: 8px;
   transition: all var(--transition-fast);
+  animation: emergency-flash 2s infinite ease-in-out;
 }
 .emergency-trigger-btn:hover {
   background: rgba(255,61,0,0.2);
   border-color: var(--alert-red);
+  animation: none;
+}
+@keyframes emergency-flash {
+  0% { opacity: 0.7; background: var(--alert-red-dim); border-color: rgba(255,61,0,0.3); }
+  50% { opacity: 1; background: rgba(255,61,0,0.2); border-color: var(--alert-red); box-shadow: 0 0 10px rgba(255,61,0,0.3); }
+  100% { opacity: 0.7; background: var(--alert-red-dim); border-color: rgba(255,61,0,0.3); }
 }
 
 /* ===== EMERGENCY MODE PANEL ===== */

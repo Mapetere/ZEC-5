@@ -363,7 +363,7 @@ We designed this as a modal that blocks interaction (rather than a passive notif
 
 We added this loading indicator to every significant process because it provides critical feedback. Without it, users would click buttons and see nothing happen for a moment, leading them to believe the system is broken. The green spinning circle and uppercase status text reinforce the industrial, professional aesthetic of the platform."
 
----
+
 
 ## Closing Statement
 

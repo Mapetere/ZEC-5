@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * EngineerSetupPage — Professional installation and telemetry mapping wizard.
@@ -12,6 +12,11 @@ export default function EngineerSetupPage({ onComplete }) {
   const [loading, setLoading] = useState(false);
   const [linkFormed, setLinkFormed] = useState(false);
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    const wrapper = document.querySelector('.login-wrapper');
+    if (wrapper) wrapper.scrollTop = 0;
+  }, [step]);
 
   // Default gadget profiles to be calibrated by the engineer
   const [gadgets, setGadgets] = useState([

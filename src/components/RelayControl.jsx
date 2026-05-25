@@ -1,14 +1,16 @@
 /**
  * RelayControl — Interactive 5-channel relay toggle grid.
  */
-export default function RelayControl({ relays, onToggle, profiles }) {
+export default function RelayControl({ relays, onToggle, profiles, activeScheduleId }) {
   const defaultNames = ['Main Supply', 'Geyser', 'Borehole', 'Entertainment', 'Lighting'];
 
   return (
     <div className="fade-in">
       <div className="section-title"><span className="dot" /> Relay Control Grid</div>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-        Manually override power distribution across 5 channels. Toggle relays to shed or restore load based on inference recommendations.
+        {activeScheduleId 
+          ? <strong style={{ color: 'var(--accent-blue)' }}>Relays are currently under autonomous control by the {activeScheduleId.toUpperCase()} schedule.</strong>
+          : "Manually override power distribution across 5 channels. Toggle relays to shed or restore load based on inference recommendations."}
       </p>
       <div className="relay-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
         {(relays || Array(5).fill(false)).slice(0, 5).map((state, i) => (
@@ -20,8 +22,13 @@ export default function RelayControl({ relays, onToggle, profiles }) {
             </div>
             <div className="toggle-wrap">
               <button
-                className={`toggle ${state ? 'on' : ''}`}
+                className={`toggle ${state ? 'on' : ''} ${activeScheduleId ? 'disabled' : ''}`}
+                style={{ opacity: activeScheduleId ? 0.5 : 1, cursor: activeScheduleId ? 'not-allowed' : 'pointer' }}
                 onClick={() => {
+                  if (activeScheduleId) {
+                    alert(`Relays are currently locked by the autonomous ${activeScheduleId.toUpperCase()} schedule. Disable the schedule to regain manual control.`);
+                    return;
+                  }
                   const relayName = profiles?.[i]?.name || defaultNames[i];
                   const action = state ? 'OFF' : 'ON';
                   if (window.confirm(`Are you sure you want to turn ${action} ${relayName}?`)) {

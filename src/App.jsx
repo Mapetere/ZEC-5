@@ -15,6 +15,8 @@ import DailyAverages from './components/DailyAverages.jsx';
 import AuditTrail from './components/AuditTrail.jsx';
 import TourGuide from './components/TourGuide.jsx';
 import EmergencyInterceptModal from './components/EmergencyInterceptModal.jsx';
+import SchedulesListPage from './components/SchedulesListPage.jsx';
+import ScheduleDetailsPage from './components/ScheduleDetailsPage.jsx';
 import LoadingOverlay from './components/LoadingOverlay.jsx';
 import {
   startMockStream, generateAlerts,
@@ -84,10 +86,10 @@ export default function App() {
   const [alerts, setAlerts] = useState([]);
   const [connected, setConnected] = useState(false);
   const [showAdvice, setShowAdvice] = useState(false);
-  const [showEmergency, setShowEmergency] = useState(false);
   const [showMeterSync, setShowMeterSync] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [viewingScheduleId, setViewingScheduleId] = useState(null);
   const [showEmergencyIntercept, setShowEmergencyIntercept] = useState(false);
   const [loadingState, setLoadingState] = useState({ isLoading: false, message: '' });
   const [tickCount, setTickCount] = useState(0);
@@ -136,7 +138,12 @@ export default function App() {
 
   const dataCollectionMinutes = Math.floor((Date.now() - dataStartTime) / (1000 * 60));
 
-  const stateRef = useRef({ tokenState: null, activeScheduleId, setupData });
+  const [activeEnergyBudgets, setActiveEnergyBudgets] = useState({});
+  const stateRef = useRef({ tokenState: null, activeScheduleId, setupData, activeEnergyBudgets });
+
+  useEffect(() => {
+    stateRef.current = { tokenState, activeScheduleId, setupData, activeEnergyBudgets };
+  }, [tokenState, activeScheduleId, setupData, activeEnergyBudgets]);
 
   // User-configurable notification threshold (kWh)
   const notifyThreshold = setupData?.notifyThreshold || 50;
@@ -199,7 +206,6 @@ export default function App() {
     setProfiles(updated);
     localStorage.setItem('zet5_profiles', JSON.stringify(updated));
 
-    // Initialize the energy engine with token data
     if (data.tokenData?.kwh && data.tokenData?.date) {
       const es = initEngine(data.tokenData.kwh, data.tokenData.date);
       setEngineState(es);
@@ -207,26 +213,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    stateRef.current = { tokenState, activeScheduleId, setupData };
-  });
-
-  // Dynamic simulation data stream + daily average storage + predictive online learning ticks
-  useEffect(() => {
     if (!user || !setupComplete) return;
 
-    // Ensure engine is initialized (in case of page refresh)
     if (!getEngineState() && setupData?.tokenData?.kwh) {
       initEngine(setupData.tokenData.kwh, setupData.tokenData.date);
     }
 
-    // Start high-fidelity client-side behavioral simulation
     const mockStream = startMockStream((data) => {
       if (gridBlackout) {
         setSensors([0, 0, 0, 0, 0]);
         const es = processTick([0, 0, 0, 0, 0], profiles);
         if (es) {
           setEngineState(es);
-          // CRITICAL: Skip recordObservation (freezing learning array)
         }
         setAlerts([{
           id: `blackout-${Date.now()}`,
@@ -246,7 +244,39 @@ export default function App() {
         }
         setAlerts(generateAlerts(data.sensors, profiles, stateRef.current.tokenState));
 
-        // Evaluate automated schedule rules
+        const budgets = { ...stateRef.current.activeEnergyBudgets };
+        let budgetsChanged = false;
+        Object.keys(budgets).forEach(relayIdxStr => {
+          const relayIndex = parseInt(relayIdxStr);
+          const budget = budgets[relayIndex];
+          const amps = data.sensors[relayIndex] || 0;
+          const tickKwh = (amps * 230 * (10 / 60)) / 1000;
+          
+          if (tickKwh > 0) {
+            budget.consumedKwh += tickKwh;
+            budgetsChanged = true;
+            
+            if (budget.consumedKwh >= budget.limitKwh) {
+              if (mockRef.current) mockRef.current.toggleRelay(relayIndex, false);
+              setRelays(prev => { const n = [...prev]; n[relayIndex] = false; return n; });
+              
+              setAlerts(prev => [{
+                id: Date.now(),
+                type: 'critical',
+                message: `ZET-5 automatically shed the ${budget.applianceName}. It successfully exhausted the ${budget.limitKwh.toFixed(1)} kWh budget limit you approved.`,
+                time: 'Just now',
+                actionable: false,
+              }, ...prev]);
+              
+              delete budgets[relayIndex];
+            }
+          }
+        });
+        
+        if (budgetsChanged) {
+          setActiveEnergyBudgets(budgets);
+        }
+
         const currentScheduleId = stateRef.current.activeScheduleId;
         if (currentScheduleId && currentScheduleId !== 'none') {
           const ts = stateRef.current.tokenState;
@@ -262,7 +292,7 @@ export default function App() {
             const currentMins = h * 60 + m;
 
             recipe.rules.forEach(rule => {
-              const idx = rule.index + 1; // Offset by 1 because Relay 0 is Main Supply
+              const idx = rule.index; 
               let shouldBeOn = true;
               if (rule.type === 'disabled') {
                 shouldBeOn = false;
@@ -292,7 +322,6 @@ export default function App() {
       }
       setTickCount(data.tickCount);
 
-      // Process daily averages
       if (!gridBlackout) {
         dailyStoreCounter.current++;
         if (dailyStoreCounter.current % 40 === 0) {
@@ -304,7 +333,7 @@ export default function App() {
     }, 1500);
 
     mockRef.current = mockStream;
-    setConnected(true); // Simulation engine active
+    setConnected(true);
 
     return () => {
       if (mockStream) mockStream.stop();
@@ -318,24 +347,17 @@ export default function App() {
     }
   }, [tokenState?.belowThreshold, tokenState?.atRisk]);
 
-
-  // Scroll to top of page-container on page navigation
   useEffect(() => {
     const el = document.querySelector('.page-container');
-    if (el) {
-      el.scrollTop = 0;
-    }
+    if (el) { el.scrollTop = 0; }
   }, [page]);
 
-  // Time Machine Simulation Advancement (Fast-Forward clock & learn patterns)
   const handleSimulateHours = useCallback((hours) => {
     withLoader(`SIMULATING ${hours} HOURS OF USAGE...`, () => {
       const startVirtualTime = getVirtualTime();
       let kwhConsumed = 0;
       let finalRelayStates = [...relays];
 
-      // If an automated schedule is active, accurately simulate minute-by-minute load 
-      // based on the schedule's component-level rules.
       const currentScheduleId = activeScheduleId;
       if (currentScheduleId && currentScheduleId !== 'none') {
         const ts = tokenState;
@@ -353,13 +375,10 @@ export default function App() {
             const h = vTime.getHours();
             const m = vTime.getMinutes();
             const currentMins = h * 60 + m;
-            let minutePowerW = 0;
-
-            // Base background power (essential constant loads not explicitly modeled)
-            minutePowerW += 150; 
+            let minutePowerW = 150; 
 
             recipe.rules.forEach(rule => {
-              const idx = rule.index + 1; // Offset by 1 because Relay 0 is Main Supply
+              const idx = rule.index;
               let shouldBeOn = true;
               if (rule.type === 'disabled') {
                 shouldBeOn = false;
@@ -379,32 +398,27 @@ export default function App() {
                 shouldBeOn = (cyclePos < rule.onMins);
               }
 
-              // Track final state for UI update
               if (min === totalMinutes - 1) {
                 finalRelayStates[idx] = shouldBeOn;
               }
 
-              // Accumulate power if relay is ON
               if (shouldBeOn && profiles[idx]) {
                 minutePowerW += profiles[idx].load; 
               }
             });
 
-            // Add minute's energy to total consumed (W -> kW / 60)
             kwhConsumed += (minutePowerW / 1000) / 60;
-            vTime = new Date(vTime.getTime() + 60000); // add 1 min
+            vTime = new Date(vTime.getTime() + 60000);
           }
         }
       }
 
-      // Fallback if no schedule is active: use historical average
       if (kwhConsumed === 0) {
         const dailyUsageKwh = tokenState?.dailyUsage || 8.5;
         const avgPowerW = (dailyUsageKwh * 1000) / 24;
         kwhConsumed = (avgPowerW / 1000) * hours;
       }
 
-      // Update real-world engine states
       const averageSimulatedPowerW = (kwhConsumed * 1000) / hours;
       simulateIntervalProgress(hours, averageSimulatedPowerW);
 
@@ -416,13 +430,11 @@ export default function App() {
         localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
       }
 
-      // Immediately push new relay states to UI and hardware mock
       setRelays(finalRelayStates);
       finalRelayStates.forEach((state, i) => {
         if (mockRef.current) mockRef.current.toggleRelay(i, state);
       });
 
-      // Populate intermediate daily averages for all virtual dates crossed
       const passedDates = [];
       let timeCursor = new Date(startVirtualTime.getTime());
       for (let h = 1; h <= hours; h++) {
@@ -444,9 +456,6 @@ export default function App() {
     });
   }, [tokenState, showToast, sensors, activeScheduleId, setupData, profiles, relays, withLoader]);
 
-
-
-  // Update notification threshold
   const handleThresholdUpdate = useCallback((newThreshold) => {
     if (setupData) {
       const updated = { ...setupData, notifyThreshold: newThreshold };
@@ -456,7 +465,6 @@ export default function App() {
     showToast(`Trigger threshold updated to ${newThreshold} kWh!`, 'success');
   }, [setupData, showToast]);
 
-  // Update critical emergency threshold
   const handleEmergencyThresholdUpdate = useCallback((newThresh, autoShed) => {
     setSetupData(prev => {
       const next = { ...prev, emergencyThreshold: newThresh, autoShedEmergency: autoShed };
@@ -466,7 +474,6 @@ export default function App() {
     showToast(`Emergency settings updated (Threshold: ${newThresh} kWh, Auto-Shed: ${autoShed ? 'ON' : 'OFF'})`, 'success');
   }, [showToast]);
 
-  // Update target duration goal
   const handleGoalUpdate = useCallback((newGoal) => {
     if (setupData) {
       const updated = { ...setupData, durationGoal: newGoal };
@@ -520,8 +527,6 @@ export default function App() {
       } else {
         setActiveScheduleId(null);
         localStorage.removeItem('zet5_active_schedule');
-        
-        // Restore pre-schedule relays
         if (preScheduleRelays) {
           setRelays(preScheduleRelays);
           preScheduleRelays.forEach((st, i) => {
@@ -530,11 +535,9 @@ export default function App() {
           setPreScheduleRelays(null);
           localStorage.removeItem('zet5_pre_schedule_relays');
         }
-
         showToast(isAutonomous ? `Automated schedule deactivated.` : `Manual mode selected. System will NOT automatically toggle relays.`, 'info');
       }
-
-      setShowAdvice(false); // Close the panel
+      setShowAdvice(false);
     });
   }, [preScheduleRelays, relays, showToast, withLoader]);
 
@@ -544,18 +547,16 @@ export default function App() {
     showToast("Appliance sensor mapping profiles updated successfully!", 'success');
   }, [showToast]);
 
-  // Meter sync handler
   const handleMeterSync = useCallback((meterReading) => {
     const result = syncWithMeter(meterReading);
     if (result) {
       setEngineState(result);
-      if (meterReading > 0) setDismissCutoff(false); // Re-arm cutoff alert when synced above 0
+      if (meterReading > 0) setDismissCutoff(false);
       showToast(`Drift calibrated! New scaling coefficient: ×${result.correctionFactor.toFixed(3)}`, 'success');
     }
     return result;
   }, [showToast]);
 
-  // Recharge handler
   const handleRecharge = useCallback((kwhAmount) => {
     const engine = getEngineState();
     if (engine) {
@@ -564,12 +565,11 @@ export default function App() {
       engine.lastTickTime = Date.now();
       setEngineState({ ...engine });
       localStorage.setItem('zet5_energy_engine', JSON.stringify(engine));
-      setDismissCutoff(false); // Re-arm cutoff alert
+      setDismissCutoff(false);
       showToast(`Loaded ${kwhAmount} kWh recharge successfully!`, 'success');
     }
   }, [showToast]);
 
-  // Blackout toggle handler
   const handleToggleBlackout = useCallback(() => {
     setGridBlackout(prev => {
       const next = !prev;
@@ -609,9 +609,16 @@ export default function App() {
     });
   }, [showToast, withLoader]);
 
-  // --- Dissertation Requirement: Autonomous Emergency Shedding (5.5.2) ---
-  const autoShedTriggered = useRef(false);
+  const handleStartEnergyBudget = (relayIndex, limitKwh, applianceName) => {
+    if (mockRef.current) mockRef.current.toggleRelay(relayIndex, true);
+    setRelays(prev => { const n = [...prev]; n[relayIndex] = true; return n; });
+    setActiveEnergyBudgets(prev => ({
+      ...prev,
+      [relayIndex]: { limitKwh, consumedKwh: 0, applianceName }
+    }));
+  };
 
+  const autoShedTriggered = useRef(false);
   useEffect(() => {
     if (tokenState?.isEmergency && !autoShedTriggered.current) {
       if (setupData?.autoShedEmergency) {
@@ -644,7 +651,7 @@ export default function App() {
               tokenData={setupData?.tokenData}
               durationGoal={setupData?.durationGoal}
               onOpenAdvice={() => setShowAdvice(true)}
-              onOpenEmergency={() => setShowEmergency(true)}
+              onOpenEmergency={() => setShowEmergencyIntercept(true)}
               onOpenMeterSync={() => setShowMeterSync(true)}
               onSimulateHours={handleSimulateHours}
               tickCount={tickCount}
@@ -661,9 +668,7 @@ export default function App() {
                 setPage('management');
                 setTimeout(() => {
                   const el = document.getElementById('recharge-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
+                  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
                 }, 100);
               }}
               relays={relays}
@@ -749,6 +754,33 @@ export default function App() {
               onGoalUpdate={handleGoalUpdate}
             />
           )}
+          {page === 'schedules-list' && (
+            <SchedulesListPage
+              tokenKwhRemaining={engineState ? Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh) : (setupData?.tokenData?.kwh || 3.0)}
+              targetHours={setupData?.durationGoal ? setupData.durationGoal * 24 : 504}
+              tokenState={tokenState}
+              activeScheduleId={activeScheduleId}
+              onApplySchedule={handleApplySchedule}
+              onViewDetails={(id) => {
+                setViewingScheduleId(id);
+                setPage('schedule-details');
+              }}
+              onBack={() => setPage('dashboard')}
+            />
+          )}
+          {page === 'schedule-details' && viewingScheduleId && (
+            <ScheduleDetailsPage
+              recipeId={viewingScheduleId}
+              tokenKwhRemaining={engineState ? Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh) : (setupData?.tokenData?.kwh || 3.0)}
+              targetHours={setupData?.durationGoal ? setupData.durationGoal * 24 : 504}
+              activeScheduleId={activeScheduleId}
+              onApplySchedule={(id, auto) => {
+                handleApplySchedule(id, auto);
+                setPage('dashboard');
+              }}
+              onBack={() => setPage('schedules-list')}
+            />
+          )}
         </div>
       </div>
 
@@ -763,6 +795,10 @@ export default function App() {
         tokenKwhRemaining={engineState ? Math.max(0, engineState.tokenKwh - engineState.cumulativeKwh) : (setupData?.tokenData?.kwh || 3.0)}
         targetHours={setupData?.durationGoal ? setupData.durationGoal * 24 : 504}
         tokenState={tokenState}
+        onViewSchedules={() => {
+          setShowAdvice(false);
+          setPage('schedules-list');
+        }}
       />
 
       <MeterSync
@@ -772,33 +808,19 @@ export default function App() {
         engineState={engineState}
       />
 
-      {showEmergency && (
-        <EmergencyMode
-          kwhRemaining={tokenState?.kwhRemaining || '0'}
-          sensors={sensors}
-          profiles={profiles}
-          relays={relays}
-          onToggleRelay={handleRelayToggle}
-          onClose={() => setShowEmergency(false)}
-        />
-      )}
 
       {showEmergencyIntercept && (
         <EmergencyInterceptModal
-          kwhRemaining={(tokenState?.kwhRemaining || 0).toFixed(2)}
+          kwhRemaining={parseFloat(tokenState?.kwhRemaining || 0).toFixed(2)}
           onKeepSchedule={() => {
             setShowEmergencyIntercept(false);
             showToast("Emergency Overridden: Existing load configuration maintained.", "warning");
           }}
           onAutoShed={() => {
             setShowEmergencyIntercept(false);
-            const geyserIndex = profiles.findIndex(p => p.name.toLowerCase() === 'geyser');
-            const profileIdx = geyserIndex !== -1 ? geyserIndex : 1;
-            const targetIndex = profileIdx + 1;
-            if (relays[targetIndex] === true) {
-              handleRelayToggle(targetIndex, false);
-              showToast(`EMERGENCY AUTONOMY: Shedding Tier 3 load (${profiles[profileIdx].name}).`, 'danger');
-            }
+            setShowAdvice(false);
+            handleApplySchedule('survival', true);
+            showToast(`EMERGENCY AUTONOMY: Shedding all non-essential loads. Survival schedule activated.`, 'danger');
           }}
           onOpenAdvice={() => {
             setShowEmergencyIntercept(false);
