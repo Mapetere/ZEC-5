@@ -178,17 +178,21 @@ export default function Dashboard({
           background: 'rgba(5, 8, 10, 0.98)',
           backdropFilter: 'blur(20px)',
           zIndex: 10000,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          textAlign: 'center',
-          padding: '40px 24px',
           borderRadius: '12px',
           border: '1px solid rgba(255, 61, 0, 0.2)',
           minHeight: '500px'
         }}>
+          <div style={{
+            position: 'sticky',
+            top: '10vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            textAlign: 'center',
+            padding: '40px 24px'
+          }}>
           <div style={{
             width: '80px',
             height: '80px',
@@ -239,6 +243,7 @@ export default function Dashboard({
           >
             Recharge Prepaid Token
           </button>
+          </div>
         </div>
       )}
 

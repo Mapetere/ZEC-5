@@ -141,9 +141,7 @@ export default function App() {
   const [activeEnergyBudgets, setActiveEnergyBudgets] = useState({});
   const stateRef = useRef({ tokenState: null, activeScheduleId, setupData, activeEnergyBudgets });
 
-  useEffect(() => {
-    stateRef.current = { tokenState, activeScheduleId, setupData, activeEnergyBudgets };
-  }, [tokenState, activeScheduleId, setupData, activeEnergyBudgets]);
+
 
   // User-configurable notification threshold (kWh)
   const notifyThreshold = setupData?.notifyThreshold || 50;
@@ -197,6 +195,10 @@ export default function App() {
       depletionDate: forecast.depletionDate,
     };
   })();
+
+  useEffect(() => {
+    stateRef.current = { tokenState, activeScheduleId, setupData, activeEnergyBudgets };
+  }, [tokenState, activeScheduleId, setupData, activeEnergyBudgets]);
 
   // Initialize energy engine when setup completes
   const handleSetupComplete = useCallback((data) => {
